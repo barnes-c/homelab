@@ -41,10 +41,13 @@ locals {
     }
   }
 
-  # apps-root rides along in the ArgoCD release via extraObjects. Helm's install order puts
-  # CustomResourceDefinition ahead of everything else, so the Application CRD exists by the
-  # time this object applies. A separate kubernetes_manifest resource cannot do this — it
-  # needs the CRD present at *plan* time, which on a fresh cluster it is not.
+  # apps-root cannot ride along in the ArgoCD release via extraObjects: the Helm provider
+  # REST-maps every object in the release manifest client-side *before* applying anything,
+  # so an Application fails with "no matches for kind Application in version
+  # argoproj.io/v1alpha1 / ensure CRDs are installed first" when the CRD ships in that same
+  # release. Helm's kind ordering does not help -- it only applies after that mapping step.
+  # It is a separate kubectl_manifest below, which resolves at apply time. The built-in
+  # kubernetes_manifest is not an option either: it needs the CRD at *plan* time.
   apps_root = {
     apiVersion = "argoproj.io/v1alpha1"
     kind       = "Application"
@@ -75,9 +78,8 @@ locals {
   }
 
   argocd_values = {
-    configs      = { params = { "server.insecure" = true } }
-    server       = { service = { type = "ClusterIP" } }
-    extraObjects = [local.apps_root]
+    configs = { params = { "server.insecure" = true } }
+    server  = { service = { type = "ClusterIP" } }
   }
 }
 
@@ -117,4 +119,12 @@ resource "helm_release" "argocd" {
   values = [yamlencode(merge(local.argocd_values, var.argocd_extra_values))]
 
   depends_on = [helm_release.cilium]
+}
+
+# App-of-apps root. Everything past this point is ArgoCD's, not tofu's.
+# depends_on guarantees the Application CRD exists before this applies.
+resource "kubectl_manifest" "apps_root" {
+  yaml_body = yamlencode(local.apps_root)
+
+  depends_on = [helm_release.argocd]
 }
