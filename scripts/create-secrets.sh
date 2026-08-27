@@ -54,9 +54,6 @@ IMMICH_CLIENT_SECRET=$(rand32)
 echo "=== Prompting for external credentials ==="
 
 prompt CF_API_TOKEN        "Cloudflare API token (cert-manager)"
-prompt AUTHENTIK_TUNNEL    "Cloudflare tunnel token (authentik/cloudflared)"
-prompt BARNES_BIZ_TUNNEL   "Cloudflare tunnel token (barnes-biz/cloudflared)"
-prompt MONITORING_TUNNEL   "Cloudflare tunnel token (monitoring/cloudflared)"
 prompt SMTP_USER             "SMTP username (barnes-biz)" false
 prompt SMTP_PASS             "SMTP password (barnes-biz)"
 prompt STRAVA_CLIENT_SECRET   "Strava client secret (account 115101)"
@@ -136,17 +133,8 @@ seal cert-manager cloudflare-api-token \
   "$MANIFESTS/cert-manager/cloudflare-api-token.yaml" \
   --from-literal=api-token="$CF_API_TOKEN"
 
-seal authentik cloudflared-tunnel \
-  "$MANIFESTS/authentik/cloudflared-tunnel.yaml" \
-  --from-literal=TUNNEL_TOKEN="$AUTHENTIK_TUNNEL"
 
-seal barnes-biz cloudflared-tunnel \
-  "$MANIFESTS/barnes-biz/cloudflared-tunnel.yaml" \
-  --from-literal=TUNNEL_TOKEN="$BARNES_BIZ_TUNNEL"
 
-seal monitoring cloudflared-tunnel \
-  "$MANIFESTS/monitoring/cloudflared-tunnel.yaml" \
-  --from-literal=TUNNEL_TOKEN="$MONITORING_TUNNEL"
 
 seal barnes-biz smtp-credentials \
   "$MANIFESTS/barnes-biz/smtp-credentials.yaml" \
