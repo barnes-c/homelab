@@ -15,7 +15,7 @@ spec:
     helm:
       values: |
         defaultSettings:
-          defaultDataPath: /var/mnt/storage0
+          defaultDataPath: /var/mnt/longhorn
           defaultReplicaCount: "1"
           replicaAutoBalance: disabled
         preUpgradeChecker:

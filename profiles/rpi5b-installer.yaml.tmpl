@@ -1,0 +1,45 @@
+# Pi 5 *installer* image — used for machine.install.image and every later `talosctl upgrade`.
+#
+# kind: installer needs no diskSize/bootloader; the on-node installer detects the existing
+# bootloader. The overlay options below are baked into the installer layer
+# (pkg/imager/out.go writes Overlay.ExtraOptions), so an upgrade rewrites config.txt with
+# them. Drop them and the PCIe slot stays off, the SATA HAT disappears, and EPHEMERAL —
+# which lives on the SSD array — does not come back after reboot.
+arch: arm64
+platform: metal
+secureboot: false
+name: Talos
+version: ${TALOS_TAG}
+input:
+  kernel:
+    path: /usr/install/arm64/vmlinuz
+  initramfs:
+    path: /usr/install/arm64/initramfs.xz
+  sdStub:
+    path: /usr/install/arm64/systemd-stub.efi
+  sdBoot:
+    path: /usr/install/arm64/systemd-boot.efi
+  baseInstaller:
+    imageRef: ${REGISTRY}/talos/installer-base:${TALOS_TAG}
+  overlayInstaller:
+    imageRef: ${OVERLAY_IMAGE}
+  # Same extensions the worker schematics declare. Image Factory resolves these by name;
+  # a local imager build has to name them explicitly.
+  #   iscsi-tools      iscsid/iscsiadm -- Longhorn's v1 engine attaches volumes over iSCSI
+  #   util-linux-tools nsenter, fstrim, blkid -- Longhorn host-namespace ops and trim
+  systemExtensions:
+    - imageRef: ${ISCSI_TOOLS_IMAGE}
+    - imageRef: ${UTIL_LINUX_TOOLS_IMAGE}
+overlay:
+  name: rpi_5
+  image:
+    imageRef: ${OVERLAY_IMAGE}
+  options:
+    configTxtAppend: |
+      dtparam=pciex1
+      dtparam=pciex1_gen=3
+      dtoverlay=pcie-32bit-dma-pi5
+      dtoverlay=disable-bt
+      dtoverlay=disable-wifi
+output:
+  kind: installer

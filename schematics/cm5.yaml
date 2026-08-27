@@ -1,0 +1,14 @@
+# Raspberry Pi CM5 8GB on NanoCluster, NVMe boot
+---
+overlay:
+  name: rpi_5
+  image: siderolabs/sbc-raspberrypi
+  options:
+    configTxtAppend: |
+      dtoverlay=disable-bt
+      dtoverlay=disable-wifi
+customization:
+  systemExtensions:
+    officialExtensions:
+      - siderolabs/iscsi-tools
+      - siderolabs/util-linux-tools

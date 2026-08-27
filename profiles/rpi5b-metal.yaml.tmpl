@@ -1,0 +1,57 @@
+# Pi 5 *metal* image (SD card) — Talos ${TALOS_TAG}.
+#
+# bootloader: grub is load-bearing. The imager defaults arm64 to sd-boot on Talos >= 1.10
+# (pkg/imager/profile/output.go, selectBootloader), and that layout never runs the overlay
+# installer — config.txt, u-boot.bin and the DTBs are absent, the Pi firmware never starts,
+# and the ACT LED stays dark. Looks exactly like dead hardware.
+#
+# dtoverlay=pcie-32bit-dma-pi5 is what gets the JMB585 SATA HAT working: the overlay rebuilt
+# from raspberrypi_kernel_version stable_20260724 carries msi-parent = <&pciex1>, restoring
+# the MSI doorbell. Without it every SATA command times out.
+arch: arm64
+platform: metal
+secureboot: false
+name: Talos
+version: ${TALOS_TAG}
+input:
+  kernel:
+    path: /usr/install/arm64/vmlinuz
+  initramfs:
+    path: /usr/install/arm64/initramfs.xz
+  sdStub:
+    path: /usr/install/arm64/systemd-stub.efi
+  sdBoot:
+    path: /usr/install/arm64/systemd-boot.efi
+  baseInstaller:
+    imageRef: ${REGISTRY}/talos/installer-base:${TALOS_TAG}
+  overlayInstaller:
+    imageRef: ${OVERLAY_IMAGE}
+  # Same extensions the worker schematics declare. Image Factory resolves these by name;
+  # a local imager build has to name them explicitly.
+  #   iscsi-tools      iscsid/iscsiadm -- Longhorn's v1 engine attaches volumes over iSCSI
+  #   util-linux-tools nsenter, fstrim, blkid -- Longhorn host-namespace ops and trim
+  systemExtensions:
+    - imageRef: ${ISCSI_TOOLS_IMAGE}
+    - imageRef: ${UTIL_LINUX_TOOLS_IMAGE}
+overlay:
+  name: rpi_5
+  image:
+    imageRef: ${OVERLAY_IMAGE}
+  options:
+    configTxtAppend: |
+      dtparam=pciex1
+      dtparam=pciex1_gen=3
+      dtoverlay=pcie-32bit-dma-pi5
+      dtoverlay=disable-bt
+      dtoverlay=disable-wifi
+output:
+  kind: image
+  imageOptions:
+    diskSize: 8589934592
+    diskFormat: raw
+    # MUST be set. selectBootloader (pkg/imager/profile/output.go:171) returns sd-boot for
+    # arm64 on Talos >= 1.10, and that layout never runs the overlay installer -- no
+    # config.txt, no u-boot.bin, no DTBs -- so the Pi firmware never starts. Leaving this
+    # unset yields a single 2.2GB EFI partition and an unbootable card.
+    bootloader: grub
+  outFormat: .xz

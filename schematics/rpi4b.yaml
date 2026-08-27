@@ -1,0 +1,14 @@
+# Raspberry Pi 4B 8GB worker
+---
+overlay:
+  name: rpi_generic
+  image: siderolabs/sbc-raspberrypi
+  options:
+    configTxtAppend: |
+      dtoverlay=disable-bt
+      dtoverlay=disable-wifi
+customization:
+  systemExtensions:
+    officialExtensions:
+      - siderolabs/iscsi-tools
+      - siderolabs/util-linux-tools
