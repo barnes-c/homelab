@@ -1,8 +1,29 @@
+# The gateway gets a dedicated single-address pool so its IP is stable. It is the target
+# of the router's 80/443 port-forward, and a dynamically assigned address would silently
+# move (e.g. to .202) if the generated Service were ever recreated while another
+# LoadBalancer held .201 -- breaking inbound traffic with no obvious cause.
+#
+# Cilium offers no other way to pin this: CiliumGatewayClassConfig.spec.service exposes
+# only type/loadBalancerClass/sourceRanges, and Gateway annotations are not propagated to
+# the generated Service, so the usual lbipam.cilium.io/ips annotation cannot be set.
+apiVersion: cilium.io/v2alpha1
+kind: CiliumLoadBalancerIPPool
+metadata:
+  name: gateway-pool
+spec:
+  blocks:
+    - start: "192.168.1.201"
+      stop: "192.168.1.201"
+  serviceSelector:
+    matchLabels:
+      io.cilium.gateway/owning-gateway: main
+---
+# Everything else. Kept clear of .201 so it can never be handed out from under the gateway.
 apiVersion: cilium.io/v2alpha1
 kind: CiliumLoadBalancerIPPool
 metadata:
   name: main-pool
 spec:
   blocks:
-    - start: "192.168.1.201"
+    - start: "192.168.1.202"
       stop: "192.168.1.210"
