@@ -1,0 +1,94 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ddns
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: cloudflare-ddns
+  namespace: ddns
+spec:
+  schedule: "*/10 * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        spec:
+          restartPolicy: OnFailure
+          securityContext:
+            runAsUser: 65532
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+            - name: ddns
+              image: curlimages/curl:8.19.0
+              env:
+                - name: CF_API_TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      name: cloudflare-api-token
+                      key: api-token
+                - name: ZONE
+                  value: barnes.biz
+                # Wildcard cert covers *.barnes.biz, so a single apex A record plus a
+                # wildcard record is enough for every hostname the gateway serves.
+                - name: RECORDS
+                  value: "barnes.biz,*.barnes.biz"
+              command:
+                - sh
+                - -c
+                - |
+                  set -eu
+                  api() { curl -sS -H "Authorization: Bearer $CF_API_TOKEN" \
+                                  -H "Content-Type: application/json" "$@"; }
+                  B=https://api.cloudflare.com/client/v4
+
+                  # Cloudflare reports the caller's source address, so this is the
+                  # public IP as seen from outside NAT.
+                  IP=$(curl -sS https://cloudflare.com/cdn-cgi/trace | sed -n 's/^ip=//p')
+                  case "$IP" in
+                    *.*.*.*) ;;
+                    *) echo "could not determine public IPv4 (got '$IP')" >&2; exit 1 ;;
+                  esac
+
+                  ZID=$(api "$B/zones?name=$ZONE" | sed -n 's/.*"id":"\([0-9a-f]\{32\}\)".*/\1/p' | head -1)
+                  [ -n "$ZID" ] || { echo "zone $ZONE not found (token needs Zone:Read)" >&2; exit 1; }
+
+                  echo "$RECORDS" | tr ',' '\n' | while read -r NAME; do
+                    [ -n "$NAME" ] || continue
+                    RESP=$(api "$B/zones/$ZID/dns_records?type=A&name=$NAME")
+                    RID=$(echo "$RESP" | sed -n 's/.*"id":"\([0-9a-f]\{32\}\)".*/\1/p' | head -1)
+                    CUR=$(echo "$RESP" | sed -n 's/.*"content":"\([0-9.]*\)".*/\1/p' | head -1)
+
+                    # proxied:false is deliberate -- proxying would put Cloudflare back in
+                    # the traffic path, which is the thing we removed the tunnels to avoid.
+                    BODY="{\"type\":\"A\",\"name\":\"$NAME\",\"content\":\"$IP\",\"ttl\":60,\"proxied\":false}"
+
+                    if [ -z "$RID" ]; then
+                      echo "creating $NAME -> $IP"
+                      api -X POST "$B/zones/$ZID/dns_records" --data "$BODY" >/dev/null
+                    elif [ "$CUR" != "$IP" ]; then
+                      echo "updating $NAME: $CUR -> $IP"
+                      api -X PATCH "$B/zones/$ZID/dns_records/$RID" --data "$BODY" >/dev/null
+                    else
+                      echo "$NAME already $IP"
+                    fi
+                  done
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 32Mi
+                limits:
+                  cpu: 100m
+                  memory: 64Mi
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop:
+                    - ALL

@@ -133,6 +133,12 @@ seal cert-manager cloudflare-api-token \
   "$MANIFESTS/cert-manager/cloudflare-api-token.yaml" \
   --from-literal=api-token="$CF_API_TOKEN"
 
+# Same token, sealed again for the ddns namespace. SealedSecrets are namespace-scoped by
+# default, so the ciphertext is not portable between namespaces.
+seal ddns cloudflare-api-token \
+  "$MANIFESTS/ddns/cloudflare-api-token.yaml" \
+  --from-literal=api-token="$CF_API_TOKEN"
+
 
 
 
