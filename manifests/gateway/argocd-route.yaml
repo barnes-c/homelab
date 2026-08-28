@@ -4,10 +4,15 @@ metadata:
   name: argocd
   namespace: argocd
 spec:
+  # Attached to the internal Gateway, NOT main. ArgoCD holds git credentials and can deploy
+  # anything, so it is reachable only from the LAN or over the VPN: the Freebox forwards
+  # 80/443 to .201 only, and the internal Gateway lives on .202. Because the route is absent
+  # from the public Gateway, a request to the public IP carrying Host: argo.barnes.biz finds
+  # no match and is refused regardless of what DNS says. See internal-gateway.yaml.
   parentRefs:
     - group: gateway.networking.k8s.io
       kind: Gateway
-      name: main
+      name: internal
       namespace: gateway
       sectionName: https
   hostnames:

@@ -18,12 +18,28 @@ spec:
     matchLabels:
       io.cilium.gateway/owning-gateway: main
 ---
-# Everything else. Kept clear of .201 so it can never be handed out from under the gateway.
+# The internal Gateway is pinned too, for the opposite reason to the public one: the
+# Freebox must NOT forward to this address, so it has to be predictable enough to keep
+# out of the forwarding rules, and stable enough for a local DNS entry to point at.
+apiVersion: cilium.io/v2alpha1
+kind: CiliumLoadBalancerIPPool
+metadata:
+  name: internal-gateway-pool
+spec:
+  blocks:
+    - start: "192.168.1.202"
+      stop: "192.168.1.202"
+  serviceSelector:
+    matchLabels:
+      io.cilium.gateway/owning-gateway: internal
+---
+# Everything else. Kept clear of .201 and .202 so neither gateway can have its address
+# handed out from under it.
 apiVersion: cilium.io/v2alpha1
 kind: CiliumLoadBalancerIPPool
 metadata:
   name: main-pool
 spec:
   blocks:
-    - start: "192.168.1.202"
+    - start: "192.168.1.203"
       stop: "192.168.1.210"
