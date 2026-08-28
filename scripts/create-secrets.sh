@@ -139,9 +139,6 @@ seal ddns cloudflare-api-token \
   "$MANIFESTS/ddns/cloudflare-api-token.yaml" \
   --from-literal=api-token="$CF_API_TOKEN"
 
-
-
-
 seal barnes-biz smtp-credentials \
   "$MANIFESTS/barnes-biz/smtp-credentials.yaml" \
   --from-literal=SMTP_USER="$SMTP_USER" \
