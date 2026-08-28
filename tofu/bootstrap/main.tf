@@ -80,6 +80,19 @@ locals {
   argocd_values = {
     configs = { params = { "server.insecure" = true } }
     server  = { service = { type = "ClusterIP" } }
+
+    # The chart ships both of these disabled, which produced a silent, self-inflicted
+    # outage: dex opens its OIDC connectors once at startup and does not retry. It started
+    # while auth.barnes.biz was still behind Cloudflare's proxy, got a 525, and gave up.
+    # With no readiness probe the pod still reported 1/1 Ready, so the Service routed
+    # traffic to a port nothing was listening on -- ArgoCD logged "connection refused" --
+    # and with no liveness probe nothing ever restarted it. It sat wedged for 22h with
+    # RESTARTS=0. Enabling both means a wedged dex is taken out of the Service and
+    # restarted instead of quietly blackholing every login.
+    dex = {
+      livenessProbe  = { enabled = true }
+      readinessProbe = { enabled = true }
+    }
   }
 }
 
