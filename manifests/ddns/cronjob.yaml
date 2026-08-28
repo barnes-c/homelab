@@ -9,7 +9,10 @@ metadata:
   name: cloudflare-ddns
   namespace: ddns
 spec:
-  schedule: "*/10 * * * *"
+  # The line is full-stack IPv4 with a fixed address, so this is a safety net rather than
+  # a necessity -- hourly is plenty. Free does not guarantee the address across a move or
+  # a re-provision, and this self-corrects if it ever changes.
+  schedule: "17 * * * *"
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 1
   failedJobsHistoryLimit: 3
@@ -48,9 +51,11 @@ spec:
                                   -H "Content-Type: application/json" "$@"; }
                   B=https://api.cloudflare.com/client/v4
 
-                  # Cloudflare reports the caller's source address, so this is the
-                  # public IP as seen from outside NAT.
-                  IP=$(curl -sS https://cloudflare.com/cdn-cgi/trace | sed -n 's/^ip=//p')
+                  # -4 is required: without it curl prefers IPv6 where available and
+                  # returns the v6 address, which then fails the IPv4 check below and the
+                  # job never updates anything. Verified against this network, which has
+                  # working IPv6.
+                  IP=$(curl -4 -sS https://cloudflare.com/cdn-cgi/trace | sed -n 's/^ip=//p')
                   case "$IP" in
                     *.*.*.*) ;;
                     *) echo "could not determine public IPv4 (got '$IP')" >&2; exit 1 ;;
