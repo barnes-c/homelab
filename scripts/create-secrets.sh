@@ -175,18 +175,6 @@ if 'app.kubernetes.io/part-of: argocd' not in content:
     open(path, 'w').write(content)
 PYEOF
 
-# grafana-strava
-seal monitoring grafana-strava \
-  "$MANIFESTS/monitoring/grafana-strava.yaml" \
-  --from-literal=STRAVA_CLIENT_SECRET="$STRAVA_CLIENT_SECRET" \
-  --from-literal=STRAVA_REFRESH_TOKEN="$STRAVA_REFRESH_TOKEN"
-
-seal monitoring grafana-strava-2 \
-  "$MANIFESTS/monitoring/grafana-strava-2.yaml" \
-  --from-literal=STRAVA2_CLIENT_SECRET="$STRAVA2_CLIENT_SECRET" \
-  --from-literal=STRAVA2_REFRESH_TOKEN="$STRAVA2_REFRESH_TOKEN"
-
-
 echo ""
 echo "Done. Review the files, then commit and push."
 echo ""

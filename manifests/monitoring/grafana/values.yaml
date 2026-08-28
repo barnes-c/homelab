@@ -1,15 +1,10 @@
 fullnameOverride: grafana
 
-plugins:
-  - grafana-strava-datasource
-
 env:
   GF_PROVISIONING_ENABLE_ENV_EXPANSION: "true"
 
 envFromSecrets:
   - name: grafana-oidc
-  - name: grafana-strava
-  - name: grafana-strava-2
 
 resources:
   requests:
@@ -77,14 +72,6 @@ dashboardProviders:
         editable: true
         options:
           path: /var/lib/grafana/dashboards/kubernetes
-      - name: strava
-        orgId: 1
-        folder: Strava
-        type: file
-        disableDeletion: false
-        editable: true
-        options:
-          path: /var/lib/grafana/dashboards/strava
 
 dashboards:
   infrastructure:
@@ -113,21 +100,3 @@ datasources:
         type: loki
         url: http://loki.monitoring.svc.cluster.local:3100
         access: proxy
-      - name: Strava
-        uid: strava
-        type: grafana-strava-datasource
-        access: proxy
-        jsonData:
-          clientID: "115101"
-        secureJsonData:
-          clientSecret: ${STRAVA_CLIENT_SECRET}
-          refreshToken: ${STRAVA_REFRESH_TOKEN}
-      - name: Strava (196370)
-        uid: strava-2
-        type: grafana-strava-datasource
-        access: proxy
-        jsonData:
-          clientID: "196370"
-        secureJsonData:
-          clientSecret: ${STRAVA2_CLIENT_SECRET}
-          refreshToken: ${STRAVA2_REFRESH_TOKEN}
