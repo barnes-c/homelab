@@ -1,0 +1,88 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: immich
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  project: default
+  sources:
+    - repoURL: https://github.com/barnes-c/k8s
+      targetRevision: master
+      path: manifests/immich
+    - repoURL: https://immich-app.github.io/immich-charts
+      chart: immich
+      targetRevision: 0.10.3
+      helm:
+        values: |
+          immich:
+            persistence:
+              library:
+                existingClaim: immich-library
+
+          controllers:
+            main:
+              containers:
+                main:
+                  env:
+                    DB_HOSTNAME: immich-postgres
+                    DB_PORT: "5432"
+                    DB_DATABASE_NAME: immich
+                    IMMICH_CONFIG_FILE: /config/immich.json
+                  envFrom:
+                    - secretRef:
+                        name: immich-postgres-credentials
+                  resources:
+                    requests:
+                      cpu: 200m
+                      memory: 256Mi
+                    limits:
+                      cpu: 1000m
+                      memory: 2Gi
+
+          persistence:
+            immich-config:
+              type: secret
+              name: immich-config
+              advancedMounts:
+                main:
+                  main:
+                    - path: /config
+                      readOnly: true
+
+          machine-learning:
+            controllers:
+              main:
+                pod:
+                  nodeSelector:
+                    workload/ml: "true"
+                containers:
+                  main:
+                    resources:
+                      requests:
+                        cpu: 1000m
+                        memory: 4Gi
+                      limits:
+                        cpu: 4000m
+                        memory: 8Gi
+
+          valkey:
+            enabled: true
+            primary:
+              resources:
+                requests:
+                  cpu: 25m
+                  memory: 32Mi
+                limits:
+                  cpu: 200m
+                  memory: 256Mi
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: immich
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
