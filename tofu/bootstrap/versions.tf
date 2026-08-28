@@ -6,9 +6,6 @@ terraform {
       source  = "hashicorp/helm"
       version = "~> 3.2"
     }
-    # Maintained fork of gavinbunney/kubectl. Needed because it resolves resource kinds at
-    # apply time, so it can create an Application whose CRD was installed earlier in the
-    # same run -- which neither helm's extraObjects nor kubernetes_manifest can do.
     kubectl = {
       source  = "alekc/kubectl"
       version = "~> 2.4"
