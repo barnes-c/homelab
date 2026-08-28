@@ -83,6 +83,38 @@ locals {
   }
 }
 
+# Gateway API CRDs must exist BEFORE Cilium installs, which is why they live here rather
+# than in an Argo Application. Cilium reads them at two points, both one-shot:
+#
+#   1. cilium-operator checks for the required GVKs once at startup. Missing => it disables
+#      the Gateway controller entirely and only logs it.
+#   2. The chart's GatewayClass template is guarded by gatewayClass.create=auto, which fires
+#      only if .Capabilities.APIVersions.Has "gateway.networking.k8s.io/v1/GatewayClass" at
+#      install time. Missing => Helm SILENTLY omits the GatewayClass; the release still
+#      reports success.
+#
+# Installed by ArgoCD (as it was) both of those lose the race, and the symptom is a Gateway
+# stuck at PROGRAMMED=Unknown with "Waiting for controller" and no GatewayClass anywhere.
+#
+# Experimental channel, not standard: Cilium watches TLSRoute (v1alpha2), which standard
+# does not ship. Without it the operator logs "no kind is registered for the type
+# v1alpha2.TLSRouteList" continuously. Pinned to the same bundle version that was vendored
+# before (v1.4.1) -- the channel is the fix here, a version bump is a separate change.
+data "kubectl_file_documents" "gateway_api_crds" {
+  content = file("${path.module}/gateway-api/experimental-install.yaml")
+}
+
+resource "kubectl_manifest" "gateway_api_crds" {
+  for_each = data.kubectl_file_documents.gateway_api_crds.manifests
+
+  yaml_body = each.value
+
+  # These CRDs exceed the 256KB annotation limit that client-side apply relies on.
+  server_side_apply = true
+  force_conflicts   = true
+  wait              = true
+}
+
 # Cilium is owned here and nowhere else. It is deliberately NOT an Argo Application:
 # Argo runs on the network Cilium provides, so a selfHeal loop on the CNI can cut Argo's
 # own connectivity and leave nothing able to repair it.
@@ -102,6 +134,8 @@ resource "helm_release" "cilium" {
   timeout        = 600
 
   values = [yamlencode(merge(local.cilium_values, var.cilium_extra_values))]
+
+  depends_on = [kubectl_manifest.gateway_api_crds]
 }
 
 resource "helm_release" "argocd" {

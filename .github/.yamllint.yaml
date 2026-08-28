@@ -2,7 +2,7 @@
 extends: default
 
 ignore: |
-  manifests/gateway-api-crds/standard-install.yaml
+  tofu/bootstrap/gateway-api/experimental-install.yaml
 
 rules:
   line-length:
