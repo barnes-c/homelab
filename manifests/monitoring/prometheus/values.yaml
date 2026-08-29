@@ -4,7 +4,9 @@ server:
   fullnameOverride: prometheus
   retention: 7d
   persistentVolume:
-    enabled: false
+    enabled: true
+    storageClass: longhorn
+    size: 10Gi
   resources:
     requests:
       cpu: 200m

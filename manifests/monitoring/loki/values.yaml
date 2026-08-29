@@ -28,13 +28,9 @@ singleBinary:
       cpu: 500m
       memory: 512Mi
   persistence:
-    enabled: false
-  extraVolumes:
-    - name: loki-data
-      emptyDir: {}
-  extraVolumeMounts:
-    - name: loki-data
-      mountPath: /var/loki
+    enabled: true
+    storageClass: longhorn
+    size: 10Gi
 
 backend:
   replicas: 0
