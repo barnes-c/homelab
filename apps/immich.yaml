@@ -8,7 +8,7 @@ metadata:
 spec:
   project: default
   sources:
-    - repoURL: https://github.com/barnes-c/k8s
+    - repoURL: https://github.com/barnes-c/homelab
       targetRevision: master
       path: manifests/immich
     - repoURL: https://immich-app.github.io/immich-charts

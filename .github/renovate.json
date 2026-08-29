@@ -86,7 +86,7 @@
                 "argocd"
             ],
             "matchDepNames": [
-                "https://github.com/barnes-c/k8s"
+                "https://github.com/barnes-c/homelab"
             ],
             "enabled": false
         },
