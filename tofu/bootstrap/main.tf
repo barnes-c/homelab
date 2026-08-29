@@ -101,7 +101,7 @@ resource "helm_release" "cilium" {
   chart      = "cilium"
   # Literal, not a variable: Renovate's terraform manager only detects chart versions
   # written inline on the helm_release. `version = var.x` silently stops updates.
-  version   = "1.19.4"
+  version   = "1.20.1"
   namespace = "kube-system"
 
   atomic         = true
