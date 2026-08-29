@@ -1,0 +1,12 @@
+---
+# Data for KSV-0125 (kubernetes-use-trusted-registry). Trivy's built-in defaults only
+# trust Azure/ECR/GCR, which would fail every image in this repo. Overriding the list
+# keeps the check active for genuinely unknown registries instead of ignoring it
+# wholesale.
+#
+# The check reads the first "/"-separated segment as the registry, so images must be
+# fully qualified (docker.io/curlimages/curl, not curlimages/curl) to match.
+ksv0125:
+  trusted_registries:
+    - ghcr.io
+    - docker.io

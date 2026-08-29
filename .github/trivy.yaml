@@ -8,3 +8,7 @@ misconfiguration:
     - kubernetes
     - helm
     - terraform
+
+rego:
+  data:
+    - .github/trivy-data
