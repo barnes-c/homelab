@@ -29,7 +29,7 @@ spec:
               type: RuntimeDefault
           containers:
             - name: ddns
-              image: docker.io/curlimages/curl:8.19.0
+              image: docker.io/curlimages/curl:8.19.0@sha256:c03110c736db81bbe1be0296f1f1608c81b954b01626bdfb0a8f84e5bd00ff3c
               env:
                 - name: CF_API_TOKEN
                   valueFrom:
