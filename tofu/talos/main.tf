@@ -92,27 +92,39 @@ locals {
     }
   }
 
-  # allowSchedulingOnControlPlanes is deprecated (k8s/node.go:188); scheduling is now
-  # governed by the taints in KubeNodeConfig. A strategic-merge patch cannot remove a map
-  # key and JSON6902 is rejected on multi-document configs, so the document is deleted and
-  # re-added without the control-plane NoSchedule taint. Labels are restated deliberately,
-  # since the delete drops them too.
-  schedulable_patches = [
-    yamlencode({
+  # Control planes only. allowSchedulingOnControlPlanes is deprecated (k8s/node.go:188);
+  # scheduling is now governed by the taints in KubeNodeConfig. A strategic-merge patch
+  # cannot remove a map key and JSON6902 is rejected on multi-document configs, so the
+  # document is deleted and re-added without the control-plane NoSchedule taint. The
+  # control-plane labels are restated deliberately, since the delete drops them too.
+  schedulable_patches = {
+    for k, v in local.control_planes : k => [
+      yamlencode({
+        apiVersion = "v1alpha1"
+        kind       = "KubeNodeConfig"
+        "$patch"   = "delete"
+      }),
+      yamlencode({
+        apiVersion = "v1alpha1"
+        kind       = "KubeNodeConfig"
+        nodeIP     = {}
+        labels = merge({
+          "node-role.kubernetes.io/control-plane"                   = ""
+          "node.kubernetes.io/exclude-from-external-load-balancers" = ""
+        }, v.node_labels)
+      }),
+    ]
+  }
+
+  # Workers keep the generated KubeNodeConfig (it carries no control-plane taint), so
+  # labels merge in rather than needing the delete/re-add dance.
+  worker_label_patch = {
+    for k, v in local.workers : k => yamlencode({
       apiVersion = "v1alpha1"
       kind       = "KubeNodeConfig"
-      "$patch"   = "delete"
-    }),
-    yamlencode({
-      apiVersion = "v1alpha1"
-      kind       = "KubeNodeConfig"
-      nodeIP     = {}
-      labels = {
-        "node-role.kubernetes.io/control-plane"                   = ""
-        "node.kubernetes.io/exclude-from-external-load-balancers" = ""
-      }
-    }),
-  ]
+      labels     = v.node_labels
+    }) if length(v.node_labels) > 0
+  }
 
   # Hostname moved out of v1alpha1 in Talos v1.14. Config generation now emits a
   # HostnameConfig document with `auto: stable`, and setting machine.network.hostname
@@ -209,11 +221,15 @@ locals {
         yamlencode(local.resolver_patch),
         yamlencode(local.ethernet_patch),
         yamlencode(local.governor_patch),
-        yamlencode(local.disable_flannel_patch),
-        yamlencode(local.disable_kubeproxy_patch),
       ],
+      # KubeProxyConfig and KubeFlannelCNIConfig are rejected on workers -- Talos allows
+      # them only on control planes ("the following document kinds are only allowed on
+      # control plane machines"). That is correct: they decide which manifests the control
+      # plane renders cluster-wide, so a worker has no business carrying them.
       v.role == "controlplane" ? concat(
         [
+          yamlencode(local.disable_flannel_patch),
+          yamlencode(local.disable_kubeproxy_patch),
           yamlencode(local.vip_patch),
           yamlencode({
             cluster = {
@@ -221,8 +237,9 @@ locals {
             }
           }),
         ],
-        local.schedulable_patches,
+        local.schedulable_patches[k],
       ) : [],
+      lookup(local.worker_label_patch, k, null) != null ? [local.worker_label_patch[k]] : [],
       lookup(local.ephemeral_patch, k, null) != null ? [yamlencode(local.ephemeral_patch[k])] : [],
       lookup(local.longhorn_patch, k, null) != null ? [yamlencode(local.longhorn_patch[k])] : [],
     ))
@@ -287,13 +304,13 @@ resource "talos_cluster_kubeconfig" "cluster" {
 
 # Without a CNI the API server never reports ready, so this is the real gate on
 # tofu/bootstrap being able to run.
-data "talos_cluster_health" "cluster" {
-  client_configuration = talos_machine_secrets.cluster.client_configuration
-  control_plane_nodes  = local.control_plane_ips
-  worker_nodes         = [for node in local.workers : node.ip]
-  endpoints            = local.control_plane_ips
-
-  skip_kubernetes_checks = true
-
-  depends_on = [talos_machine_bootstrap.cluster]
-}
+# Deliberately no talos_cluster_health data source here.
+#
+# It was declared as a gate on the cluster being up, but nothing consumed its output, so
+# it only ever blocked. Worse, once every input is known (which it is as soon as the
+# secrets exist in state) OpenTofu reads it during PLAN -- so adding a node that has not
+# been provisioned yet makes `tofu plan` hang waiting for that node to report healthy,
+# before you have had a chance to apply the config that would make it healthy.
+#
+# Check health explicitly instead:
+#   talosctl -n <control-plane-ip> health

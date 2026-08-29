@@ -62,6 +62,9 @@ variable "nodes" {
     # Backing store for Longhorn, mounted at /var/mnt/longhorn.
     longhorn_selector = optional(string)
     longhorn_min_size = optional(string)
+
+    # Extra Kubernetes node labels, applied via KubeNodeConfig.
+    node_labels = optional(map(string), {})
   }))
 
   default = {
@@ -81,19 +84,34 @@ variable "nodes" {
       ephemeral_max_size = "300GiB"
       longhorn_selector  = "disk.dev_path == '/dev/md127'"
       longhorn_min_size  = "500GiB"
+
+      # Paired with createDefaultDiskLabeledNodes in apps/longhorn.yaml: only nodes
+      # carrying this label get a Longhorn disk. Without it Longhorn would create one on
+      # every node at defaultDataPath, including workers whose only storage is an SD card.
+      node_labels = {
+        "node.longhorn.io/create-default-disk" = "true"
+      }
     }
 
-    # Not yet built. Uncomment once the board is flashed and `make schematics` has
-    # written a real installer image ref.
-    # "rpi4b-wk-01" = {
-    #   ip            = "192.168.1.12"
-    #   role          = "worker"
-    #   install_disk  = "/dev/mmcblk0"
-    #   install_image = "factory.talos.dev/metal-installer/CHANGEME:v1.14.0-rc.2"
-    #   ephemeral_selector = "disk.transport == 'usb'"
-    #   longhorn_selector  = "disk.transport == 'usb'"
-    #   longhorn_min_size  = "200GiB"
-    # }
+    # Compute-only worker: runs pods, contributes no Longhorn storage.
+    #
+    # The 500GB USB SSD this node is supposed to have does not enumerate -- the drive
+    # powers up but the kernel logs zero USB lines, so nothing reaches the bus (suspected
+    # charge-only cable). Until that is fixed there is only the 32GB SD card.
+    #
+    # No ephemeral_selector: EPHEMERAL falls back to the install disk, which is fine for a
+    # worker since it holds no etcd. No longhorn_selector, so no UserVolumeConfig is
+    # created -- and the node is NOT labelled for Longhorn (see node_labels on the Pi 5),
+    # which stops Longhorn creating a default disk on the SD card and wearing it out.
+    #
+    # To bring the SSD into use later: add ephemeral_selector/longhorn_selector matching
+    # disk.transport == 'usb' plus the create-default-disk label, and re-apply.
+    "rpi4b-wk-01" = {
+      ip            = "192.168.1.12"
+      role          = "worker"
+      install_disk  = "/dev/mmcblk0"
+      install_image = "factory.talos.dev/metal-installer/b3a0359a76da43ab16121ec916e421be6af9ed098dc5740d88683cf93eef2133:v1.14.0-rc.2"
+    }
 
     # "cm5-wk-01" = {
     #   ip            = "192.168.1.13"
