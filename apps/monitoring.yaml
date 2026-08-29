@@ -66,8 +66,6 @@ spec:
     repoURL: https://github.com/barnes-c/k8s
     targetRevision: master
     path: manifests/monitoring
-    directory:
-      recurse: false
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring
