@@ -10,7 +10,7 @@ spec:
   goTemplateOptions: ["missingkey=error"]
   generators:
     - git:
-        repoURL: https://github.com/barnes-c/k8s
+        repoURL: https://github.com/barnes-c/homelab
         revision: master
         files:
           - path: manifests/monitoring/*/config.json
@@ -27,7 +27,7 @@ spec:
           helm:
             valueFiles:
               - $values/manifests/monitoring/{{ .name }}/values.yaml
-        - repoURL: https://github.com/barnes-c/k8s
+        - repoURL: https://github.com/barnes-c/homelab
           targetRevision: master
           ref: values
       destination:
@@ -63,7 +63,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/barnes-c/k8s
+    repoURL: https://github.com/barnes-c/homelab
     targetRevision: master
     path: manifests/monitoring
   destination:

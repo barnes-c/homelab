@@ -25,7 +25,7 @@ variable "argocd_extra_values" {
 variable "apps_repo" {
   description = "Git repository holding the ArgoCD Application manifests"
   type        = string
-  default     = "https://github.com/barnes-c/k8s"
+  default     = "https://github.com/barnes-c/homelab"
 }
 
 variable "apps_revision" {

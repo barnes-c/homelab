@@ -10,7 +10,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/barnes-c/k8s
+    repoURL: https://github.com/barnes-c/homelab
     targetRevision: master
     path: manifests/cert-manager
   destination:

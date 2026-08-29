@@ -1,4 +1,4 @@
-# k8s
+# homelab
 
 Talos Linux cluster on Raspberry Pi hardware, and everything running on it.
 
