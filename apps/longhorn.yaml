@@ -15,9 +15,17 @@ spec:
     helm:
       values: |
         defaultSettings:
+          # Matches the UserVolumeConfig named "longhorn" in tofu/talos; Talos mounts
+          # user volumes at /var/mnt/<name>.
           defaultDataPath: /var/mnt/longhorn
           defaultReplicaCount: "1"
           replicaAutoBalance: disabled
+          # Only nodes labelled node.longhorn.io/create-default-disk=true get a disk.
+          # Without this Longhorn creates one at defaultDataPath on EVERY node, and on a
+          # worker whose only storage is an SD card it would silently create that
+          # directory and start writing replicas to it. Labels are set per node in
+          # tofu/talos/variables.tf (node_labels).
+          createDefaultDiskLabeledNodes: "true"
         preUpgradeChecker:
           jobEnabled: false
         longhornManager:
