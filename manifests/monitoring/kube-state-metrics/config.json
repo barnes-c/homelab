@@ -2,5 +2,5 @@
   "name": "kube-state-metrics",
   "repoURL": "https://prometheus-community.github.io/helm-charts",
   "chart": "kube-state-metrics",
-  "chartVersion": "7.1.0"
+  "chartVersion": "7.8.1"
 }
