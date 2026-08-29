@@ -327,3 +327,26 @@ stringData:
         state: present
         attrs:
           flow_recovery: !KeyOf flow
+
+      # The brand binding above only makes the flow reachable by token (ak
+      # create_recovery_key). The "Forgot password?" link on the login page comes from the
+      # identification stage instead, which ships with recovery_flow unset -- so without
+      # this a user who forgot their password has nothing to click.
+      # !Find rather than !KeyOf: the identification serializer stringifies recovery_flow
+      # before the tag is resolved, and !KeyOf fails there ("failed to find entry with id
+      # of flow and a model instance"). !Find is safe because the flow above is created
+      # earlier in this same import, so the lookup succeeds.
+      - identifiers:
+          name: default-authentication-identification
+        model: authentik_stages_identification.identificationstage
+        state: present
+        attrs:
+          # user_fields has to be restated even though it is unchanged: the serializer
+          # validates the whole object, so omitting it reads as an empty selection and
+          # fails with "When no user fields are selected, at least one source must be
+          # selected". These are the stage's current values.
+          user_fields:
+            - email
+            - username
+          case_insensitive_matching: true
+          recovery_flow: !Find [authentik_flows.flow, [slug, default-recovery-flow]]
