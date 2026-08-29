@@ -70,6 +70,18 @@
             ]
         },
         {
+            "description": "authentik rejects migrations that skip a release, so it must be upgraded one minor at a time and never grouped with the other argocd apps.",
+            "matchManagers": [
+                "argocd"
+            ],
+            "matchDepNames": [
+                "authentik"
+            ],
+            "groupName": "authentik",
+            "separateMultipleMinor": true,
+            "automerge": false
+        },
+        {
             "matchManagers": [
                 "argocd"
             ],
