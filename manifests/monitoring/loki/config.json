@@ -2,5 +2,5 @@
   "name": "loki",
   "repoURL": "https://grafana.github.io/helm-charts",
   "chart": "loki",
-  "chartVersion": "6.53.0"
+  "chartVersion": "6.55.0"
 }
