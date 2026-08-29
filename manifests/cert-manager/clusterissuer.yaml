@@ -6,6 +6,7 @@ spec:
   acme:
     server: https://acme-v02.api.letsencrypt.org/directory
     email: admin@barnes.biz
+    profile: shortlived
     privateKeySecretRef:
       name: letsencrypt-account-key
     solvers:
