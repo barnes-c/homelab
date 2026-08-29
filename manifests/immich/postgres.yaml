@@ -52,7 +52,10 @@ spec:
               memory: 256Mi
             limits:
               cpu: 500m
-              memory: 512Mi
+              # 512Mi was not enough after the immich 0.12 bump: postgres was OOMKilled
+              # in a loop, which took immich-server down with EHOSTUNREACH as the
+              # endpoint kept disappearing.
+              memory: 1Gi
           ports:
             - containerPort: 5432
           volumeMounts:
