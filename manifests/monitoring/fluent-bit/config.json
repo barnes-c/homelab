@@ -2,5 +2,5 @@
   "name": "fluent-bit",
   "repoURL": "https://fluent.github.io/helm-charts",
   "chart": "fluent-bit",
-  "chartVersion": "0.55.0"
+  "chartVersion": "0.58.1"
 }
