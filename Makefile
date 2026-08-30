@@ -1,11 +1,5 @@
-# Talos image builds.
-#
-#   Pi 4B / CM5  -> stock Image Factory schematics
-#   Pi 5         -> local build, because it carries one commit that is not upstream:
-#                   cb393a0d7 "don't regenerate k8s certs on NTP spike status changes".
-#                   The macb kernel work and the Pi 5 DTB/SATA msi-parent fix are both
-#                   upstream as of v1.14.0-rc.2, so there is no custom kernel or overlay
-#                   any more -- just imager + installer-base from the talos branch.
+# Talos image builds. Pi 4B / CM5 use Image Factory schematics; the Pi 5 needs a local
+# build for one not-yet-upstream commit. See #47.
 #
 # Requires GNU Make 4+ (`gmake` on macOS) and the docker CLI with buildx, not podman's alias.
 

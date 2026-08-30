@@ -76,8 +76,6 @@ locals {
   }
 }
 
-# Gateway API CRDs must exist BEFORE Cilium installs
-# Experimental channel here because standard does not have TLSRoute (v1alpha2)
 data "kubectl_file_documents" "gateway_api_crds" {
   content = file("${path.module}/gateway-api/experimental-install.yaml")
 }
@@ -99,10 +97,8 @@ resource "helm_release" "cilium" {
   name       = "cilium"
   repository = "https://helm.cilium.io/"
   chart      = "cilium"
-  # Literal, not a variable: Renovate's terraform manager only detects chart versions
-  # written inline on the helm_release. `version = var.x` silently stops updates.
-  version   = "1.20.1"
-  namespace = "kube-system"
+  version    = "1.20.1"
+  namespace  = "kube-system"
 
   atomic         = true
   take_ownership = true

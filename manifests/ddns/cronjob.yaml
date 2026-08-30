@@ -9,9 +9,6 @@ metadata:
   name: cloudflare-ddns
   namespace: ddns
 spec:
-  # The line is full-stack IPv4 with a fixed address, so this is a safety net rather than
-  # a necessity -- hourly is plenty. Free does not guarantee the address across a move or
-  # a re-provision, and this self-corrects if it ever changes.
   schedule: "17 * * * *"
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 1
@@ -38,8 +35,6 @@ spec:
                       key: api-token
                 - name: ZONE
                   value: barnes.biz
-                # Wildcard cert covers *.barnes.biz, so a single apex A record plus a
-                # wildcard record is enough for every hostname the gateway serves.
                 - name: RECORDS
                   value: "barnes.biz,*.barnes.biz"
               command:
@@ -51,10 +46,6 @@ spec:
                                   -H "Content-Type: application/json" "$@"; }
                   B=https://api.cloudflare.com/client/v4
 
-                  # -4 is required: without it curl prefers IPv6 where available and
-                  # returns the v6 address, which then fails the IPv4 check below and the
-                  # job never updates anything. Verified against this network, which has
-                  # working IPv6.
                   IP=$(curl -4 -sS https://cloudflare.com/cdn-cgi/trace | sed -n 's/^ip=//p')
                   case "$IP" in
                     *.*.*.*) ;;

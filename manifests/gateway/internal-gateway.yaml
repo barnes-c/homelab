@@ -1,16 +1,4 @@
-# Internal-only Gateway for admin surfaces that should not be reachable from the internet.
-#
-# Enforcement is topological, not policy-based: this Gateway gets its own LoadBalancer IP
-# (192.168.1.202) and the Freebox forwards 80/443 only to .201. Nothing outside the LAN can
-# reach .202 at all. Routes attached here are therefore absent from the public Gateway, so
-# even a request to the public IP carrying Host: argo.barnes.biz finds no matching route.
-#
-# Source-IP filtering was the obvious alternative and does not work here: the gateway
-# Service runs externalTrafficPolicy=Cluster, so Cilium SNATs the client address and any
-# CIDR rule would match a node IP rather than the real client. loadBalancerSourceRanges is
-# also Service-wide, so it would restrict auth/immich/etc. along with argo.
-#
-# Reuses the same barnes-biz-tls wildcard secret -- same namespace, so no ReferenceGrant.
+# LAN-only Gateway (.202); the Freebox forwards 80/443 only to .201. See #48.
 apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
 metadata:
