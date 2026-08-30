@@ -80,3 +80,14 @@ Anything that can be *closed* is an issue, not a comment. "Re-enable once a node
 in a YAML comment is invisible: it never appears in `gh issue list` and nothing can close it.
 
 At the start of a task, check `gh issue list` and the project board for current state.
+
+## Working in issues
+
+Track progress in the issue itself, not only in commits. Comment as the work proceeds, so the
+current state is visible without reading the diff.
+
+When something turns out to be wrong, **add a comment saying what changed and why — do not
+edit the earlier comment or rewrite the body to match**. A superseded assumption is part of
+the record: erasing it means the next person re-derives the same dead end, and hides that the
+conclusion moved at all. The body may carry current state (a checklist, the agreed approach);
+the reasoning trail lives in comments and is append-only.
