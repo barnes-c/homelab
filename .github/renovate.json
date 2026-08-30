@@ -9,6 +9,9 @@
     "labels": [
         "dependencies"
     ],
+    "dependencyDashboardLabels": [
+        "dependencies"
+    ],
     "pinDigests": true,
     "hostRules": [
         {

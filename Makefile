@@ -11,12 +11,8 @@ TALOS_VERSION  ?= v1.14.0-rc.2
 TALOS_SRC      ?= $(HOME)/Code/siderolabs/talos
 TALOS_BRANCH   ?= fix/no-cert-regen-on-ntp-spike-rc2
 REGISTRY       ?= 192.168.1.18:5005
-# v0.2.1 is the first release containing 3efdf1a, which bumps raspberrypi_kernel_version to
-# stable_20260724 and so rebuilds pcie-32bit-dma-pi5.dtbo with msi-parent = <&pciex1>.
-# That is the SATA HAT fix; v0.2.0 and earlier drop the MSI doorbell and every command
-# times out. Upstream is equivalent to the old local dtb-20260724-min overlay -- same patch
-# set (0007 dropped, 0008 rebased, 0011-0014 absent) -- but that has not been A/B tested on
-# hardware yet. If SATA misbehaves, fall back to 192.168.1.18:5005/sbc-raspberrypi:dtb-20260724-min.
+# v0.2.1 is the first release carrying the SATA HAT fix; earlier tags time out on every
+# command. Not yet A/B tested against the old local overlay -- see #51 for the fallback.
 OVERLAY_IMAGE  ?= ghcr.io/siderolabs/sbc-raspberrypi:v0.2.1
 
 # System extensions. The worker schematics name these and let Image Factory resolve the

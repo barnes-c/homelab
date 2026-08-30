@@ -34,7 +34,7 @@ spec:
               port: 587
               use_tls: true
               use_ssl: false
-              # TODO switch to auth@barnes.biz
+              # Should send from the role address auth@barnes.biz. See #50.
               from: "Auth for barnes.biz <christopher@barnes.biz>"
               username: ""
               password: ""
