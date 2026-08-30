@@ -18,8 +18,6 @@ spec:
       securityContext:
         seccompProfile:
           type: RuntimeDefault
-        # The image's entrypoint normally chowns PGDATA as root before dropping to
-        # postgres; running as non-root skips that, so fsGroup has to grant access.
         fsGroup: 999
       containers:
         - name: postgres
@@ -52,9 +50,6 @@ spec:
               memory: 256Mi
             limits:
               cpu: 500m
-              # 512Mi was not enough after the immich 0.12 bump: postgres was OOMKilled
-              # in a loop, which took immich-server down with EHOSTUNREACH as the
-              # endpoint kept disappearing.
               memory: 1Gi
           ports:
             - containerPort: 5432

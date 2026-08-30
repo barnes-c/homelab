@@ -32,9 +32,9 @@ extension image refs by tag, unlike a schematic.
 
 Two artifacts, not interchangeable:
 
-| Artifact | Use |
-|---|---|
-| `images/talos-rpi5b.raw.xz` | bootable SD image, initial flash only |
+|              Artifact               |                          Use                          |
+| ----------------------------------- | ----------------------------------------------------- |
+| `images/talos-rpi5b.raw.xz`         | bootable SD image, initial flash only                 |
 | `$(REGISTRY)/talos/installer:<tag>` | `machine.install.image`, and every `talosctl upgrade` |
 
 Gotchas:
