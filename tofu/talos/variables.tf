@@ -93,19 +93,9 @@ variable "nodes" {
       }
     }
 
-    # Compute-only worker: runs pods, contributes no Longhorn storage.
-    #
-    # The 500GB USB SSD this node is supposed to have does not enumerate -- the drive
-    # powers up but the kernel logs zero USB lines, so nothing reaches the bus (suspected
-    # charge-only cable). Until that is fixed there is only the 32GB SD card.
-    #
-    # No ephemeral_selector: EPHEMERAL falls back to the install disk, which is fine for a
-    # worker since it holds no etcd. No longhorn_selector, so no UserVolumeConfig is
-    # created -- and the node is NOT labelled for Longhorn (see node_labels on the Pi 5),
-    # which stops Longhorn creating a default disk on the SD card and wearing it out.
-    #
-    # To bring the SSD into use later: add ephemeral_selector/longhorn_selector matching
-    # disk.transport == 'usb' plus the create-default-disk label, and re-apply.
+    # Compute-only worker: its USB SSD does not enumerate, so it has only the SD card and
+    # is deliberately unlabelled for Longhorn, which would otherwise wear the card out.
+    # See #52.
     "rpi4b-wk-01" = {
       ip            = "192.168.1.12"
       role          = "worker"

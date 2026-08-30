@@ -190,7 +190,8 @@ locals {
     }
   }
 
-  # Workaround for TX checksum offload stalls on the RP1 MAC.
+  # Workaround for TX checksum offload stalls on the RP1 MAC. May be redundant since the
+  # macb fixes landed in v1.14.0-rc.2 -- see #53.
   ethernet_patch = {
     apiVersion = "v1alpha1"
     kind       = "EthernetConfig"
