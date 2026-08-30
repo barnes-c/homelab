@@ -173,9 +173,9 @@ manifests/            raw manifests referenced by those Applications
   ```sh
   tofu -chdir=tofu/talos plan -out=/tmp/p.bin
   tofu -chdir=tofu/talos show -json /tmp/p.bin \
-    | jq -r '.planned_values.root_module.resources[]
-             | select(.type=="talos_machine_configuration_apply")
-             | .values.config_patches | to_entries[] | "\(.key)\t\(.value|@base64)"'
+    | jq -r '.planned_values.root_module.resources[]     |              |                    |            |
+    | select(.type=="talos_machine_configuration_apply") |              |                    |            |
+    | .values.config_patches                             | to_entries[] | "\(.key)\t\(.value | @base64)"' |
   # write each entry to its own file -- concatenating them silently drops all but the
   # first document -- then: talosctl machineconfig patch <cfg> --patch @f && talosctl validate
   ```
