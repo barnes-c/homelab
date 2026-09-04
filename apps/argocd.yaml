@@ -15,7 +15,7 @@ spec:
       path: manifests/argocd
     - repoURL: https://argoproj.github.io/argo-helm
       chart: argo-cd
-      targetRevision: 10.4.3
+      targetRevision: 10.8.0
       helm:
         values: |
           configs:
