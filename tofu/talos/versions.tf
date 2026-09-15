@@ -9,7 +9,7 @@ terraform {
       # 0.11.0 bundles machinery v1.13.0 and rejects them with "not registered".
       # 0.12.0-beta.0 bundles v1.14.0-rc.2. Pinned exactly because prerelease versions are
       # not selected by range constraints.
-      version = "0.12.0-beta.0"
+      version = "0.12.0-rc.0"
     }
   }
 }
