@@ -62,7 +62,7 @@ subjects:
 # Upstream binds a ClusterRole granting get/watch/list on secrets in every namespace. The
 # webhook only ever does a single Get of the Porkbun credential in cert-manager's cluster
 # resource namespace, so this is narrowed to a Role over that one secret. Re-check on
-# every image bump. See #70
+# every image bump. See barnes-c/homelab-issues#26
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:

@@ -1,5 +1,5 @@
 # Talos image builds. Pi 4B / CM5 use Image Factory schematics; the Pi 5 needs a local
-# build for one not-yet-upstream commit. See #47.
+# build for one not-yet-upstream commit. See barnes-c/homelab-issues#15.
 #
 # Requires GNU Make 4+ (`gmake` on macOS) and the docker CLI with buildx, not podman's alias.
 
@@ -12,7 +12,7 @@ TALOS_SRC      ?= $(HOME)/Code/siderolabs/talos
 TALOS_BRANCH   ?= fix/no-cert-regen-on-ntp-spike-rc2
 REGISTRY       ?= 192.168.1.18:5005
 # v0.2.1 is the first release carrying the SATA HAT fix; earlier tags time out on every
-# command. Not yet A/B tested against the old local overlay -- see #51 for the fallback.
+# command. Not yet A/B tested against the old local overlay -- see barnes-c/homelab-issues#18 for the fallback.
 OVERLAY_IMAGE  ?= ghcr.io/siderolabs/sbc-raspberrypi:v0.2.1
 
 # System extensions. The worker schematics name these and let Image Factory resolve the

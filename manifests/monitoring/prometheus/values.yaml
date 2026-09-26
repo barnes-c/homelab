@@ -3,7 +3,7 @@ fullnameOverride: prometheus
 server:
   fullnameOverride: prometheus
   retention: 15d
-  # Under persistentVolume.size so blocks evict before the disk fills; base-2 units. See #59.
+  # Under persistentVolume.size so blocks evict before the disk fills; base-2 units. See barnes-c/homelab-issues#25.
   retentionSize: 8GB
   persistentVolume:
     enabled: true

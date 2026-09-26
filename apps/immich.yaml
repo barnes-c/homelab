@@ -51,7 +51,7 @@ spec:
                     - path: /config
                       readOnly: true
 
-          # No node is labelled workload/ml=true; enabling this leaves pods Pending. See #46.
+          # No node is labelled workload/ml=true; enabling this leaves pods Pending. See barnes-c/homelab-issues#14.
           machine-learning:
             enabled: false
 

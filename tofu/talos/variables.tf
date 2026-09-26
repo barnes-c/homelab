@@ -95,7 +95,7 @@ variable "nodes" {
 
     # Compute-only worker: its USB SSD does not enumerate, so it has only the SD card and
     # is deliberately unlabelled for Longhorn, which would otherwise wear the card out.
-    # See #52.
+    # See barnes-c/homelab-issues#19.
     "rpi4b-wk-01" = {
       ip            = "192.168.1.12"
       role          = "worker"

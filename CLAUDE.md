@@ -25,7 +25,7 @@ gmake rpi5b-image rpi5b-installer   # Pi 5, built locally
 image is then downloaded per `TALOS_VERSION`. The factory resolves extension versions itself.
 
 **Pi 5** — a local imager build, because Image Factory can only layer onto a published
-release (see #47). It builds `installer-base` + `imager` from `TALOS_SRC`
+release (see barnes-c/homelab-issues#15). It builds `installer-base` + `imager` from `TALOS_SRC`
 (`~/Code/siderolabs/talos`, branch `fix/no-cert-regen-on-ntp-spike-rc2`) and pushes them to
 the local registry at `REGISTRY` (`192.168.1.18:5005`) under `talos/`. A profile has to pin
 extension image refs by tag, unlike a schematic.
@@ -80,9 +80,12 @@ A comment should state the fact, not just point — a bare `See #N` forces a rou
 find out whether you cared.
 
 Anything that can be *closed* is an issue, not a comment. "Re-enable once a node is labelled"
-in a YAML comment is invisible: it never appears in `gh issue list` and nothing can close it.
+in a YAML comment is invisible: it never appears in the issue tracker and nothing can close it.
 
-At the start of a task, check `gh issue list` and the project board for current state.
+Issues live in the **private** repo `barnes-c/homelab-issues`, not here — this repo is public,
+and its issues were moved on 2026-09-26 so they (and their references to upstream issues) stay
+private. At the start of a task, check `gh issue list -R barnes-c/homelab-issues` and the
+project board for current state.
 
 ## Working in issues
 

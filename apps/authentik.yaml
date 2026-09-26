@@ -34,7 +34,7 @@ spec:
               port: 587
               use_tls: true
               use_ssl: false
-              # Should send from the role address auth@barnes.biz. See #50.
+              # Should send from the role address auth@barnes.biz. See barnes-c/homelab-issues#17.
               from: "Auth for barnes.biz <christopher@barnes.biz>"
               username: ""
               password: ""
