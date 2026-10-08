@@ -37,8 +37,8 @@
     "customManagers": [
         {
             "customType": "regex",
-            "fileMatch": [
-                "manifests/monitoring/.*/config\\.json$"
+            "managerFilePatterns": [
+                "/manifests/monitoring/.*/config\\.json$/"
             ],
             "matchStrings": [
                 "\"repoURL\":\\s*\"(?<registryUrl>[^\"]+)\",\\s*\"chart\":\\s*\"(?<depName>[^\"]+)\",\\s*\"chartVersion\":\\s*\"(?<currentValue>[^\"]+)\""
