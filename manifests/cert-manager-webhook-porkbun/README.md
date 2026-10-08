@@ -14,6 +14,8 @@ chart, so the RBAC and pod hardening below can diverge from upstream.
 | ------ | ------ |
 | `secret-reader` is a namespaced `Role` over `resourceNames: [porkbun-api-key]` | Upstream binds a `ClusterRole` granting `get/watch/list` on secrets in *every* namespace. The solver does one `Get` of one secret. See barnes-c/homelab-issues#26 |
 | `groupName: acme.barnes.biz` | Upstream defaults to the author's domain. The value is arbitrary but must match in three places: `GROUP_NAME`, the `APIService` name, and the ClusterIssuer's `webhook.groupName` |
+| `domain-solver` ClusterRole over `resources: [porkbun]` | Upstream grants `*` in the group. The resource is the ClusterIssuer's `solverName` |
+| Listens on 8443 (`--secure-port`) | Upstream binds 443, a privileged port. The Service still exposes 443 |
 | Image pinned by digest | Chart default is `:latest` |
 | `runAsNonRoot`, `readOnlyRootFilesystem`, dropped capabilities, resource limits | Chart ships empty `securityContext` and `resources`. See barnes-c/homelab-issues#12, barnes-c/homelab-issues#13 |
 

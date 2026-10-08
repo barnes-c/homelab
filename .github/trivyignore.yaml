@@ -1,0 +1,7 @@
+misconfigurations:
+  - id: KSV-0113
+    paths:
+      - manifests/cert-manager-webhook-porkbun/rbac.yaml
+    statement: >-
+      secret-reader is get on a single secret via resourceNames; the check ignores
+      resourceNames. See barnes-c/homelab-issues#26

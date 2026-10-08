@@ -12,3 +12,5 @@ misconfiguration:
 rego:
   data:
     - .github/trivy-data
+
+ignorefile: .github/trivyignore.yaml
