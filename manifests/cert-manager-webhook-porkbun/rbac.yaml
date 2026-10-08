@@ -33,7 +33,8 @@ subjects:
     name: cert-manager-webhook-porkbun
     namespace: cert-manager
 ---
-# cert-manager invokes the solver by POSTing a ChallengePayload into this API group.
+# cert-manager invokes the solver by POSTing a ChallengePayload into this API group. The
+# resource is the ClusterIssuer's solverName; upstream grants "*".
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
@@ -42,7 +43,7 @@ rules:
   - apiGroups:
       - acme.barnes.biz
     resources:
-      - "*"
+      - porkbun
     verbs:
       - create
 ---

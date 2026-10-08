@@ -28,6 +28,7 @@ spec:
           args:
             - --tls-cert-file=/tls/tls.crt
             - --tls-private-key-file=/tls/tls.key
+            - --secure-port=8443
           env:
             # Arbitrary, but must match the APIService name, the domain-solver
             # ClusterRole and the ClusterIssuer's webhook.groupName.
@@ -35,7 +36,7 @@ spec:
               value: acme.barnes.biz
           ports:
             - name: https
-              containerPort: 443
+              containerPort: 8443
               protocol: TCP
           livenessProbe:
             httpGet:
