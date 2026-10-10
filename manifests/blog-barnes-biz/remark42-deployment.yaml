@@ -1,0 +1,113 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: remark42
+  namespace: blog-barnes-biz
+spec:
+  replicas: 1
+  # BoltDB is single-writer and the Longhorn volume is RWO: the old pod must stop first.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: remark42
+  template:
+    metadata:
+      labels:
+        app: remark42
+    spec:
+      securityContext:
+        fsGroup: 1001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: remark42
+          image: ghcr.io/umputun/remark42:v1.17.1@sha256:45b3771ec0164332c585a838333427d19cb457f88591306385ba173aa6fbd7c9
+          # Bypass /init.sh: it needs root to chown and su-exec. The server substitutes
+          # REMARK_URL into the web assets itself.
+          command: ["/srv/remark42", "server"]
+          ports:
+            - containerPort: 8080
+          env:
+            - name: REMARK_URL
+              value: https://comments.barnes.biz
+            - name: SITE
+              value: blog
+            # Sets CSP frame-ancestors; the default is * (embeddable anywhere).
+            - name: ALLOWED_HOSTS
+              value: https://blog.barnes.biz
+            # Cilium's Envoy reaches the pod from the pod CIDR.
+            - name: TRUSTED_PROXY
+              value: 10.244.0.0/16
+            - name: SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: remark42-credentials
+                  key: SECRET
+            - name: AUTH_ANON
+              value: "true"
+            # Anonymous IDs are derived from the display name alone, so anyone can claim
+            # any name. The admin account must log in by email.
+            - name: AUTH_EMAIL_ENABLE
+              value: "true"
+            - name: AUTH_EMAIL_FROM
+              value: website@barnes.biz
+            - name: NOTIFY_EMAIL_FROM
+              value: website@barnes.biz
+            - name: NOTIFY_ADMINS
+              value: email
+            - name: NOTIFY_USERS
+              value: email
+            - name: ADMIN_SHARED_EMAIL
+              value: admin@barnes.biz
+            - name: SMTP_HOST
+              value: smtp.mail.me.com
+            - name: SMTP_PORT
+              value: "587"
+            - name: SMTP_STARTTLS
+              value: "true"
+            - name: SMTP_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: remark42-credentials
+                  key: SMTP_USERNAME
+            - name: SMTP_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: remark42-credentials
+                  key: SMTP_PASSWORD
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+          livenessProbe:
+            httpGet:
+              path: /ping
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /ping
+              port: 8080
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          securityContext:
+            runAsUser: 1001
+            runAsGroup: 1001
+            runAsNonRoot: true
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: data
+              mountPath: /srv/var
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: remark42-data
