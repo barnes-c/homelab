@@ -31,9 +31,9 @@ prompt() {
   local prompt_text="$2"
   local silent="${3:-true}"
   if [[ "$silent" == "true" ]]; then
-    read -r -s -p "$prompt_text: " "$var"; echo
+    read -r -s -p "$prompt_text: " "${var?}"; echo
   else
-    read -r -p "$prompt_text: " "$var"
+    read -r -p "$prompt_text: " "${var?}"
   fi
 }
 
@@ -50,6 +50,7 @@ GRAFANA_CLIENT_ID=$(rand32)
 GRAFANA_CLIENT_SECRET=$(rand32)
 IMMICH_CLIENT_ID=$(rand32)
 IMMICH_CLIENT_SECRET=$(rand32)
+REMARK42_SECRET=$(rand32)
 
 echo "=== Prompting for external credentials ==="
 
@@ -57,11 +58,6 @@ prompt PORKBUN_API_KEY         "Porkbun API key (pk1_...)"
 prompt PORKBUN_SECRET_API_KEY  "Porkbun secret API key (sk1_...)"
 prompt SMTP_USER             "SMTP username (barnes-biz)" false
 prompt SMTP_PASS             "SMTP password (barnes-biz)"
-prompt STRAVA_CLIENT_SECRET   "Strava client secret (account 115101)"
-prompt STRAVA_REFRESH_TOKEN   "Strava refresh token (account 115101)"
-prompt STRAVA2_CLIENT_SECRET  "Strava client secret (account 196370)"
-prompt STRAVA2_REFRESH_TOKEN  "Strava refresh token (account 196370)"
-
 echo ""
 echo "=== Sealing secrets ==="
 
@@ -151,6 +147,12 @@ seal authentik smtp-credentials \
   "$MANIFESTS/authentik/smtp-credentials.yaml" \
   --from-literal=AUTHENTIK_EMAIL__USERNAME="$SMTP_USER" \
   --from-literal=AUTHENTIK_EMAIL__PASSWORD="$SMTP_PASS"
+
+seal blog-barnes-biz remark42-credentials \
+  "$MANIFESTS/blog-barnes-biz/remark42-credentials.yaml" \
+  --from-literal=SECRET="$REMARK42_SECRET" \
+  --from-literal=SMTP_USERNAME="$SMTP_USER" \
+  --from-literal=SMTP_PASSWORD="$SMTP_PASS"
 
 seal monitoring grafana-oidc \
   "$MANIFESTS/monitoring/grafana-oidc.yaml" \
