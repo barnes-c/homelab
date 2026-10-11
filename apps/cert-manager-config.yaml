@@ -13,6 +13,8 @@ spec:
     repoURL: https://github.com/barnes-c/homelab
     targetRevision: master
     path: manifests/cert-manager
+    directory:
+      exclude: values.yaml
   destination:
     server: https://kubernetes.default.svc
   syncPolicy:

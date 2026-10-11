@@ -13,12 +13,14 @@ spec:
     - repoURL: https://github.com/barnes-c/homelab
       targetRevision: master
       path: manifests/immich
+      directory:
+        exclude: values.yaml
     - repoURL: https://immich-app.github.io/immich-charts
       chart: immich
       targetRevision: 0.12.0
       helm:
         valueFiles:
-          - $values/manifests/immich/immich/values.yaml
+          - $values/manifests/immich/values.yaml
     - repoURL: https://github.com/barnes-c/homelab
       targetRevision: master
       ref: values

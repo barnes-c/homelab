@@ -11,12 +11,14 @@ spec:
     - repoURL: https://github.com/barnes-c/homelab
       targetRevision: master
       path: manifests/argocd
+      directory:
+        exclude: values.yaml
     - repoURL: https://argoproj.github.io/argo-helm
       chart: argo-cd
       targetRevision: 10.10.2
       helm:
         valueFiles:
-          - $values/manifests/argocd/argo-cd/values.yaml
+          - $values/manifests/argocd/values.yaml
     - repoURL: https://github.com/barnes-c/homelab
       targetRevision: master
       ref: values
