@@ -19,7 +19,9 @@ spec:
           global:
             envFrom:
               - secretRef:
-                  name: authentik-credentials
+                  name: authentik-secrets
+              - secretRef:
+                  name: authentik-db
               - secretRef:
                   name: oidc-argocd
               - secretRef:
@@ -118,7 +120,7 @@ spec:
           postgresql:
             enabled: true
             auth:
-              existingSecret: authentik-credentials
+              existingSecret: authentik-db
               secretKeys:
                 adminPasswordKey: AUTHENTIK_POSTGRESQL__PASSWORD
                 userPasswordKey: AUTHENTIK_POSTGRESQL__PASSWORD

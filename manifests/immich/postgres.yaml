@@ -30,17 +30,17 @@ spec:
             runAsGroup: 999
           envFrom:
             - secretRef:
-                name: immich-postgres-credentials
+                name: immich-db
           env:
             - name: POSTGRES_USER
               valueFrom:
                 secretKeyRef:
-                  name: immich-postgres-credentials
+                  name: immich-db
                   key: DB_USERNAME
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: immich-postgres-credentials
+                  name: immich-db
                   key: DB_PASSWORD
             - name: POSTGRES_DB
               value: immich

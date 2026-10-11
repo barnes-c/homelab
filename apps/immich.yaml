@@ -32,7 +32,7 @@ spec:
                     IMMICH_CONFIG_FILE: /config/immich.json
                   envFrom:
                     - secretRef:
-                        name: immich-postgres-credentials
+                        name: immich-db
                   resources:
                     requests:
                       cpu: 200m

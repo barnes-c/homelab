@@ -38,11 +38,6 @@ prompt() {
 
 echo "=== Generating random secrets ==="
 
-IMMICH_DB_USER=$(rand32)
-IMMICH_DB_PASS=$(rand32)
-AUTHENTIK_DB_PASS=$(rand32)
-AUTHENTIK_SECRET_KEY=$(rand32)
-AUTHENTIK_BOOTSTRAP_PASSWORD=$(rand32)
 GOATCOUNTER_ADMIN_PASSWORD=$(rand32)
 
 echo "=== Prompting for external credentials ==="
@@ -53,17 +48,6 @@ prompt SMTP_USER             "SMTP username (barnes-biz)" false
 prompt SMTP_PASS             "SMTP password (barnes-biz)"
 echo ""
 echo "=== Sealing secrets ==="
-
-seal immich immich-postgres-credentials \
-  "$MANIFESTS/immich/immich-postgres-credentials.yaml" \
-  --from-literal=DB_USERNAME="$IMMICH_DB_USER" \
-  --from-literal=DB_PASSWORD="$IMMICH_DB_PASS"
-
-seal authentik authentik-credentials \
-  "$MANIFESTS/authentik/authentik-credentials.yaml" \
-  --from-literal=AUTHENTIK_POSTGRESQL__PASSWORD="$AUTHENTIK_DB_PASS" \
-  --from-literal=AUTHENTIK_SECRET_KEY="$AUTHENTIK_SECRET_KEY" \
-  --from-literal=AUTHENTIK_BOOTSTRAP_PASSWORD="$AUTHENTIK_BOOTSTRAP_PASSWORD"
 
 seal cert-manager porkbun-api-key \
   "$MANIFESTS/cert-manager/porkbun-api-key.yaml" \
@@ -98,6 +82,3 @@ seal blog-barnes-biz goatcounter-admin \
 
 echo ""
 echo "Done. Review the files, then commit and push."
-echo ""
-echo "=== Authentik akadmin bootstrap password (save this) ==="
-echo "$AUTHENTIK_BOOTSTRAP_PASSWORD"
