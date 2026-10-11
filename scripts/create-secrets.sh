@@ -25,7 +25,6 @@ seal() {
   echo "  -> $outfile"
 }
 
-
 prompt() {
   local var="$1"
   local prompt_text="$2"
@@ -44,12 +43,6 @@ IMMICH_DB_PASS=$(rand32)
 AUTHENTIK_DB_PASS=$(rand32)
 AUTHENTIK_SECRET_KEY=$(rand32)
 AUTHENTIK_BOOTSTRAP_PASSWORD=$(rand32)
-ARGOCD_CLIENT_ID=$(rand32)
-ARGOCD_CLIENT_SECRET=$(rand32)
-GRAFANA_CLIENT_ID=$(rand32)
-GRAFANA_CLIENT_SECRET=$(rand32)
-IMMICH_CLIENT_ID=$(rand32)
-IMMICH_CLIENT_SECRET=$(rand32)
 GOATCOUNTER_ADMIN_PASSWORD=$(rand32)
 
 echo "=== Prompting for external credentials ==="
@@ -61,7 +54,6 @@ prompt SMTP_PASS             "SMTP password (barnes-biz)"
 echo ""
 echo "=== Sealing secrets ==="
 
-
 seal immich immich-postgres-credentials \
   "$MANIFESTS/immich/immich-postgres-credentials.yaml" \
   --from-literal=DB_USERNAME="$IMMICH_DB_USER" \
@@ -72,59 +64,6 @@ seal authentik authentik-credentials \
   --from-literal=AUTHENTIK_POSTGRESQL__PASSWORD="$AUTHENTIK_DB_PASS" \
   --from-literal=AUTHENTIK_SECRET_KEY="$AUTHENTIK_SECRET_KEY" \
   --from-literal=AUTHENTIK_BOOTSTRAP_PASSWORD="$AUTHENTIK_BOOTSTRAP_PASSWORD"
-
-seal authentik authentik-oidc-clients \
-  "$MANIFESTS/authentik/authentik-oidc-clients.yaml" \
-  --from-literal=ARGOCD_CLIENT_ID="$ARGOCD_CLIENT_ID" \
-  --from-literal=ARGOCD_CLIENT_SECRET="$ARGOCD_CLIENT_SECRET" \
-  --from-literal=GRAFANA_CLIENT_ID="$GRAFANA_CLIENT_ID" \
-  --from-literal=GRAFANA_CLIENT_SECRET="$GRAFANA_CLIENT_SECRET" \
-  --from-literal=IMMICH_CLIENT_ID="$IMMICH_CLIENT_ID" \
-  --from-literal=IMMICH_CLIENT_SECRET="$IMMICH_CLIENT_SECRET"
-
-_immich_config_tmp=$(mktemp)
-cat > "$_immich_config_tmp" <<EOF
-{
-  "oauth": {
-    "enabled": true,
-    "issuerUrl": "https://authentik.barnes.biz/application/o/immich/",
-    "clientId": "$IMMICH_CLIENT_ID",
-    "clientSecret": "$IMMICH_CLIENT_SECRET",
-    "callbackUrl": "https://img.barnes.biz/auth/login",
-    "scope": "openid email profile",
-    "signingAlgorithm": "RS256",
-    "storageLabelClaim": "preferred_username",
-    "buttonText": "Login with Authentik",
-    "autoRegister": true,
-    "autoLaunch": false,
-    "mobileOverrideEnabled": false,
-    "mobileRedirectUri": ""
-  },
-  "passwordLogin": {
-    "enabled": true
-  },
-  "machineLearning": {
-    "enabled": false
-  },
-  "server": {
-    "externalDomain": "https://img.barnes.biz",
-    "loginPageMessage": ""
-  },
-  "storageTemplate": {
-    "enabled": true,
-    "template": "{{y}}/{{y}}-{{MM}}-{{dd}}/{{filename}}"
-  }
-}
-EOF
-kubectl create secret generic immich-config \
-  --namespace immich \
-  --dry-run=client -o yaml \
-  --from-file=immich.json="$_immich_config_tmp" \
-  | kubeseal --format yaml \
-    --controller-namespace sealed-secrets \
-  > "$MANIFESTS/immich/immich-config.yaml"
-rm "$_immich_config_tmp"
-echo "  -> $MANIFESTS/immich/immich-config.yaml"
 
 seal cert-manager porkbun-api-key \
   "$MANIFESTS/cert-manager/porkbun-api-key.yaml" \
@@ -156,29 +95,6 @@ seal blog-barnes-biz remark42-credentials \
 seal blog-barnes-biz goatcounter-admin \
   "$MANIFESTS/blog-barnes-biz/goatcounter-admin.yaml" \
   --from-literal=password="$GOATCOUNTER_ADMIN_PASSWORD"
-
-seal monitoring grafana-oidc \
-  "$MANIFESTS/monitoring/grafana-oidc.yaml" \
-  --from-literal=GF_AUTH_GENERIC_OAUTH_CLIENT_ID="$GRAFANA_CLIENT_ID" \
-  --from-literal=GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET="$GRAFANA_CLIENT_SECRET"
-
-seal argocd argocd-oidc \
-  "$MANIFESTS/argocd/argocd-oidc.yaml" \
-  --from-literal=dex.authentik.clientID="$ARGOCD_CLIENT_ID" \
-  --from-literal=dex.authentik.clientSecret="$ARGOCD_CLIENT_SECRET"
-# ArgoCD requires this label to read the secret from dex.config
-python3 - "$MANIFESTS/argocd/argocd-oidc.yaml" <<'PYEOF'
-import sys, re
-path = sys.argv[1]
-content = open(path).read()
-if 'app.kubernetes.io/part-of: argocd' not in content:
-    content = re.sub(
-        r'(  template:\n    metadata:\n      name: argocd-oidc\n      namespace: argocd\n)',
-        r'\1      labels:\n        app.kubernetes.io/part-of: argocd\n',
-        content
-    )
-    open(path, 'w').write(content)
-PYEOF
 
 echo ""
 echo "Done. Review the files, then commit and push."
