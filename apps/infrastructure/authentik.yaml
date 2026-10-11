@@ -12,7 +12,7 @@ spec:
   sources:
     - repoURL: https://github.com/barnes-c/homelab
       targetRevision: master
-      path: manifests/authentik
+      path: manifests/infrastructure/authentik
       directory:
         exclude: values.yaml
     - repoURL: https://charts.goauthentik.io
@@ -20,7 +20,7 @@ spec:
       targetRevision: 2026.8.3
       helm:
         valueFiles:
-          - $values/manifests/authentik/values.yaml
+          - $values/manifests/infrastructure/authentik/values.yaml
     - repoURL: https://github.com/barnes-c/homelab
       targetRevision: master
       ref: values

@@ -11,7 +11,7 @@ spec:
   project: default
   source:
     repoURL: https://github.com/barnes-c/homelab
-    path: manifests/blog-barnes-biz
+    path: manifests/workloads/blog-barnes-biz
     targetRevision: master
   destination:
     server: https://kubernetes.default.svc

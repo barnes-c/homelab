@@ -12,7 +12,7 @@ spec:
   sources:
     - repoURL: https://github.com/barnes-c/homelab
       targetRevision: master
-      path: manifests/immich
+      path: manifests/workloads/immich
       directory:
         exclude: values.yaml
     - repoURL: https://immich-app.github.io/immich-charts
@@ -20,7 +20,7 @@ spec:
       targetRevision: 0.12.0
       helm:
         valueFiles:
-          - $values/manifests/immich/values.yaml
+          - $values/manifests/workloads/immich/values.yaml
     - repoURL: https://github.com/barnes-c/homelab
       targetRevision: master
       ref: values

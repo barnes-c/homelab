@@ -12,7 +12,7 @@ spec:
     solvers:
       # DNS-01, not HTTP-01: the certificate covers *.barnes.biz and a wildcard cannot be
       # validated over HTTP-01. Porkbun has no built-in cert-manager solver, hence the
-      # webhook in manifests/cert-manager-webhook-porkbun.
+      # webhook in manifests/infrastructure/cert-manager-webhook-porkbun.
       - dns01:
           webhook:
             groupName: acme.barnes.biz

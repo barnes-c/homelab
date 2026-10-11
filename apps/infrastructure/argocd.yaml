@@ -10,7 +10,7 @@ spec:
   sources:
     - repoURL: https://github.com/barnes-c/homelab
       targetRevision: master
-      path: manifests/argocd
+      path: manifests/infrastructure/argocd
       directory:
         exclude: values.yaml
     - repoURL: https://argoproj.github.io/argo-helm
@@ -18,7 +18,7 @@ spec:
       targetRevision: 10.10.2
       helm:
         valueFiles:
-          - $values/manifests/argocd/values.yaml
+          - $values/manifests/infrastructure/argocd/values.yaml
     - repoURL: https://github.com/barnes-c/homelab
       targetRevision: master
       ref: values

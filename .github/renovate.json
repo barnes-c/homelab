@@ -38,12 +38,23 @@
         {
             "customType": "regex",
             "managerFilePatterns": [
-                "/manifests/monitoring/.*/config\\.json$/"
+                "/manifests/infrastructure/monitoring/.*/config\\.json$/"
             ],
             "matchStrings": [
                 "\"repoURL\":\\s*\"(?<registryUrl>[^\"]+)\",\\s*\"chart\":\\s*\"(?<depName>[^\"]+)\",\\s*\"chartVersion\":\\s*\"(?<currentValue>[^\"]+)\""
             ],
             "datasourceTemplate": "helm"
+        },
+        {
+            "description": "Container images run via `docker run` in workflow scripts, which the github-actions manager does not parse.",
+            "customType": "regex",
+            "managerFilePatterns": [
+                "/^\\.github/workflows/.+\\.ya?ml$/"
+            ],
+            "matchStrings": [
+                "(?<depName>(?:docker\\.io|ghcr\\.io)/[a-z0-9._/-]+):(?<currentValue>[A-Za-z0-9._-]+)(?:@(?<currentDigest>sha256:[a-f0-9]{64}))?"
+            ],
+            "datasourceTemplate": "docker"
         }
     ],
     "packageRules": [

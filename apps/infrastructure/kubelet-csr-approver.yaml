@@ -15,7 +15,7 @@ spec:
       targetRevision: 1.2.15
       helm:
         valueFiles:
-          - $values/manifests/kubelet-csr-approver/values.yaml
+          - $values/manifests/infrastructure/kubelet-csr-approver/values.yaml
     - repoURL: https://github.com/barnes-c/homelab
       targetRevision: master
       ref: values

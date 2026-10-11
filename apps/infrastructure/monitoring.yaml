@@ -13,7 +13,7 @@ spec:
         repoURL: https://github.com/barnes-c/homelab
         revision: master
         files:
-          - path: manifests/monitoring/*/config.json
+          - path: manifests/infrastructure/monitoring/*/config.json
   template:
     metadata:
       name: "monitoring-{{ .name }}"
@@ -28,7 +28,7 @@ spec:
           targetRevision: "{{ .chartVersion }}"
           helm:
             valueFiles:
-              - $values/manifests/monitoring/{{ .name }}/values.yaml
+              - $values/manifests/infrastructure/monitoring/{{ .name }}/values.yaml
         - repoURL: https://github.com/barnes-c/homelab
           targetRevision: master
           ref: values
@@ -76,7 +76,7 @@ spec:
   source:
     repoURL: https://github.com/barnes-c/homelab
     targetRevision: master
-    path: manifests/monitoring
+    path: manifests/infrastructure/monitoring
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring

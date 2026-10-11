@@ -85,7 +85,7 @@ variable "nodes" {
       longhorn_selector  = "disk.dev_path == '/dev/md127'"
       longhorn_min_size  = "500GiB"
 
-      # Paired with createDefaultDiskLabeledNodes in apps/longhorn.yaml: only nodes
+      # Paired with createDefaultDiskLabeledNodes in apps/infrastructure/longhorn.yaml: only nodes
       # carrying this label get a Longhorn disk. Without it Longhorn would create one on
       # every node at defaultDataPath, including workers whose only storage is an SD card.
       node_labels = {

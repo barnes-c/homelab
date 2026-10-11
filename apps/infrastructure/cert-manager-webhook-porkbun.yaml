@@ -12,7 +12,7 @@ spec:
   source:
     repoURL: https://github.com/barnes-c/homelab
     targetRevision: master
-    path: manifests/cert-manager-webhook-porkbun
+    path: manifests/infrastructure/cert-manager-webhook-porkbun
   destination:
     server: https://kubernetes.default.svc
   syncPolicy:

@@ -12,7 +12,7 @@ spec:
   source:
     repoURL: https://github.com/barnes-c/homelab
     targetRevision: master
-    path: manifests/cert-manager
+    path: manifests/infrastructure/cert-manager
     directory:
       exclude: values.yaml
   destination:
