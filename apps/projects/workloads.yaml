@@ -1,0 +1,30 @@
+# Workloads may only deploy into their own namespace and create nothing cluster-scoped except it.
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: workloads
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-3"
+spec:
+  description: End-user services, confined to their own namespace.
+  sourceRepos:
+    - https://github.com/barnes-c/homelab
+    - https://immich-app.github.io/immich-charts
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: barnes-biz
+    - server: https://kubernetes.default.svc
+      namespace: blog-barnes-biz
+    - server: https://kubernetes.default.svc
+      namespace: immich
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+      name: barnes-biz
+    - group: ""
+      kind: Namespace
+      name: blog-barnes-biz
+    - group: ""
+      kind: Namespace
+      name: immich
