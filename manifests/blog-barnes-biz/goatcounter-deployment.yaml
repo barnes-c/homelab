@@ -16,13 +16,16 @@ spec:
       labels:
         app: goatcounter
     spec:
+      # The Service is named goatcounter, so service links would inject GOATCOUNTER_PORT=tcp://…,
+      # which GoatCounter reads as a flag and refuses to start.
+      enableServiceLinks: false
       securityContext:
         fsGroup: 1000
         seccompProfile:
           type: RuntimeDefault
       containers:
         - name: goatcounter
-          image: arp242/goatcounter:2.7.0@sha256:791df3317bf5ce379511181a4802aaf29127a318b372d4fe39ec59e1c5af44be
+          image: docker.io/arp242/goatcounter:2.7.0@sha256:791df3317bf5ce379511181a4802aaf29127a318b372d4fe39ec59e1c5af44be
           args: ["serve", "-automigrate"]
           ports:
             - containerPort: 8080
