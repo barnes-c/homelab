@@ -4,8 +4,10 @@ Talos Linux cluster on Raspberry Pi hardware. See `README.md` for provisioning s
 
 ## Ownership
 
-OpenTofu owns the cluster and the two things that must exist before GitOps can work (Cilium,
-ArgoCD, `apps-root`). ArgoCD owns everything after. Nothing is owned by both.
+OpenTofu owns the cluster and what must exist before GitOps can work: Cilium and `apps-root`.
+It also installs ArgoCD, but only once — `apps/argocd.yaml` manages ArgoCD after bootstrap, and
+`helm_release.argocd` ignores later value and version changes. ArgoCD owns everything else.
+Nothing is owned by both.
 
 - `apps/` — ArgoCD `Application` definitions. `apps-root` watches this directory.
 - `manifests/` — the raw manifests those Applications point at.
