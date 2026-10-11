@@ -1,0 +1,40 @@
+# Postgres stores its password at first init: rotating it means ALTER ROLE first, see #31.
+---
+apiVersion: generators.external-secrets.io/v1alpha1
+kind: Password
+metadata:
+  name: immich-db
+  namespace: immich
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  length: 48
+  symbols: 0
+  noUpper: false
+  allowRepeat: true
+  secretKeys:
+    - DB_PASSWORD
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: immich-db
+  namespace: immich
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  refreshPolicy: CreatedOnce
+  target:
+    name: immich-db
+    creationPolicy: Orphan
+    immutable: true
+    template:
+      data:
+        DB_USERNAME: immich
+        DB_PASSWORD: "{{ .DB_PASSWORD }}"
+  dataFrom:
+    - sourceRef:
+        generatorRef:
+          apiVersion: generators.external-secrets.io/v1alpha1
+          kind: Password
+          name: immich-db

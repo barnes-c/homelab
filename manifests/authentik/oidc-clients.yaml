@@ -1,5 +1,7 @@
 # One Secret per OIDC client so each consumer can be granted exactly its own (oidc-client-readers.yaml).
 # Wave -1: the Authentik pods envFrom these, so they must exist before the chart rolls.
+# Authentik re-imports blueprint-sso.yaml only when the file changes, not when its !Env values
+# do: after regenerating these, run `ak apply_blueprint /blueprints/custom/sso.yaml` in the worker.
 ---
 apiVersion: generators.external-secrets.io/v1alpha1
 kind: Password
