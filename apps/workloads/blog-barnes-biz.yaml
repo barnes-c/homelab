@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: immich
+  name: blog-barnes-biz
   namespace: argocd
   annotations:
     argocd.argoproj.io/sync-wave: "1"
@@ -9,30 +9,20 @@ metadata:
     - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
-  sources:
-    - repoURL: https://github.com/barnes-c/homelab
-      targetRevision: master
-      path: manifests/immich
-      directory:
-        exclude: values.yaml
-    - repoURL: https://immich-app.github.io/immich-charts
-      chart: immich
-      targetRevision: 0.12.0
-      helm:
-        valueFiles:
-          - $values/manifests/immich/values.yaml
-    - repoURL: https://github.com/barnes-c/homelab
-      targetRevision: master
-      ref: values
+  source:
+    repoURL: https://github.com/barnes-c/homelab
+    path: manifests/workloads/blog-barnes-biz
+    targetRevision: master
   destination:
     server: https://kubernetes.default.svc
-    namespace: immich
+    namespace: blog-barnes-biz
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+      - ServerSideApply=true
     retry:
       limit: 5
       refresh: true

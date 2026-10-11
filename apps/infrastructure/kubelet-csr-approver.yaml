@@ -1,22 +1,27 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: cert-manager-config
+  name: kubelet-csr-approver
   namespace: argocd
   annotations:
-    argocd.argoproj.io/sync-wave: "0"
+    argocd.argoproj.io/sync-wave: "-2"
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
-  source:
-    repoURL: https://github.com/barnes-c/homelab
-    targetRevision: master
-    path: manifests/cert-manager
-    directory:
-      exclude: values.yaml
+  sources:
+    - repoURL: https://postfinance.github.io/kubelet-csr-approver
+      chart: kubelet-csr-approver
+      targetRevision: 1.2.15
+      helm:
+        valueFiles:
+          - $values/manifests/infrastructure/kubelet-csr-approver/values.yaml
+    - repoURL: https://github.com/barnes-c/homelab
+      targetRevision: master
+      ref: values
   destination:
     server: https://kubernetes.default.svc
+    namespace: kubelet-csr-approver
   syncPolicy:
     automated:
       prune: true

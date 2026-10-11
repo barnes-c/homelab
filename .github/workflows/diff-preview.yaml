@@ -35,7 +35,7 @@ jobs:
         run: |
           # Render with the same Argo CD chart the cluster runs.
           ARGOCD_CHART_VERSION=$(yq '.spec.sources[] | select(.chart == "argo-cd") | .targetRevision' \
-            pull-request/apps/argocd.yaml)
+            pull-request/apps/infrastructure/argocd.yaml)
           docker run --rm \
             --network=host \
             -v /var/run/docker.sock:/var/run/docker.sock \

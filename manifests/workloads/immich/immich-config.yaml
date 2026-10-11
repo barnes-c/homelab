@@ -1,4 +1,5 @@
-# Reads this app's OIDC client from the authentik namespace; see manifests/authentik/oidc-client-readers.yaml.
+# Reads this app's OIDC client from the authentik namespace;
+# see manifests/infrastructure/authentik/oidc-client-readers.yaml.
 apiVersion: v1
 kind: ServiceAccount
 metadata:

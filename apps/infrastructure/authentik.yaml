@@ -1,33 +1,39 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: kubelet-csr-approver
+  name: authentik
   namespace: argocd
   annotations:
-    argocd.argoproj.io/sync-wave: "-2"
+    argocd.argoproj.io/sync-wave: "0"
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
   sources:
-    - repoURL: https://postfinance.github.io/kubelet-csr-approver
-      chart: kubelet-csr-approver
-      targetRevision: 1.2.15
+    - repoURL: https://github.com/barnes-c/homelab
+      targetRevision: master
+      path: manifests/infrastructure/authentik
+      directory:
+        exclude: values.yaml
+    - repoURL: https://charts.goauthentik.io
+      chart: authentik
+      targetRevision: 2026.8.3
       helm:
         valueFiles:
-          - $values/manifests/kubelet-csr-approver/values.yaml
+          - $values/manifests/infrastructure/authentik/values.yaml
     - repoURL: https://github.com/barnes-c/homelab
       targetRevision: master
       ref: values
   destination:
     server: https://kubernetes.default.svc
-    namespace: kubelet-csr-approver
+    namespace: authentik
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+      - ServerSideApply=true
     retry:
       limit: 5
       refresh: true

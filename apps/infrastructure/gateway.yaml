@@ -10,7 +10,7 @@ spec:
   source:
     repoURL: https://github.com/barnes-c/homelab
     targetRevision: master
-    path: manifests/gateway
+    path: manifests/infrastructure/gateway
   destination:
     server: https://kubernetes.default.svc
     namespace: gateway

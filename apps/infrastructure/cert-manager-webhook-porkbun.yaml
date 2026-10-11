@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: ddns
+  name: cert-manager-webhook-porkbun
   namespace: argocd
   annotations:
     argocd.argoproj.io/sync-wave: "0"
@@ -12,7 +12,7 @@ spec:
   source:
     repoURL: https://github.com/barnes-c/homelab
     targetRevision: master
-    path: manifests/ddns
+    path: manifests/infrastructure/cert-manager-webhook-porkbun
   destination:
     server: https://kubernetes.default.svc
   syncPolicy:
