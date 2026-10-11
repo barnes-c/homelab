@@ -42,7 +42,7 @@ spec:
             - name: SECRET
               valueFrom:
                 secretKeyRef:
-                  name: remark42-credentials
+                  name: remark42-jwt
                   key: SECRET
             - name: AUTH_ANON
               value: "true"
