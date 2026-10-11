@@ -39,9 +39,8 @@ locals {
     apiVersion = "argoproj.io/v1alpha1"
     kind       = "Application"
     metadata = {
-      name       = "apps-root"
-      namespace  = "argocd"
-      finalizers = ["resources-finalizer.argocd.argoproj.io"]
+      name      = "apps-root"
+      namespace = "argocd"
     }
     spec = {
       project = "default"

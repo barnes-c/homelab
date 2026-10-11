@@ -54,6 +54,10 @@ Gotchas:
 
 - **Sync waves** order deployment; see the table in `apps/README.md`. Storage-dependent apps
   go at wave 1.
+- **Finalizers**: every app gets `resources-finalizer.argocd.argoproj.io`, so deleting its file
+  retires it. Exceptions are platform apps whose cascade would take others down: `argocd`,
+  `apps-root`, `longhorn`, `cert-manager`, `external-secrets`, `sealed-secrets`, `gateway`.
+  Data survives a cascade because Longhorn's StorageClass is `reclaimPolicy: Retain`.
 - **HTTPRoutes live beside their app** (`manifests/immich/immich-route.yaml`,
   `manifests/monitoring/grafana-route.yaml`), not in `manifests/gateway/`. The instruction in
   `manifests/README.md` is out of date.

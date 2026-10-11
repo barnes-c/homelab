@@ -26,6 +26,9 @@ spec:
           # directory and start writing replicas to it. Labels are set per node in
           # tofu/talos/variables.tf (node_labels).
           createDefaultDiskLabeledNodes: "true"
+        # Retiring an app (finalizer cascade) deletes its PVCs; Retain keeps the volume and its data.
+        persistence:
+          reclaimPolicy: Retain
         preUpgradeChecker:
           jobEnabled: false
         longhornManager:
