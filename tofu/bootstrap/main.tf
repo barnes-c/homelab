@@ -67,12 +67,7 @@ locals {
   argocd_values = {
     configs = { params = { "server.insecure" = true } }
     server  = { service = { type = "ClusterIP" } }
-
-    # Enable for self-healing
-    dex = {
-      livenessProbe  = { enabled = true }
-      readinessProbe = { enabled = true }
-    }
+    dex     = { enabled = false }
   }
 }
 

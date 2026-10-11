@@ -42,11 +42,11 @@ spec:
       # Merge keeps the data keys below; Replace would render a Secret with only the template's (none).
       mergePolicy: Merge
   data:
-    - secretKey: dex.authentik.clientID
+    - secretKey: oidc.authentik.clientID
       remoteRef:
         key: oidc-argocd
         property: ARGOCD_CLIENT_ID
-    - secretKey: dex.authentik.clientSecret
+    - secretKey: oidc.authentik.clientSecret
       remoteRef:
         key: oidc-argocd
         property: ARGOCD_CLIENT_SECRET

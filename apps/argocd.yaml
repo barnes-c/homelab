@@ -25,25 +25,22 @@ spec:
             cm:
               url: https://argo.barnes.biz
               admin.enabled: "false"
-              dex.config: |
-                connectors:
-                  - type: oidc
-                    id: authentik
-                    name: Authentik
-                    config:
-                      issuer: https://auth.barnes.biz/application/o/argocd/
-                      clientID: $argocd-oidc:dex.authentik.clientID
-                      clientSecret: $argocd-oidc:dex.authentik.clientSecret
-                      insecureEnableGroups: true
-                      scopes:
-                        - openid
-                        - profile
-                        - email
-                        - groups
+              oidc.config: |
+                name: Authentik
+                issuer: https://auth.barnes.biz/application/o/argocd/
+                clientID: $argocd-oidc:oidc.authentik.clientID
+                clientSecret: $argocd-oidc:oidc.authentik.clientSecret
+                requestedScopes:
+                  - openid
+                  - profile
+                  - email
+                  - groups
             rbac:
               policy.csv: |
                 g, ArgoCD Admins, role:admin
               policy.default: role:readonly
+          dex:
+            enabled: false
           server:
             replicas: 1
             resources:
