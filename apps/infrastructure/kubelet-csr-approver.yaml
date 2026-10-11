@@ -8,7 +8,7 @@ metadata:
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
-  project: default
+  project: infrastructure
   sources:
     - repoURL: https://postfinance.github.io/kubelet-csr-approver
       chart: kubelet-csr-approver

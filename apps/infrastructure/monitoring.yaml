@@ -21,7 +21,7 @@ spec:
       finalizers:
         - resources-finalizer.argocd.argoproj.io
     spec:
-      project: default
+      project: infrastructure
       sources:
         - repoURL: "{{ .repoURL }}"
           chart: "{{ .chart }}"
@@ -72,7 +72,7 @@ metadata:
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
-  project: default
+  project: infrastructure
   source:
     repoURL: https://github.com/barnes-c/homelab
     targetRevision: master
