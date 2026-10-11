@@ -22,7 +22,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: remark42
-          image: ghcr.io/umputun/remark42:v1.17.1@sha256:45b3771ec0164332c585a838333427d19cb457f88591306385ba173aa6fbd7c9
+          image: ghcr.io/umputun/remark42:v1.18.0@sha256:00a803ffdde34e8f239eef3e46adbeac44b9ef1a2f366e8b86b413d6908f3ac3
           # Bypass /init.sh: it needs root to chown and su-exec. The server substitutes
           # REMARK_URL into the web assets itself.
           command: ["/srv/remark42", "server"]
