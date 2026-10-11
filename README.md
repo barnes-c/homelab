@@ -125,6 +125,15 @@ superblocks live on `sda`/`sdb`, outside the md data area.
 
 ## Step 4 — Bootstrap
 
+On a **rebuild**, restore the sealed-secrets keys first (see [Backups](#backups)). If the
+controller starts without them it generates a new key, and none of the SealedSecrets in
+git can be decrypted:
+
+```sh
+kubectl create namespace sealed-secrets
+kubectl apply -f sealed-secrets-keys.json
+```
+
 ```sh
 cd tofu/bootstrap
 tofu init && tofu apply
@@ -135,6 +144,32 @@ Installs Cilium, then ArgoCD, then the `apps-root` Application. ArgoCD takes ove
 Cilium is **not** an ArgoCD Application. ArgoCD runs on the network Cilium provides, so a
 selfHeal loop on the CNI can cut ArgoCD's own connectivity and leave nothing able to
 repair it. Upgrade Cilium by bumping `cilium_version` and re-applying.
+
+## Backups
+
+### sealed-secrets keys
+
+Key renewal is off (`keyrenewperiod: "0"` in `apps/sealed-secrets.yaml`), so one export
+stays complete:
+
+```sh
+kubectl -n sealed-secrets get secret -l sealedsecrets.bitnami.com/sealed-secrets-key -o json \
+  | jq '{apiVersion: "v1", kind: "List", items: [.items[] | {apiVersion, kind, type,
+        metadata: {name: .metadata.name, namespace: .metadata.namespace, labels: .metadata.labels},
+        data}]}' \
+  > sealed-secrets-keys.json
+```
+
+`resourceVersion` and `uid` are stripped because `kubectl apply` refuses to create objects
+that carry them. The file holds the private keys: store it in the password manager, never
+in this repo, and delete the local copy.
+
+Check a backup offline by decrypting a committed SealedSecret; this prints key names only:
+
+```sh
+kubeseal --recovery-unseal --recovery-private-key sealed-secrets-keys.json \
+  < manifests/ddns/porkbun-api-key.yaml | yq '.data | keys'
+```
 
 ## Layout
 
