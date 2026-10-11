@@ -1,0 +1,55 @@
+---
+# Renders every Application on the base branch and the PR with a throwaway Argo CD, and comments the diff.
+name: Diff Preview
+on:
+  pull_request:
+    branches: [master]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: diff-preview-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  diff:
+    name: Argo CD Diff Preview
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          path: pull-request
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.base_ref }}
+          path: base
+
+      - name: Render diff
+        env:
+          BASE_BRANCH: ${{ github.base_ref }}
+          TARGET_BRANCH: refs/pull/${{ github.event.number }}/merge
+          REPO: ${{ github.repository }}
+        run: |
+          # Render with the same Argo CD chart the cluster runs.
+          ARGOCD_CHART_VERSION=$(yq '.spec.sources[] | select(.chart == "argo-cd") | .targetRevision' \
+            pull-request/apps/argocd.yaml)
+          docker run --rm \
+            --network=host \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            -v "$PWD/base:/base-branch" \
+            -v "$PWD/pull-request:/target-branch" \
+            -v "$PWD/output:/output" \
+            -e BASE_BRANCH -e TARGET_BRANCH -e REPO \
+            -e ARGOCD_CHART_VERSION="$ARGOCD_CHART_VERSION" \
+            docker.io/dagandersen/argocd-diff-preview:v0.2.16@sha256:21e7c8fa794220118feedc6e5316afd90cf0a107bfc845e08aa0291996efd968
+
+      - name: Comment on PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.number }}
+        run: |
+          gh pr comment "$PR" --repo "$GITHUB_REPOSITORY" --body-file output/diff.md --edit-last \
+            || gh pr comment "$PR" --repo "$GITHUB_REPOSITORY" --body-file output/diff.md
