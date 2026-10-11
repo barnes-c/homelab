@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: goatcounter
+  namespace: blog-barnes-biz
+spec:
+  replicas: 1
+  # SQLite is single-writer and the Longhorn volume is RWO: the old pod must stop first.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: goatcounter
+  template:
+    metadata:
+      labels:
+        app: goatcounter
+    spec:
+      securityContext:
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: goatcounter
+          image: arp242/goatcounter:2.7.0@sha256:791df3317bf5ce379511181a4802aaf29127a318b372d4fe39ec59e1c5af44be
+          args: ["serve", "-automigrate"]
+          ports:
+            - containerPort: 8080
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+          livenessProbe:
+            httpGet:
+              path: /status
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /status
+              port: 8080
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+            runAsNonRoot: true
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: data
+              mountPath: /home/goatcounter/goatcounter-data
+            # CSV exports are written to TMPDIR.
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: goatcounter-data
+        - name: tmp
+          emptyDir: {}
