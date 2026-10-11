@@ -11,7 +11,7 @@ terraform.tfstate.backup
 # generated
 .schematic-id-*
 .imager-*
-profiles/*.yaml
-!profiles/*.yaml.tmpl
+cluster/profiles/*.yaml
+!cluster/profiles/*.yaml.tmpl
 images/
 _out/
