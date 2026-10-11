@@ -21,7 +21,11 @@ spec:
               - secretRef:
                   name: authentik-credentials
               - secretRef:
-                  name: authentik-oidc-clients
+                  name: oidc-argocd
+              - secretRef:
+                  name: oidc-grafana
+              - secretRef:
+                  name: oidc-immich
               - secretRef:
                   name: smtp-credentials
 

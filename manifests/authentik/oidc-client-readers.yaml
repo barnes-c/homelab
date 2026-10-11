@@ -1,0 +1,77 @@
+# Each consumer namespace may read only its own client: get on one resourceName, no list/watch.
+# ESO validation only needs a get rule on secrets (providers/v1/kubernetes/validate.go).
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: oidc-argocd-reader
+  namespace: authentik
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    resourceNames: ["oidc-argocd"]
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: oidc-argocd-reader
+  namespace: authentik
+subjects:
+  - kind: ServiceAccount
+    name: authentik-oidc-reader
+    namespace: argocd
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: oidc-argocd-reader
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: oidc-grafana-reader
+  namespace: authentik
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    resourceNames: ["oidc-grafana"]
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: oidc-grafana-reader
+  namespace: authentik
+subjects:
+  - kind: ServiceAccount
+    name: authentik-oidc-reader
+    namespace: monitoring
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: oidc-grafana-reader
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: oidc-immich-reader
+  namespace: authentik
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    resourceNames: ["oidc-immich"]
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: oidc-immich-reader
+  namespace: authentik
+subjects:
+  - kind: ServiceAccount
+    name: authentik-oidc-reader
+    namespace: immich
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: oidc-immich-reader

@@ -1,0 +1,52 @@
+# Reads this app's OIDC client from the authentik namespace; see manifests/authentik/oidc-client-readers.yaml.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: authentik-oidc-reader
+  namespace: argocd
+---
+apiVersion: external-secrets.io/v1
+kind: SecretStore
+metadata:
+  name: authentik
+  namespace: argocd
+spec:
+  provider:
+    kubernetes:
+      remoteNamespace: authentik
+      server:
+        caProvider:
+          type: ConfigMap
+          name: kube-root-ca.crt
+          key: ca.crt
+      auth:
+        serviceAccount:
+          name: authentik-oidc-reader
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: argocd-oidc
+  namespace: argocd
+spec:
+  secretStoreRef:
+    kind: SecretStore
+    name: authentik
+  target:
+    name: argocd-oidc
+    template:
+      # Argo CD only resolves $secret:key references from Secrets with this label.
+      metadata:
+        labels:
+          app.kubernetes.io/part-of: argocd
+      # Merge keeps the data keys below; Replace would render a Secret with only the template's (none).
+      mergePolicy: Merge
+  data:
+    - secretKey: dex.authentik.clientID
+      remoteRef:
+        key: oidc-argocd
+        property: ARGOCD_CLIENT_ID
+    - secretKey: dex.authentik.clientSecret
+      remoteRef:
+        key: oidc-argocd
+        property: ARGOCD_CLIENT_SECRET

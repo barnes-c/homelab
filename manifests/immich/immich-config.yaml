@@ -1,0 +1,80 @@
+# Reads this app's OIDC client from the authentik namespace; see manifests/authentik/oidc-client-readers.yaml.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: authentik-oidc-reader
+  namespace: immich
+---
+apiVersion: external-secrets.io/v1
+kind: SecretStore
+metadata:
+  name: authentik
+  namespace: immich
+spec:
+  provider:
+    kubernetes:
+      remoteNamespace: authentik
+      server:
+        caProvider:
+          type: ConfigMap
+          name: kube-root-ca.crt
+          key: ca.crt
+      auth:
+        serviceAccount:
+          name: authentik-oidc-reader
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: immich-config
+  namespace: immich
+spec:
+  secretStoreRef:
+    kind: SecretStore
+    name: authentik
+  target:
+    name: immich-config
+    # Mounted at /config, so the Secret must hold only immich.json (Replace drops clientId/clientSecret).
+    template:
+      data:
+        immich.json: |
+          {
+            "oauth": {
+              "enabled": true,
+              "issuerUrl": "https://auth.barnes.biz/application/o/immich/",
+              "clientId": "{{ .clientId }}",
+              "clientSecret": "{{ .clientSecret }}",
+              "callbackUrl": "https://img.barnes.biz/auth/login",
+              "scope": "openid email profile",
+              "signingAlgorithm": "RS256",
+              "storageLabelClaim": "preferred_username",
+              "buttonText": "Login with Authentik",
+              "autoRegister": true,
+              "autoLaunch": false,
+              "mobileOverrideEnabled": false,
+              "mobileRedirectUri": ""
+            },
+            "passwordLogin": {
+              "enabled": true
+            },
+            "machineLearning": {
+              "enabled": false
+            },
+            "server": {
+              "externalDomain": "https://img.barnes.biz",
+              "loginPageMessage": ""
+            },
+            "storageTemplate": {
+              "enabled": true,
+              "template": "{{ `{{y}}/{{y}}-{{MM}}-{{dd}}/{{filename}}` }}"
+            }
+          }
+  data:
+    - secretKey: clientId
+      remoteRef:
+        key: oidc-immich
+        property: IMMICH_CLIENT_ID
+    - secretKey: clientSecret
+      remoteRef:
+        key: oidc-immich
+        property: IMMICH_CLIENT_SECRET

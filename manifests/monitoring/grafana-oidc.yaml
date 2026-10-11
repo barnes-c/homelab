@@ -1,0 +1,45 @@
+# Reads this app's OIDC client from the authentik namespace; see manifests/authentik/oidc-client-readers.yaml.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: authentik-oidc-reader
+  namespace: monitoring
+---
+apiVersion: external-secrets.io/v1
+kind: SecretStore
+metadata:
+  name: authentik
+  namespace: monitoring
+spec:
+  provider:
+    kubernetes:
+      remoteNamespace: authentik
+      server:
+        caProvider:
+          type: ConfigMap
+          name: kube-root-ca.crt
+          key: ca.crt
+      auth:
+        serviceAccount:
+          name: authentik-oidc-reader
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: grafana-oidc
+  namespace: monitoring
+spec:
+  secretStoreRef:
+    kind: SecretStore
+    name: authentik
+  target:
+    name: grafana-oidc
+  data:
+    - secretKey: GF_AUTH_GENERIC_OAUTH_CLIENT_ID
+      remoteRef:
+        key: oidc-grafana
+        property: GRAFANA_CLIENT_ID
+    - secretKey: GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET
+      remoteRef:
+        key: oidc-grafana
+        property: GRAFANA_CLIENT_SECRET

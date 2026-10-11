@@ -1,0 +1,110 @@
+# One Secret per OIDC client so each consumer can be granted exactly its own (oidc-client-readers.yaml).
+# Wave -1: the Authentik pods envFrom these, so they must exist before the chart rolls.
+---
+apiVersion: generators.external-secrets.io/v1alpha1
+kind: Password
+metadata:
+  name: oidc-argocd
+  namespace: authentik
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  length: 48
+  symbols: 0
+  noUpper: false
+  allowRepeat: true
+  secretKeys:
+    - ARGOCD_CLIENT_ID
+    - ARGOCD_CLIENT_SECRET
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: oidc-argocd
+  namespace: authentik
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  refreshPolicy: CreatedOnce
+  target:
+    name: oidc-argocd
+    creationPolicy: Orphan
+    immutable: true
+  dataFrom:
+    - sourceRef:
+        generatorRef:
+          apiVersion: generators.external-secrets.io/v1alpha1
+          kind: Password
+          name: oidc-argocd
+---
+apiVersion: generators.external-secrets.io/v1alpha1
+kind: Password
+metadata:
+  name: oidc-grafana
+  namespace: authentik
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  length: 48
+  symbols: 0
+  noUpper: false
+  allowRepeat: true
+  secretKeys:
+    - GRAFANA_CLIENT_ID
+    - GRAFANA_CLIENT_SECRET
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: oidc-grafana
+  namespace: authentik
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  refreshPolicy: CreatedOnce
+  target:
+    name: oidc-grafana
+    creationPolicy: Orphan
+    immutable: true
+  dataFrom:
+    - sourceRef:
+        generatorRef:
+          apiVersion: generators.external-secrets.io/v1alpha1
+          kind: Password
+          name: oidc-grafana
+---
+apiVersion: generators.external-secrets.io/v1alpha1
+kind: Password
+metadata:
+  name: oidc-immich
+  namespace: authentik
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  length: 48
+  symbols: 0
+  noUpper: false
+  allowRepeat: true
+  secretKeys:
+    - IMMICH_CLIENT_ID
+    - IMMICH_CLIENT_SECRET
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: oidc-immich
+  namespace: authentik
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  refreshPolicy: CreatedOnce
+  target:
+    name: oidc-immich
+    creationPolicy: Orphan
+    immutable: true
+  dataFrom:
+    - sourceRef:
+        generatorRef:
+          apiVersion: generators.external-secrets.io/v1alpha1
+          kind: Password
+          name: oidc-immich
