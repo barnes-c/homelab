@@ -9,16 +9,16 @@ metadata:
     - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
-  source:
-    repoURL: https://postfinance.github.io/kubelet-csr-approver
-    chart: kubelet-csr-approver
-    targetRevision: 1.2.15
-    helm:
-      values: |
-        providerIpRanges:
-          - 192.168.1.0/24
-        bypassDnsResolution: true
-        maxExpirationSeconds: 604800
+  sources:
+    - repoURL: https://postfinance.github.io/kubelet-csr-approver
+      chart: kubelet-csr-approver
+      targetRevision: 1.2.15
+      helm:
+        valueFiles:
+          - $values/manifests/kubelet-csr-approver/kubelet-csr-approver/values.yaml
+    - repoURL: https://github.com/barnes-c/homelab
+      targetRevision: master
+      ref: values
   destination:
     server: https://kubernetes.default.svc
     namespace: kubelet-csr-approver
