@@ -137,6 +137,10 @@ resource "helm_release" "argocd" {
 
   values = [yamlencode(merge(local.argocd_values, var.argocd_extra_values))]
 
+  lifecycle {
+    ignore_changes = [values, version]
+  }
+
   depends_on = [helm_release.cilium]
 }
 
