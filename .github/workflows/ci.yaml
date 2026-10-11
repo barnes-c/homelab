@@ -40,12 +40,18 @@ jobs:
             apps/*.yaml
 
   opentofu:
-    name: OpenTofu
+    name: OpenTofu (${{ matrix.module }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        module: [bootstrap, talos]
+    defaults:
+      run:
+        working-directory: tofu/${{ matrix.module }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - uses: opentofu/setup-opentofu@a1320f892987e89d278cc92dc5adc984fb93aca4 # v2.0.2
-      - run: cd tofu
       - run: tofu fmt -check -recursive
       - run: tofu init -input=false
       - run: tofu validate
