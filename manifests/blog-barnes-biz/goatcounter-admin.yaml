@@ -1,0 +1,13 @@
+---
+apiVersion: bitnami.com/v1alpha1
+kind: SealedSecret
+metadata:
+  name: goatcounter-admin
+  namespace: blog-barnes-biz
+spec:
+  encryptedData:
+    password: AgA1ss5mOwRjDuf5URAZ3tIR+9TiCT056+H/9GYtz0Dd1X/pWo0zMIVeFTOomzrPH9q3GXIwXQJwV5BAYlY1xsKBIvTrKlNPA3+U2bauP8+S7hKfz3s2tyoRAbUQ9l0Alu6LE6OgmdUWp0o9JRaSx14ir3TQG3FIdvvPpRrkWfjjtjVJZM2inyZpf6mFSamU86hsj39N8DIpfBSL9FihuG5oJLOQefk7fNzUXDgJMOSjBQjSYNCLPkIbEd4H9Ev/IojhR2ow4Hu5beC5NaMd2xk0nJZsUnAXbSlB98gAVlUJa+KNB2uge7KLUvHIYDQg22oev2U73MuzcsAskp3s+mvIk8JIP/T7idkfY0jO3/iTuF9zE9vYREGCC45pwlT1La4WYU64k19S/I926MAqYGYofTlDtDQbVqD+tLqEaWdfdOZcAYBtS0hPgENS4rVSVFRb44djn9tdMc+5FgfgwOFypedvdS202bSx+5foEzt2xC3LlMNAtzMSHrXzNKQuLeVurHfUgkuTuq2s3XWMlnp7ijlL7hS+yR5olxDPyLwOmUft9FR8PRtr0tCFTwYSfA0gX+Er/OU067qxy0TGyo5f16L2/xgU1GJ/i552j48BS3xTZjtJNERnopAeSSIW/Tl7egzPjWynUGiOmWVfRj3fEWX8HGyZQi2JfaJEZOBxFWS01HvWzLcN/A6CsQhey3YhzjN1EESMu2zmhkS4TLLkYnEC9QCYNGAuDddh0YnvVw==
+  template:
+    metadata:
+      name: goatcounter-admin
+      namespace: blog-barnes-biz

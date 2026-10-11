@@ -23,6 +23,51 @@ spec:
         fsGroup: 1000
         seccompProfile:
           type: RuntimeDefault
+      initContainers:
+        # Creates the site and admin on first start, so the dashboard never offers the
+        # open "create your first site" form. The password only applies at creation.
+        - name: provision
+          image: docker.io/arp242/goatcounter:2.7.0@sha256:791df3317bf5ce379511181a4802aaf29127a318b372d4fe39ec59e1c5af44be
+          command: ["sh", "-c"]
+          args:
+            - |
+              set -eu
+              goatcounter db migrate -createdb all
+              if goatcounter db show site -find "$VHOST" >/dev/null 2>&1; then
+                echo "site $VHOST exists"
+              else
+                goatcounter db create site -vhost "$VHOST" -user.email "$ADMIN_EMAIL" -user.password "$ADMIN_PASSWORD"
+              fi
+              goatcounter db query "update sites set settings = json_set(settings, '\$.allow_counter', json('true')) where cname = '$VHOST'"
+          env:
+            - name: VHOST
+              value: stats.barnes.biz
+            - name: ADMIN_EMAIL
+              value: admin@barnes.biz
+            - name: ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: goatcounter-admin
+                  key: password
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+            runAsNonRoot: true
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: data
+              mountPath: /home/goatcounter/goatcounter-data
       containers:
         - name: goatcounter
           image: docker.io/arp242/goatcounter:2.7.0@sha256:791df3317bf5ce379511181a4802aaf29127a318b372d4fe39ec59e1c5af44be

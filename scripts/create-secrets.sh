@@ -51,6 +51,7 @@ GRAFANA_CLIENT_SECRET=$(rand32)
 IMMICH_CLIENT_ID=$(rand32)
 IMMICH_CLIENT_SECRET=$(rand32)
 REMARK42_SECRET=$(rand32)
+GOATCOUNTER_ADMIN_PASSWORD=$(rand32)
 
 echo "=== Prompting for external credentials ==="
 
@@ -153,6 +154,10 @@ seal blog-barnes-biz remark42-credentials \
   --from-literal=SECRET="$REMARK42_SECRET" \
   --from-literal=SMTP_USERNAME="$SMTP_USER" \
   --from-literal=SMTP_PASSWORD="$SMTP_PASS"
+
+seal blog-barnes-biz goatcounter-admin \
+  "$MANIFESTS/blog-barnes-biz/goatcounter-admin.yaml" \
+  --from-literal=password="$GOATCOUNTER_ADMIN_PASSWORD"
 
 seal monitoring grafana-oidc \
   "$MANIFESTS/monitoring/grafana-oidc.yaml" \
