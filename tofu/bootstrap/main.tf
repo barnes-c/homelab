@@ -65,9 +65,27 @@ locals {
   }
 
   argocd_values = {
-    configs = { params = { "server.insecure" = true } }
-    server  = { service = { type = "ClusterIP" } }
-    dex     = { enabled = false }
+    configs = {
+      params = { "server.insecure" = true }
+      cm = {
+        "resource.customizations.health.argoproj.io_Application" = <<-EOT
+          hs = {}
+          hs.status = "Progressing"
+          hs.message = ""
+          if obj.status ~= nil then
+            if obj.status.health ~= nil then
+              hs.status = obj.status.health.status
+              if obj.status.health.message ~= nil then
+                hs.message = obj.status.health.message
+              end
+            end
+          end
+          return hs
+        EOT
+      }
+    }
+    server = { service = { type = "ClusterIP" } }
+    dex    = { enabled = false }
   }
 }
 

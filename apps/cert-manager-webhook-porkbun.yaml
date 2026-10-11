@@ -3,10 +3,6 @@ kind: Application
 metadata:
   name: cert-manager-webhook-porkbun
   namespace: argocd
-  # Wave 0, not -1: the webhook's own serving certificate is a cert-manager Certificate,
-  # so cert-manager's CRDs must already exist. Same wave as cert-manager-config, whose
-  # ClusterIssuer points at this solver -- issuance simply retries until the APIService
-  # comes up.
   annotations:
     argocd.argoproj.io/sync-wave: "0"
   finalizers:
@@ -27,6 +23,7 @@ spec:
       - CreateNamespace=true
     retry:
       limit: 5
+      refresh: true
       backoff:
         duration: 30s
         factor: 2

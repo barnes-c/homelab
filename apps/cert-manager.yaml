@@ -52,3 +52,10 @@ spec:
       - CreateNamespace=true
       - ServerSideApply=true
       - Replace=true
+    retry:
+      limit: 5
+      refresh: true
+      backoff:
+        duration: 30s
+        factor: 2
+        maxDuration: 5m
