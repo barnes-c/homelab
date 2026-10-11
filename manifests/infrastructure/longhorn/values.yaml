@@ -1,5 +1,5 @@
 defaultSettings:
-  # Matches the UserVolumeConfig named "longhorn" in tofu/talos; Talos mounts
+  # Matches the UserVolumeConfig named "longhorn" in cluster/tofu/talos; Talos mounts
   # user volumes at /var/mnt/<name>.
   defaultDataPath: /var/mnt/longhorn
   defaultReplicaCount: "1"
@@ -8,7 +8,7 @@ defaultSettings:
   # Without this Longhorn creates one at defaultDataPath on EVERY node, and on a
   # worker whose only storage is an SD card it would silently create that
   # directory and start writing replicas to it. Labels are set per node in
-  # tofu/talos/variables.tf (node_labels).
+  # cluster/tofu/talos/variables.tf (node_labels).
   createDefaultDiskLabeledNodes: "true"
 # Retiring an app (finalizer cascade) deletes its PVCs; Retain keeps the volume and its data.
 persistence:

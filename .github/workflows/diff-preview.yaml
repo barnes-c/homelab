@@ -1,5 +1,4 @@
 ---
-# Renders every Application on the base branch and the PR with a throwaway Argo CD, and comments the diff.
 name: Diff Preview
 on:
   pull_request:

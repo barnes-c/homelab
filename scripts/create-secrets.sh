@@ -54,8 +54,6 @@ seal cert-manager porkbun-api-key \
   --from-literal=api-key="$PORKBUN_API_KEY" \
   --from-literal=secret-api-key="$PORKBUN_SECRET_API_KEY"
 
-# Same keys, sealed again for the ddns namespace. SealedSecrets are namespace-scoped by
-# default, so the ciphertext is not portable between namespaces.
 seal ddns porkbun-api-key \
   "$MANIFESTS/infrastructure/ddns/porkbun-api-key.yaml" \
   --from-literal=api-key="$PORKBUN_API_KEY" \
