@@ -1,0 +1,4 @@
+providerIpRanges:
+  - 192.168.1.0/24
+bypassDnsResolution: true
+maxExpirationSeconds: 604800

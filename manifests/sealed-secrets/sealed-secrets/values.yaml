@@ -1,0 +1,4 @@
+fullnameOverride: sealed-secrets-controller
+# No automatic key renewal, so one off-cluster backup of the keys stays complete.
+# Renewal never re-encrypts existing SealedSecrets anyway. See #32.
+keyrenewperiod: "0"

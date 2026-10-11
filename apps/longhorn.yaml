@@ -8,59 +8,16 @@ metadata:
     argocd.argoproj.io/sync-options: SkipHealthCheck
 spec:
   project: default
-  source:
-    repoURL: https://charts.longhorn.io
-    chart: longhorn
-    targetRevision: 1.13.0
-    helm:
-      values: |
-        defaultSettings:
-          # Matches the UserVolumeConfig named "longhorn" in tofu/talos; Talos mounts
-          # user volumes at /var/mnt/<name>.
-          defaultDataPath: /var/mnt/longhorn
-          defaultReplicaCount: "1"
-          replicaAutoBalance: disabled
-          # Only nodes labelled node.longhorn.io/create-default-disk=true get a disk.
-          # Without this Longhorn creates one at defaultDataPath on EVERY node, and on a
-          # worker whose only storage is an SD card it would silently create that
-          # directory and start writing replicas to it. Labels are set per node in
-          # tofu/talos/variables.tf (node_labels).
-          createDefaultDiskLabeledNodes: "true"
-        # Retiring an app (finalizer cascade) deletes its PVCs; Retain keeps the volume and its data.
-        persistence:
-          reclaimPolicy: Retain
-        preUpgradeChecker:
-          jobEnabled: false
-        longhornManager:
-          resources:
-            requests:
-              cpu: 50m
-              memory: 128Mi
-        longhornUI:
-          resources:
-            requests:
-              cpu: 25m
-              memory: 32Mi
-            limits:
-              cpu: 200m
-              memory: 128Mi
-        longhornDriver:
-          resources:
-            requests:
-              cpu: 25m
-              memory: 64Mi
-            limits:
-              cpu: 200m
-              memory: 128Mi
-        csi:
-          attacher:
-            replicas: 1
-          provisioner:
-            replicas: 1
-          resizer:
-            replicas: 1
-          snapshotter:
-            replicas: 1
+  sources:
+    - repoURL: https://charts.longhorn.io
+      chart: longhorn
+      targetRevision: 1.13.0
+      helm:
+        valueFiles:
+          - $values/manifests/longhorn/longhorn/values.yaml
+    - repoURL: https://github.com/barnes-c/homelab
+      targetRevision: master
+      ref: values
   destination:
     server: https://kubernetes.default.svc
     namespace: longhorn-system
