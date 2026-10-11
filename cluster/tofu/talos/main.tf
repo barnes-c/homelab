@@ -4,18 +4,6 @@ locals {
 
   control_plane_ips = [for node in local.control_planes : node.ip]
 
-  # Talos v1.14 decomposed most of v1alpha1 into standalone documents, and setting a field
-  # in both places fails validation ("X is already set in v1alpha1 config"). What stays in
-  # v1alpha1 below is only what has no document equivalent yet. Everything else moved:
-  #
-  #   machine.network.hostname          -> HostnameConfig        (hostname_patch)
-  #   machine.install                   -> UnattendedInstallConfig (install_patch)
-  #   machine.kubelet                   -> KubeletConfig         (kubelet_patch)
-  #   machine.features.hostDNS          -> ResolverConfig        (resolver_patch)
-  #   machine.features.kubePrism        -> KubePrismConfig       (already port 7445, no patch)
-  #   cluster.network.cni: none         -> delete KubeFlannelCNIConfig
-  #   cluster.proxy.disabled            -> delete KubeProxyConfig
-  #   cluster.allowSchedulingOnControlPlanes -> KubeNodeConfig taints (schedulable_patch)
   common_patch = {
     machine = {
       time = { servers = var.ntp_servers }
