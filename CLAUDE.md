@@ -60,6 +60,10 @@ Gotchas:
   retires it. Exceptions are platform apps whose cascade would take others down: `argocd`,
   `apps-root`, `longhorn`, `cert-manager`, `external-secrets`, `sealed-secrets`, `gateway`.
   Data survives a cascade because Longhorn's StorageClass is `reclaimPolicy: Retain`.
+- **Helm values live in `manifests/<app>/values.yaml`**, referenced via a `$values` source. If the
+  app also syncs `manifests/<app>/` as a directory source, that source needs
+  `directory.exclude: values.yaml` or Argo applies the values as a manifest. Apps with several
+  charts use `manifests/<app>/<chart>/values.yaml` (monitoring).
 - **HTTPRoutes live beside their app** (`manifests/immich/immich-route.yaml`,
   `manifests/monitoring/grafana-route.yaml`), not in `manifests/gateway/`. The instruction in
   `manifests/README.md` is out of date.
