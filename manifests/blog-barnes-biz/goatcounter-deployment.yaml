@@ -38,7 +38,9 @@ spec:
               else
                 goatcounter db create site -vhost "$VHOST" -user.email "$ADMIN_EMAIL" -user.password "$ADMIN_PASSWORD"
               fi
-              goatcounter db query "update sites set settings = json_set(settings, '\$.allow_counter', json('true')) where cname = '$VHOST'"
+              goatcounter db query "update sites
+                set settings = json_set(settings, '\$.allow_counter', json('true'))
+                where cname = '$VHOST'"
           env:
             - name: VHOST
               value: stats.barnes.biz
