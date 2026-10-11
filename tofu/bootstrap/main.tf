@@ -48,6 +48,7 @@ locals {
         repoURL        = var.apps_repo
         targetRevision = var.apps_revision
         path           = var.apps_path
+        directory      = { recurse = true }
       }
       destination = {
         server    = "https://kubernetes.default.svc"
