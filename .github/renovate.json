@@ -59,6 +59,14 @@
     ],
     "packageRules": [
         {
+            "description": "Automerge patches once they have been public for 3 days.",
+            "matchUpdateTypes": [
+                "patch"
+            ],
+            "automerge": true,
+            "minimumReleaseAge": "3 days"
+        },
+        {
             "matchManagers": [
                 "github-actions"
             ],
@@ -105,10 +113,11 @@
             "enabled": false
         },
         {
-            "matchUpdateTypes": [
-                "patch"
+            "description": "Tofu-managed (Cilium, Talos provider): only applied by a manual tofu apply, so an automerged bump would land silently with the next unrelated apply.",
+            "matchManagers": [
+                "terraform"
             ],
-            "automerge": true
+            "automerge": false
         }
     ]
 }
