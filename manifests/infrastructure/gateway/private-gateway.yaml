@@ -1,8 +1,8 @@
-# LAN-only Gateway (.202); the Freebox forwards 80/443 only to .201. See barnes-c/homelab-issues#16.
+# LAN-only Gateway (.202); the Freebox forwards 80/443 only to .201.
 apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
 metadata:
-  name: internal
+  name: private
   namespace: gateway
 spec:
   gatewayClassName: cilium
