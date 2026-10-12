@@ -52,6 +52,12 @@ controller:
     limits:
       cpu: 1000m
       memory: 1Gi
+  metrics:
+    enabled: true
+    service:
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8082"
 repoServer:
   replicas: 1
   resources:
