@@ -48,7 +48,7 @@ spec:
             - name: SMTP_SECURE
               value: "false"
             - name: SMTP_FROM
-              value: "Barnes.biz Contact <website@barnes.biz>"
+              value: "Barnes.biz Contact <noreply@barnes.biz>"
             - name: SMTP_USER
               valueFrom:
                 secretKeyRef:
