@@ -1,0 +1,28 @@
+---
+name: Gateway API
+on:
+  pull_request:
+    paths: &paths
+      # main.tf pins the Cilium version: a Cilium bump alone must trigger the check.
+      - cluster/tofu/bootstrap/main.tf
+      - cluster/tofu/bootstrap/gateway-api/**
+      - scripts/gateway-api-crds.sh
+      - .github/workflows/gateway-api.yaml
+  push:
+    branches: [master]
+    paths: *paths
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gateway-api-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  crds:
+    name: Gateway API CRDs match Cilium
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - run: scripts/gateway-api-crds.sh
