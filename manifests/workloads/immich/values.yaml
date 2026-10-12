@@ -3,11 +3,10 @@ immich:
     library:
       existingClaim: immich-library
 
-# Top-level controllers/persistence are merged into every component (server, valkey, machine-learning),
-# so server-only settings live under server:.
 server:
   controllers:
     main:
+      strategy: Recreate
       containers:
         main:
           env:

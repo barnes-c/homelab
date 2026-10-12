@@ -35,13 +35,6 @@ spec:
       destination:
         server: https://kubernetes.default.svc
         namespace: monitoring
-      ignoreDifferences:
-        - group: ""
-          kind: Secret
-          name: grafana
-          namespace: monitoring
-          jsonPointers:
-            - /data/admin-password
       syncPolicy:
         automated:
           prune: true

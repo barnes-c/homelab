@@ -18,6 +18,12 @@ persistence:
   enabled: true
   size: 1Gi
 
+deploymentStrategy:
+  type: Recreate
+
+admin:
+  existingSecret: grafana-admin
+
 sidecar:
   dashboards:
     enabled: true
