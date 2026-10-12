@@ -1,0 +1,29 @@
+---
+name: YAML
+on:
+  pull_request:
+    paths: &paths
+      - "**/*.yaml"
+      - "**/*.yml"
+      - .github/.yamllint.yaml
+      - .github/workflows/yaml.yaml
+  push:
+    branches: [master]
+    paths: *paths
+
+permissions:
+  contents: read
+
+concurrency:
+  group: yaml-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  yaml:
+    name: YAML Lint
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: ibiqlik/action-yamllint@2576378a8e339169678f9939646ee3ee325e845c # v3
+        with:
+          config_file: .github/.yamllint.yaml

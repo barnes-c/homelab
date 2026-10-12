@@ -1,0 +1,35 @@
+---
+name: OpenTofu
+on:
+  pull_request:
+    paths: &paths
+      - cluster/tofu/**
+      - .github/workflows/opentofu.yaml
+  push:
+    branches: [master]
+    paths: *paths
+
+permissions:
+  contents: read
+
+concurrency:
+  group: opentofu-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  opentofu:
+    name: OpenTofu (${{ matrix.module }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        module: [bootstrap, talos]
+    defaults:
+      run:
+        working-directory: cluster/tofu/${{ matrix.module }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: opentofu/setup-opentofu@a1320f892987e89d278cc92dc5adc984fb93aca4 # v2.0.2
+      - run: tofu fmt -check -recursive
+      - run: tofu init -input=false
+      - run: tofu validate

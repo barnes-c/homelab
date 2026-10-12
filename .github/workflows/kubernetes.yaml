@@ -1,0 +1,37 @@
+---
+name: Kubernetes
+on:
+  pull_request:
+    paths: &paths
+      - apps/**
+      - .github/workflows/kubernetes.yaml
+  push:
+    branches: [master]
+    paths: *paths
+
+permissions:
+  contents: read
+
+concurrency:
+  group: kubernetes-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  kubernetes:
+    name: Kubernetes Validation
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Validate manifests
+        shell: bash
+        env:
+          KUBECONFORM_IMAGE: ghcr.io/yannh/kubeconform:v0.8.0-alpine@sha256:6b90a5f23d846140ce0194fe050b1995e546eba938f3a6bf10c039dd5e24588f
+        run: |
+          CRDS="https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json"
+
+          docker run --rm -v "$PWD:/work" -w /work "$KUBECONFORM_IMAGE" \
+            -strict -summary \
+            -schema-location default \
+            -schema-location "$CRDS" \
+            apps/

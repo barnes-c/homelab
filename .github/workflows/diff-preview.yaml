@@ -3,6 +3,10 @@ name: Diff Preview
 on:
   pull_request:
     branches: [master]
+    paths:
+      - apps/**
+      - manifests/**
+      - .github/workflows/diff-preview.yaml
 
 permissions:
   contents: read
