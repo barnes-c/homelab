@@ -28,3 +28,10 @@ spec:
     - group: ""
       kind: Namespace
       name: immich
+  orphanedResources:
+    warn: true
+    ignore:
+      - kind: Secret
+        name: immich-db
+      - kind: Secret
+        name: remark42-jwt
