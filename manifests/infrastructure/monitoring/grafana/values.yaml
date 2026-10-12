@@ -55,8 +55,8 @@ grafana.ini:
     api_url: https://auth.barnes.biz/application/o/userinfo/
     role_attribute_path: >-
       contains(groups, 'Grafana Admins') && 'Admin' ||
-      contains(groups, 'Grafana Editors') && 'Editor' ||
-      'Viewer'
+      contains(groups, 'Grafana Editors') && 'Editor'
+    role_attribute_strict: true
 
 dashboardProviders:
   dashboardproviders.yaml:

@@ -31,7 +31,7 @@ configs:
   rbac:
     policy.csv: |
       g, ArgoCD Admins, role:admin
-    policy.default: role:readonly
+    policy.default: ""
 dex:
   enabled: false
 server:

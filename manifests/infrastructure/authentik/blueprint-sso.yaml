@@ -10,7 +10,8 @@ stringData:
       name: SSO Applications
 
     entries:
-      # Groups
+      # Groups. An application with group bindings admits only members of those groups;
+      # without any binding it admits every Authentik user.
       - model: authentik_core.group
         id: grafana-admins
         state: present
@@ -28,6 +29,12 @@ stringData:
         state: present
         identifiers:
           name: ArgoCD Admins
+
+      - model: authentik_core.group
+        id: immich-users
+        state: present
+        identifiers:
+          name: Immich Users
 
       # Grafana
       - model: authentik_providers_oauth2.oauth2provider
@@ -60,6 +67,20 @@ stringData:
           provider: !KeyOf grafana-provider
           meta_launch_url: https://monitoring.barnes.biz
 
+      - model: authentik_policies.policybinding
+        state: present
+        identifiers:
+          target: !KeyOf grafana-app
+          group: !KeyOf grafana-admins
+          order: 0
+
+      - model: authentik_policies.policybinding
+        state: present
+        identifiers:
+          target: !KeyOf grafana-app
+          group: !KeyOf grafana-editors
+          order: 1
+
       # ArgoCD
       - model: authentik_providers_oauth2.oauth2provider
         id: argocd-provider
@@ -90,6 +111,13 @@ stringData:
           name: ArgoCD
           provider: !KeyOf argocd-provider
           meta_launch_url: https://argo.barnes.biz
+
+      - model: authentik_policies.policybinding
+        state: present
+        identifiers:
+          target: !KeyOf argocd-app
+          group: !KeyOf argocd-admins
+          order: 0
 
       # Immich
       - model: authentik_providers_oauth2.oauth2provider
@@ -122,7 +150,14 @@ stringData:
         attrs:
           name: Immich
           provider: !KeyOf immich-provider
-          meta_launch_url: https://immich.barnes.biz
+          meta_launch_url: https://img.barnes.biz
+
+      - model: authentik_policies.policybinding
+        state: present
+        identifiers:
+          target: !KeyOf immich-app
+          group: !KeyOf immich-users
+          order: 0
 
       # Website Dashboard
       - model: authentik_providers_proxy.proxyprovider
