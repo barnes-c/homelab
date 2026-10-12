@@ -1,0 +1,21 @@
+# On top of workloads-baseline: server, postgres and valkey talk to each other, and the
+# server reaches Authentik for OIDC.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: immich
+  namespace: immich
+spec:
+  endpointSelector: {}
+  ingress:
+    - fromEndpoints:
+        - {}
+  egress:
+    - toEndpoints:
+        - {}
+    - toFQDNs:
+        - matchName: auth.barnes.biz
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP

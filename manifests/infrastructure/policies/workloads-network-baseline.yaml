@@ -1,0 +1,29 @@
+# Default deny for workload namespaces: pods take traffic only from the Gateway and may only
+# resolve DNS. Each namespace adds what else it needs in its own CiliumNetworkPolicy.
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  name: workloads-baseline
+spec:
+  endpointSelector:
+    matchExpressions:
+      - key: k8s:io.kubernetes.pod.namespace
+        operator: In
+        values: [barnes-biz, blog-barnes-biz, immich]
+  ingress:
+    # Gateway traffic carries the ingress identity, which plain NetworkPolicy cannot select.
+    - fromEntities:
+        - ingress
+  egress:
+    # The DNS rule sends lookups through Cilium's proxy, which is what lets toFQDNs work.
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: ANY
+          rules:
+            dns:
+              - matchPattern: "*"

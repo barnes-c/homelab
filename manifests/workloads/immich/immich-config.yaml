@@ -58,6 +58,9 @@ spec:
             "passwordLogin": {
               "enabled": false
             },
+            "newVersionCheck": {
+              "enabled": false
+            },
             "machineLearning": {
               "enabled": false
             },

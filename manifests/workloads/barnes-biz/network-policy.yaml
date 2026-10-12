@@ -1,0 +1,15 @@
+# On top of workloads-baseline: the contact form sends mail.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: website
+  namespace: barnes-biz
+spec:
+  endpointSelector: {}
+  egress:
+    - toFQDNs:
+        - matchName: smtp.mail.me.com
+      toPorts:
+        - ports:
+            - port: "587"
+              protocol: TCP
