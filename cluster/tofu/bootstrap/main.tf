@@ -27,7 +27,12 @@ locals {
       wireguard = { userspaceFallback = false }
     }
 
-    hubble    = { enabled = false }
+    hubble = {
+      enabled       = true
+      listenAddress = ""
+      tls           = { enabled = false }
+    }
+
     resources = { requests = { cpu = "100m", memory = "256Mi" } }
     operator = {
       replicas  = var.control_plane_count > 1 ? 2 : 1
