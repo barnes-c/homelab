@@ -21,8 +21,6 @@ locals {
     }
   }
 
-  # seccomp-default is not needed here: the generated KubeletConfig already sets
-  # defaultRuntimeSeccompProfileEnabled, which is the supported way to express it.
   kubelet_patch = {
     apiVersion = "v1alpha1"
     kind       = "KubeletConfig"
@@ -41,18 +39,6 @@ locals {
     }
   }
 
-  # Cilium replaces flannel and kube-proxy, installed by tofu/bootstrap once the cluster is
-  # up. In v1.14 these are no longer v1alpha1 toggles (`cluster.network.cni.name: none` /
-  # `cluster.proxy.disabled`); both moved to their own documents. The two need DIFFERENT
-  # treatment, which is not obvious:
-  #
-  #   KubeFlannelCNIConfig has no enable switch, so deleting the document is what yields
-  #   "no CNI" -- verified: the node reports `cni plugin not initialized`.
-  #
-  #   KubeProxyConfig has `enabled` (proxy.go:59), and Enabled() returns TRUE when the
-  #   field is nil (proxy.go:200). Deleting the document therefore falls back to Talos'
-  #   default and kube-proxy still gets deployed -- observed on the first apply. It has to
-  #   be disabled explicitly instead.
   disable_flannel_patch = {
     apiVersion = "v1alpha1"
     kind       = "KubeFlannelCNIConfig"
@@ -65,9 +51,24 @@ locals {
     enabled    = false
   }
 
-  # machine.install became UnattendedInstallConfig, and the disk is now a CEL selector
-  # rather than a device path. wipe stays false so the install does not touch the SSD
-  # array -- Talos can discover mdraid but cannot recreate it.
+  pod_security_patch = {
+    apiVersion = "v1alpha1"
+    kind       = "KubeAdmissionControlConfig"
+    name       = "PodSecurity"
+    configuration = {
+      apiVersion = "pod-security.admission.config.k8s.io/v1alpha1"
+      kind       = "PodSecurityConfiguration"
+      defaults = {
+        enforce           = "restricted"
+        "enforce-version" = "latest"
+        audit             = "restricted"
+        "audit-version"   = "latest"
+        warn              = "restricted"
+        "warn-version"    = "latest"
+      }
+    }
+  }
+
   install_patch = {
     for k, v in var.nodes : k => {
       apiVersion = "v1alpha1"
@@ -219,6 +220,7 @@ locals {
         [
           yamlencode(local.disable_flannel_patch),
           yamlencode(local.disable_kubeproxy_patch),
+          yamlencode(local.pod_security_patch),
           yamlencode(local.vip_patch),
           yamlencode({
             cluster = {
