@@ -31,9 +31,6 @@ spec:
     automated:
       prune: true
       selfHeal: true
-    managedNamespaceMetadata:
-      labels:
-        pod-security.kubernetes.io/enforce: baseline
     syncOptions:
       - CreateNamespace=true
     retry:
