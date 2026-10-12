@@ -69,11 +69,6 @@ seal authentik smtp-credentials \
   --from-literal=AUTHENTIK_EMAIL__USERNAME="$SMTP_USER" \
   --from-literal=AUTHENTIK_EMAIL__PASSWORD="$SMTP_PASS"
 
-seal blog-barnes-biz remark42-credentials \
-  "$MANIFESTS/workloads/blog-barnes-biz/remark42-credentials.yaml" \
-  --from-literal=SMTP_USERNAME="$SMTP_USER" \
-  --from-literal=SMTP_PASSWORD="$SMTP_PASS"
-
 seal blog-barnes-biz goatcounter-admin \
   "$MANIFESTS/workloads/blog-barnes-biz/goatcounter-admin.yaml" \
   --from-literal=password="$GOATCOUNTER_ADMIN_PASSWORD"
