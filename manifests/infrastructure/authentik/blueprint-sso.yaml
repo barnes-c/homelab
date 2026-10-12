@@ -159,35 +159,15 @@ stringData:
           group: !KeyOf immich-users
           order: 0
 
-      # Website Dashboard
-      - model: authentik_providers_proxy.proxyprovider
-        id: website-dashboard-provider
-        state: present
-        identifiers:
-          name: Website Dashboard
-        attrs:
-          authorization_flow: !Find [authentik_flows.flow, [slug, default-provider-authorization-explicit-consent]]
-          invalidation_flow: !Find [authentik_flows.flow, [slug, default-provider-invalidation-flow]]
-          mode: forward_single
-          external_host: https://barnes.biz
-
       - model: authentik_core.application
-        id: website-dashboard-app
-        state: present
+        state: absent
         identifiers:
           slug: website-dashboard
-        attrs:
-          name: Website Dashboard
-          provider: !KeyOf website-dashboard-provider
-          meta_launch_url: https://barnes.biz/dashboard
 
-      - model: authentik_outposts.outpost
+      - model: authentik_providers_proxy.proxyprovider
+        state: absent
         identifiers:
-          name: authentik Embedded Outpost
-        state: present
-        attrs:
-          providers:
-            - !KeyOf website-dashboard-provider
+          name: Website Dashboard
 
   recovery.yaml: |
     version: 1
