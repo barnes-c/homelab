@@ -274,8 +274,8 @@ stringData:
             - username
       - identifiers:
           name: default-recovery-user-login
-        id: default-recovery-user-login
         model: authentik_stages_user_login.userloginstage
+        state: absent
       - identifiers:
           name: Change your password
         id: stages-prompt-password
@@ -321,16 +321,6 @@ stringData:
           target: !KeyOf flow
           stage: !KeyOf default-recovery-user-write
           order: 40
-        model: authentik_flows.flowstagebinding
-        attrs:
-          evaluate_on_plan: true
-          re_evaluate_policies: false
-          policy_engine_mode: any
-          invalid_response_action: retry
-      - identifiers:
-          target: !KeyOf flow
-          stage: !KeyOf default-recovery-user-login
-          order: 100
         model: authentik_flows.flowstagebinding
         attrs:
           evaluate_on_plan: true
