@@ -38,4 +38,15 @@ config:
         Host                 loki.monitoring.svc.cluster.local
         Port                 3100
         Labels               job=fluent-bit
-        Auto_Kubernetes_Labels On
+        Label_Map_Path       /fluent-bit/etc/conf/loki-labels.json
+
+  extraFiles:
+    loki-labels.json: |
+      {
+        "kubernetes": {
+          "namespace_name": "namespace",
+          "pod_name": "pod",
+          "container_name": "container",
+          "labels": {"app.kubernetes.io/name": "app"}
+        }
+      }
