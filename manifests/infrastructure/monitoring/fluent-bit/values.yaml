@@ -31,6 +31,13 @@ config:
         K8S-Logging.Parser  On
         K8S-Logging.Exclude On
 
+    # NestJS apps (Immich) log info as "log", which Loki's level detection doesn't know.
+    [FILTER]
+        Name       modify
+        Match      kube.*
+        Condition  Key_Value_Equals level log
+        Set        level info
+
   outputs: |
     [OUTPUT]
         Name                 loki
