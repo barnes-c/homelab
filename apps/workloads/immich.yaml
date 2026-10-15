@@ -17,7 +17,7 @@ spec:
         exclude: values.yaml
     - repoURL: ghcr.io/immich-app/immich-charts
       chart: immich
-      targetRevision: 0.12.0
+      targetRevision: 0.13.4
       helm:
         valueFiles:
           - $values/manifests/workloads/immich/values.yaml
