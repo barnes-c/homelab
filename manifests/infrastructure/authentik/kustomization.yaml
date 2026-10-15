@@ -17,5 +17,5 @@ configMapGenerator:
       - blueprints/invitation.yaml
       - blueprints/recovery.yaml
 generatorOptions:
-  # values.yaml mounts it by this name.
+  # values.yaml mounts it by this name, on the worker at /blueprints/custom.
   disableNameSuffixHash: true
