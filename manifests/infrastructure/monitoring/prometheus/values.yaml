@@ -39,7 +39,6 @@ scrapeConfigs:
     post_relabel_configs: |
       - action: labeldrop
         regex: helm_sh_chart|app_kubernetes_io_version|pod_template_hash|controller_revision_hash|pod_template_generation
-  # Public names resolve to the WAN IP and hairpin through the Freebox, so this tests the real path.
   blackbox:
     metrics_path: /probe
     params:
