@@ -17,6 +17,11 @@ loki:
           period: 24h
   storage:
     type: filesystem
+  limits_config:
+    retention_period: 14d
+  compactor:
+    retention_enabled: true
+    delete_request_store: filesystem
 
 singleBinary:
   replicas: 1

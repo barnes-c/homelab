@@ -34,6 +34,12 @@ sidecar:
       foldersFromFilesStructure: true
 
 grafana.ini:
+  analytics:
+    reporting_enabled: false
+    check_for_updates: false
+    check_for_plugin_updates: false
+  news:
+    news_feed_enabled: false
   server:
     domain: monitoring.barnes.biz
     root_url: https://monitoring.barnes.biz
