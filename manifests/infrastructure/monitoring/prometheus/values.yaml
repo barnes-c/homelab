@@ -29,12 +29,13 @@ prometheus-node-exporter:
 prometheus-pushgateway:
   enabled: false
 
-extraScrapeConfigs: |
-  - job_name: node-exporter
-    static_configs:
-      - targets:
-          - node-exporter.monitoring.svc.cluster.local:9100
-  - job_name: kube-state-metrics
-    static_configs:
-      - targets:
-          - kube-state-metrics.monitoring.svc.cluster.local:8080
+# Labels that change on every chart or image bump split a series in two.
+scrapeConfigs:
+  kubernetes-service-endpoints:
+    post_relabel_configs: |
+      - action: labeldrop
+        regex: helm_sh_chart|app_kubernetes_io_version|pod_template_hash|controller_revision_hash|pod_template_generation
+  kubernetes-pods:
+    post_relabel_configs: |
+      - action: labeldrop
+        regex: helm_sh_chart|app_kubernetes_io_version|pod_template_hash|controller_revision_hash|pod_template_generation
