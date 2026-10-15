@@ -29,6 +29,7 @@ server:
             DB_DATABASE_NAME: immich
             IMMICH_CONFIG_FILE: /config/immich.json
             IMMICH_TELEMETRY_INCLUDE: all
+            IMMICH_LOG_FORMAT: json
           envFrom:
             - secretRef:
                 name: immich-db
