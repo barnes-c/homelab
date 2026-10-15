@@ -55,13 +55,6 @@ server:
     timeoutSeconds: 5
   readinessProbe:
     timeoutSeconds: 5
-  volumes:
-    - name: custom-blueprints
-      secret:
-        secretName: authentik-blueprints
-  volumeMounts:
-    - name: custom-blueprints
-      mountPath: /blueprints/custom
 
 worker:
   securityContext:
@@ -91,16 +84,19 @@ worker:
     timeoutSeconds: 5
   readinessProbe:
     timeoutSeconds: 5
+  # Worker only: it imports the blueprints. Kept at the old path on purpose: Authentik keys
+  # blueprint instances by path and requires unique names, so a new path would fail to import.
   volumes:
-    - name: custom-blueprints
-      secret:
-        secretName: authentik-blueprints
+    - name: blueprints
+      configMap:
+        name: authentik-blueprints
   volumeMounts:
-    - name: custom-blueprints
+    - name: blueprints
       mountPath: /blueprints/custom
 
 serviceAccount:
   create: false
+
 
 postgresql:
   enabled: true

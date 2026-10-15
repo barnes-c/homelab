@@ -1,0 +1,24 @@
+# yaml-language-server: $schema=https://goauthentik.io/blueprints/schema.json
+version: 1
+metadata:
+  name: Require MFA
+entries:
+  # The shipped login flow skips MFA for users without a device; this makes them enroll
+  # TOTP or WebAuthn at their next login instead.
+  - model: authentik_stages_authenticator_validate.authenticatorvalidatestage
+    state: present
+    identifiers:
+      name: default-authentication-mfa-validation
+    attrs:
+      device_classes:
+        - static
+        - totp
+        - webauthn
+      not_configured_action: configure
+      configuration_stages:
+        - !Find
+          - authentik_stages_authenticator_totp.authenticatortotpstage
+          - [name, default-authenticator-totp-setup]
+        - !Find
+          - authentik_stages_authenticator_webauthn.authenticatorwebauthnstage
+          - [name, default-authenticator-webauthn-setup]
