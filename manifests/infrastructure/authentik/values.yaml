@@ -55,13 +55,6 @@ server:
     timeoutSeconds: 5
   readinessProbe:
     timeoutSeconds: 5
-  volumes:
-    - name: custom-blueprints
-      secret:
-        secretName: authentik-blueprints
-  volumeMounts:
-    - name: custom-blueprints
-      mountPath: /blueprints/custom
 
 worker:
   securityContext:
@@ -91,16 +84,14 @@ worker:
     timeoutSeconds: 5
   readinessProbe:
     timeoutSeconds: 5
-  volumes:
-    - name: custom-blueprints
-      secret:
-        secretName: authentik-blueprints
-  volumeMounts:
-    - name: custom-blueprints
-      mountPath: /blueprints/custom
 
 serviceAccount:
   create: false
+
+# Mounted on the worker only, which is what imports blueprints.
+blueprints:
+  configMaps:
+    - authentik-blueprints
 
 postgresql:
   enabled: true

@@ -1,0 +1,192 @@
+# yaml-language-server: $schema=https://goauthentik.io/blueprints/schema.json
+version: 1
+metadata:
+  name: Invitation enrollment
+entries:
+  # Enrollment by invitation link only; not linked from the login page or the brand. The
+  # user enrolls an MFA device before the first login. New users join Immich Users; access
+  # to any other app is a separate step: add them to its group.
+  #
+  # Imports "SSO Applications" first: the !Find for Immich Users below would otherwise yield
+  # null on a fresh install, silently.
+  - model: authentik_blueprints.metaapplyblueprint
+    attrs:
+      identifiers:
+        name: SSO Applications
+      required: true
+
+  - model: authentik_flows.flow
+    id: flow
+    identifiers:
+      slug: invitation-enrollment
+    attrs:
+      name: Invitation enrollment
+      title: Create your account
+      designation: enrollment
+      authentication: require_unauthenticated
+
+  - model: authentik_stages_invitation.invitationstage
+    id: invitation
+    identifiers:
+      name: invitation-enrollment-invitation
+    attrs:
+      continue_flow_without_invitation: false
+
+  - model: authentik_policies_password.passwordpolicy
+    id: password-policy
+    identifiers:
+      name: invitation-enrollment-password
+    attrs:
+      password_field: password
+      check_static_rules: true
+      length_min: 12
+      amount_digits: 0
+      amount_lowercase: 0
+      amount_uppercase: 0
+      amount_symbols: 0
+      # Have I Been Pwned would need egress; zxcvbn runs locally.
+      check_have_i_been_pwned: false
+      check_zxcvbn: true
+      zxcvbn_score_threshold: 3
+      error_message: Use at least 12 characters and avoid common words or patterns.
+
+  - model: authentik_stages_prompt.prompt
+    id: field-username
+    identifiers:
+      name: invitation-enrollment-field-username
+    attrs:
+      field_key: username
+      label: Username
+      type: username
+      required: true
+      placeholder: Username
+      placeholder_expression: false
+      order: 0
+  - model: authentik_stages_prompt.prompt
+    id: field-name
+    identifiers:
+      name: invitation-enrollment-field-name
+    attrs:
+      field_key: name
+      label: Name
+      type: text
+      required: true
+      placeholder: Name
+      placeholder_expression: false
+      order: 1
+  - model: authentik_stages_prompt.prompt
+    id: field-email
+    identifiers:
+      name: invitation-enrollment-field-email
+    attrs:
+      field_key: email
+      label: Email
+      type: email
+      required: true
+      placeholder: Email
+      placeholder_expression: false
+      order: 2
+  - model: authentik_stages_prompt.prompt
+    id: field-password
+    identifiers:
+      name: invitation-enrollment-field-password
+    attrs:
+      field_key: password
+      label: Password
+      type: password
+      required: true
+      placeholder: Password
+      placeholder_expression: false
+      order: 3
+  - model: authentik_stages_prompt.prompt
+    id: field-password-repeat
+    identifiers:
+      name: invitation-enrollment-field-password-repeat
+    attrs:
+      field_key: password_repeat
+      label: Password (repeat)
+      type: password
+      required: true
+      placeholder: Password (repeat)
+      placeholder_expression: false
+      order: 4
+
+  - model: authentik_stages_prompt.promptstage
+    id: prompt
+    identifiers:
+      name: invitation-enrollment-prompt
+    attrs:
+      fields:
+        - !KeyOf field-username
+        - !KeyOf field-name
+        - !KeyOf field-email
+        - !KeyOf field-password
+        - !KeyOf field-password-repeat
+      validation_policies:
+        - !KeyOf password-policy
+
+  - model: authentik_stages_user_write.userwritestage
+    id: user-write
+    identifiers:
+      name: invitation-enrollment-user-write
+    attrs:
+      user_creation_mode: always_create
+      user_type: internal
+      create_users_group: !Find [authentik_core.group, [name, Immich Users]]
+
+  # The user has no device yet, so this goes straight to setting one up.
+  - model: authentik_stages_authenticator_validate.authenticatorvalidatestage
+    id: mfa
+    identifiers:
+      name: invitation-enrollment-mfa
+    attrs:
+      device_classes:
+        - totp
+        - webauthn
+      not_configured_action: configure
+      configuration_stages:
+        - !Find
+          - authentik_stages_authenticator_webauthn.authenticatorwebauthnstage
+          - [name, default-authenticator-webauthn-setup]
+        - !Find
+          - authentik_stages_authenticator_totp.authenticatortotpstage
+          - [name, default-authenticator-totp-setup]
+
+  - model: authentik_stages_user_login.userloginstage
+    id: login
+    identifiers:
+      name: invitation-enrollment-login
+
+  - model: authentik_flows.flowstagebinding
+    identifiers:
+      target: !KeyOf flow
+      stage: !KeyOf invitation
+      order: 10
+  - model: authentik_flows.flowstagebinding
+    identifiers:
+      target: !KeyOf flow
+      stage: !KeyOf prompt
+      order: 20
+  - model: authentik_flows.flowstagebinding
+    identifiers:
+      target: !KeyOf flow
+      stage: !KeyOf user-write
+      order: 30
+  - model: authentik_flows.flowstagebinding
+    identifiers:
+      target: !KeyOf flow
+      stage: !KeyOf mfa
+      order: 40
+  # Recovery codes, for when the device is lost.
+  - model: authentik_flows.flowstagebinding
+    identifiers:
+      target: !KeyOf flow
+      stage: !Find
+        - authentik_stages_authenticator_static.authenticatorstaticstage
+        - [name, default-authenticator-static-setup]
+      order: 50
+  - model: authentik_flows.flowstagebinding
+    identifiers:
+      target: !KeyOf flow
+      stage: !KeyOf login
+      order: 100
