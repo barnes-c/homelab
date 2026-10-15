@@ -32,6 +32,11 @@ prometheus-pushgateway:
 # Labels that change on every chart or image bump split a series in two.
 scrapeConfigs:
   kubernetes-service-endpoints:
+    # Endpoint discovery also targets container ports the Service doesn't list; keep only listed ones.
+    pre_relabel_configs: |
+      - source_labels: [__meta_kubernetes_endpointslice_port]
+        action: drop
+        regex: ""
     post_relabel_configs: |
       - action: labeldrop
         regex: helm_sh_chart|app_kubernetes_io_version|pod_template_hash|controller_revision_hash|pod_template_generation
