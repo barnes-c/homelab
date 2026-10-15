@@ -10,7 +10,7 @@ spec:
   description: End-user services, confined to their own namespace.
   sourceRepos:
     - https://github.com/barnes-c/homelab
-    - https://immich-app.github.io/immich-charts
+    - ghcr.io/immich-app/immich-charts
   destinations:
     - server: https://kubernetes.default.svc
       namespace: barnes-biz

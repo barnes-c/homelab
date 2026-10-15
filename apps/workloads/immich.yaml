@@ -15,7 +15,7 @@ spec:
       path: manifests/workloads/immich
       directory:
         exclude: values.yaml
-    - repoURL: https://immich-app.github.io/immich-charts
+    - repoURL: ghcr.io/immich-app/immich-charts
       chart: immich
       targetRevision: 0.12.0
       helm:
