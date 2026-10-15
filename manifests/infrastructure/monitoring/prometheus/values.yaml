@@ -39,3 +39,25 @@ scrapeConfigs:
     post_relabel_configs: |
       - action: labeldrop
         regex: helm_sh_chart|app_kubernetes_io_version|pod_template_hash|controller_revision_hash|pod_template_generation
+  blackbox:
+    metrics_path: /probe
+    params:
+      module: [http_2xx]
+    static_configs:
+      - targets:
+          - https://barnes.biz
+          - https://www.barnes.biz
+          - https://blog.barnes.biz
+          - https://comments.barnes.biz/web/embed.js
+          - https://stats.barnes.biz/count.js
+          - https://img.barnes.biz/api/server/ping
+          - https://auth.barnes.biz/-/health/ready/
+          - https://argo.barnes.biz/healthz
+          - https://monitoring.barnes.biz/api/health
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter.monitoring.svc.cluster.local:9115
