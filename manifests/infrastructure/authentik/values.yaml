@@ -99,6 +99,9 @@ worker:
     - name: custom-blueprints
       mountPath: /blueprints/custom
 
+serviceAccount:
+  create: false
+
 postgresql:
   enabled: true
   auth:

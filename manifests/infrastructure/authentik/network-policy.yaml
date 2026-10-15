@@ -31,13 +31,6 @@ spec:
           rules:
             dns:
               - matchPattern: "*"
-    # The worker checks the Kubernetes outpost integration.
-    - toEntities:
-        - kube-apiserver
-      toPorts:
-        - ports:
-            - port: "6443"
-              protocol: TCP
     - toFQDNs:
         - matchName: smtp.mail.me.com
       toPorts:
