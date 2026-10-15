@@ -94,8 +94,6 @@ locals {
   }
 }
 
-# Must be the Gateway API version Cilium requires (1.20: v1.6.1); with older CRDs the operator
-# disables its Gateway controller and every HTTPS listener loses its certificate.
 data "kubectl_file_documents" "gateway_api_crds" {
   content = file("${path.module}/gateway-api/experimental-install.yaml")
 }
