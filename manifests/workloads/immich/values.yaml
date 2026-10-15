@@ -28,6 +28,7 @@ server:
             DB_PORT: "5432"
             DB_DATABASE_NAME: immich
             IMMICH_CONFIG_FILE: /config/immich.json
+            IMMICH_TELEMETRY_INCLUDE: all
           envFrom:
             - secretRef:
                 name: immich-db
