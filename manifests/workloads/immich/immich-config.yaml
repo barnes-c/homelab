@@ -45,7 +45,6 @@ spec:
               "issuerUrl": "https://auth.barnes.biz/application/o/immich/",
               "clientId": "{{ .clientId }}",
               "clientSecret": "{{ .clientSecret }}",
-              "callbackUrl": "https://img.barnes.biz/auth/login",
               "scope": "openid email profile",
               "signingAlgorithm": "RS256",
               "storageLabelClaim": "preferred_username",
