@@ -1,0 +1,42 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: reloader
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: infrastructure
+  sources:
+    - repoURL: https://stakater.github.io/stakater-charts
+      chart: reloader
+      targetRevision: 2.2.18
+      helm:
+        valueFiles:
+          - $values/manifests/infrastructure/reloader/values.yaml
+    - repoURL: https://github.com/barnes-c/homelab
+      targetRevision: master
+      path: manifests/infrastructure/reloader
+      directory:
+        exclude: values.yaml
+    - repoURL: https://github.com/barnes-c/homelab
+      targetRevision: master
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: reloader
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+    retry:
+      limit: 5
+      refresh: true
+      backoff:
+        duration: 30s
+        factor: 2
+        maxDuration: 5m
