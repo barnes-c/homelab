@@ -21,7 +21,7 @@ spec:
         fsGroup: 999
       containers:
         - name: postgres
-          image: docker.io/tensorchord/pgvecto-rs:pg16-v0.2.0@sha256:592cac7b88a6443a9b06dfc0248b847ee3b20971244be3ea9bf259b01fe1621e
+          image: ghcr.io/immich-app/postgres:16-vectorchord0.4.3-pgvectors0.2.0@sha256:1a078b237c1d9b420b0ee59147386b4aa60d3a07a8e6a402fc84a57e41b043a4
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
@@ -64,6 +64,11 @@ spec:
               mountPath: /tmp
             - name: run
               mountPath: /var/run/postgresql
+            # The entrypoint writes postgresql.conf here, and the root filesystem is read-only.
+            - name: conf
+              mountPath: /etc/postgresql
+            - name: shm
+              mountPath: /dev/shm
       volumes:
         - name: data
           persistentVolumeClaim:
@@ -72,6 +77,13 @@ spec:
           emptyDir: {}
         - name: run
           emptyDir: {}
+        - name: conf
+          emptyDir: {}
+        # Immich's compose file sets shm_size: 128mb; the runtime default is 64Mi.
+        - name: shm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 128Mi
 ---
 apiVersion: v1
 kind: Service
