@@ -49,10 +49,27 @@ spec:
               "signingAlgorithm": "RS256",
               "storageLabelClaim": "preferred_username",
               "buttonText": "Login with Authentik",
+              "endSessionEndpoint": "https://auth.barnes.biz/application/o/immich/end-session/",
+              "accountManagementUrl": "https://auth.barnes.biz/if/user/",
               "autoRegister": true,
-              "autoLaunch": false,
+              "autoLaunch": true,
               "mobileOverrideEnabled": false,
               "mobileRedirectUri": ""
+            },
+            "notifications": {
+              "smtp": {
+                "enabled": true,
+                "from": "Immich <noreply@barnes.biz>",
+                "replyTo": "",
+                "transport": {
+                  "host": "smtp.mail.me.com",
+                  "port": 587,
+                  "secure": false,
+                  "ignoreCert": false,
+                  "username": "{{ .smtpUser }}",
+                  "password": "{{ .smtpPass }}"
+                }
+              }
             },
             "passwordLogin": {
               "enabled": false
@@ -81,3 +98,11 @@ spec:
       remoteRef:
         key: oidc-immich
         property: IMMICH_CLIENT_SECRET
+    - secretKey: smtpUser
+      remoteRef:
+        key: smtp-credentials
+        property: AUTHENTIK_EMAIL__USERNAME
+    - secretKey: smtpPass
+      remoteRef:
+        key: smtp-credentials
+        property: AUTHENTIK_EMAIL__PASSWORD
