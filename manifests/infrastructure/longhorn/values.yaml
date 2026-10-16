@@ -13,7 +13,12 @@ defaultSettings:
 # Retiring an app (finalizer cascade) deletes its PVCs; Retain keeps the volume and its data.
 persistence:
   reclaimPolicy: Retain
-  defaultClassReplicaCount: 2
+  # Persistent data lives only on rpi5b-cp-01, whose disk is a RAID1 mirror; a second
+  # replica on the other node would add little. Scratch data uses longhorn-scratch instead.
+  defaultClassReplicaCount: 1
+  defaultDiskSelector:
+    enable: true
+    selector: persistent
 preUpgradeChecker:
   jobEnabled: false
 longhornManager:
