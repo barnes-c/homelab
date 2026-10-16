@@ -13,6 +13,7 @@ defaultSettings:
 # Retiring an app (finalizer cascade) deletes its PVCs; Retain keeps the volume and its data.
 persistence:
   reclaimPolicy: Retain
+  defaultClassReplicaCount: 2
 preUpgradeChecker:
   jobEnabled: false
 longhornManager:
