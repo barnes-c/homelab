@@ -7,6 +7,8 @@ server:
   controllers:
     main:
       strategy: Recreate
+      annotations:
+        reloader.stakater.com/auto: "true"
       pod:
         securityContext:
           runAsNonRoot: true
