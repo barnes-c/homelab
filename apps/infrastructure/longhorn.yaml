@@ -17,6 +17,11 @@ spec:
           - $values/manifests/infrastructure/longhorn/values.yaml
     - repoURL: https://github.com/barnes-c/homelab
       targetRevision: master
+      path: manifests/infrastructure/longhorn
+      directory:
+        exclude: values.yaml
+    - repoURL: https://github.com/barnes-c/homelab
+      targetRevision: master
       ref: values
   destination:
     server: https://kubernetes.default.svc

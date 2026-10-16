@@ -93,7 +93,7 @@ locals {
         kind       = "KubeNodeConfig"
         "$patch"   = "delete"
       }),
-      yamlencode({
+      yamlencode(merge({
         apiVersion = "v1alpha1"
         kind       = "KubeNodeConfig"
         nodeIP     = {}
@@ -101,18 +101,17 @@ locals {
           "node-role.kubernetes.io/control-plane"                   = ""
           "node.kubernetes.io/exclude-from-external-load-balancers" = ""
         }, v.node_labels)
-      }),
+      }, length(v.node_annotations) > 0 ? { annotations = v.node_annotations } : {})),
     ]
   }
 
   # Workers keep the generated KubeNodeConfig (it carries no control-plane taint), so
-  # labels merge in rather than needing the delete/re-add dance.
+  # labels and annotations merge in rather than needing the delete/re-add dance.
   worker_label_patch = {
-    for k, v in local.workers : k => yamlencode({
-      apiVersion = "v1alpha1"
-      kind       = "KubeNodeConfig"
-      labels     = v.node_labels
-    }) if length(v.node_labels) > 0
+    for k, v in local.workers : k => yamlencode(merge(
+      { apiVersion = "v1alpha1", kind = "KubeNodeConfig", labels = v.node_labels },
+      length(v.node_annotations) > 0 ? { annotations = v.node_annotations } : {},
+    )) if length(v.node_labels) > 0 || length(v.node_annotations) > 0
   }
 
   # Hostname moved out of v1alpha1 in Talos v1.14. Config generation now emits a

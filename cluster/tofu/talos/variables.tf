@@ -63,8 +63,9 @@ variable "nodes" {
     longhorn_selector = optional(string)
     longhorn_min_size = optional(string)
 
-    # Extra Kubernetes node labels, applied via KubeNodeConfig.
-    node_labels = optional(map(string), {})
+    # Extra Kubernetes node labels and annotations, applied via KubeNodeConfig.
+    node_labels      = optional(map(string), {})
+    node_annotations = optional(map(string), {})
   }))
 
   default = {
@@ -85,22 +86,34 @@ variable "nodes" {
       longhorn_selector  = "disk.dev_path == '/dev/md127'"
       longhorn_min_size  = "500GiB"
 
-      # Paired with createDefaultDiskLabeledNodes in apps/infrastructure/longhorn.yaml: only nodes
-      # carrying this label get a Longhorn disk. Without it Longhorn would create one on
-      # every node at defaultDataPath, including workers whose only storage is an SD card.
+      # Paired with createDefaultDiskLabeledNodes in manifests/infrastructure/longhorn/values.yaml:
+      # only labelled nodes get a Longhorn disk. "config" makes Longhorn take the disk, with its
+      # tags, from the annotation below. It is read only when the node has no disk yet.
       node_labels = {
-        "node.longhorn.io/create-default-disk" = "true"
+        "node.longhorn.io/create-default-disk" = "config"
+      }
+      node_annotations = {
+        "node.longhorn.io/default-disks-config" = "[{\"path\":\"/var/mnt/longhorn\",\"allowScheduling\":true,\"tags\":[\"persistent\"]}]"
       }
     }
 
-    # Compute-only worker: its USB SSD does not enumerate, so it has only the SD card and
-    # is deliberately unlabelled for Longhorn, which would otherwise wear the card out.
-    # See barnes-c/homelab-issues#19.
+    # Samsung T7 500GB on USB: scratch storage for Longhorn (metrics, logs), no replicas.
+    # Matched by model because the USB bridge reports a generic wwid (naa.5000000000000001).
+    # EPHEMERAL stays on the SD card; only Longhorn moves to the T7.
     "rpi4b-wk-01" = {
-      ip            = "192.168.1.12"
-      role          = "worker"
-      install_disk  = "/dev/mmcblk0"
-      install_image = "factory.talos.dev/metal-installer/b3a0359a76da43ab16121ec916e421be6af9ed098dc5740d88683cf93eef2133:v1.14.0-rc.2"
+      ip                = "192.168.1.12"
+      role              = "worker"
+      install_disk      = "/dev/mmcblk0"
+      install_image     = "factory.talos.dev/metal-installer/b3a0359a76da43ab16121ec916e421be6af9ed098dc5740d88683cf93eef2133:v1.14.0-rc.2"
+      longhorn_selector = "disk.model == 'PSSD T7'"
+      longhorn_min_size = "400GiB"
+
+      node_labels = {
+        "node.longhorn.io/create-default-disk" = "config"
+      }
+      node_annotations = {
+        "node.longhorn.io/default-disks-config" = "[{\"path\":\"/var/mnt/longhorn\",\"allowScheduling\":true,\"tags\":[\"scratch\"]}]"
+      }
     }
 
     # "cm5-wk-01" = {
