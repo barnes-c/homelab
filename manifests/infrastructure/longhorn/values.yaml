@@ -4,11 +4,12 @@ defaultSettings:
   defaultDataPath: /var/mnt/longhorn
   defaultReplicaCount: "1"
   replicaAutoBalance: disabled
-  # Only nodes labelled node.longhorn.io/create-default-disk=true get a disk.
+  # Only nodes labelled node.longhorn.io/create-default-disk get a disk; with "config" its
+  # path and tags come from the node.longhorn.io/default-disks-config annotation.
   # Without this Longhorn creates one at defaultDataPath on EVERY node, and on a
   # worker whose only storage is an SD card it would silently create that
-  # directory and start writing replicas to it. Labels are set per node in
-  # cluster/tofu/talos/variables.tf (node_labels).
+  # directory and start writing replicas to it. Both are set per node in
+  # cluster/tofu/talos/variables.tf (node_labels, node_annotations).
   createDefaultDiskLabeledNodes: "true"
 # Retiring an app (finalizer cascade) deletes its PVCs; Retain keeps the volume and its data.
 persistence:
