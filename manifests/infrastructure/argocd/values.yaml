@@ -27,7 +27,8 @@ configs:
         - openid
         - profile
         - email
-        - groups
+        - offline_access
+      refreshTokenThreshold: 5m
   rbac:
     policy.csv: |
       g, ArgoCD Admins, role:admin
