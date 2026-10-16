@@ -2,13 +2,13 @@ fullnameOverride: prometheus
 
 server:
   fullnameOverride: prometheus
-  retention: 15d
+  retention: 90d
   # Under persistentVolume.size so blocks evict before the disk fills; base-2 units. See barnes-c/homelab-issues#25.
-  retentionSize: 8GB
+  retentionSize: 26GB
   persistentVolume:
     enabled: true
     storageClass: longhorn
-    size: 10Gi
+    size: 30Gi
   resources:
     requests:
       cpu: 200m
