@@ -2,5 +2,5 @@
   "name": "grafana",
   "repoURL": "https://grafana-community.github.io/helm-charts",
   "chart": "grafana",
-  "chartVersion": "14.0.0"
+  "chartVersion": "14.0.1"
 }
