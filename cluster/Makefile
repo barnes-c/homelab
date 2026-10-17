@@ -9,16 +9,17 @@ TALOS_VERSION  ?= v1.14.4
 
 # Local build inputs for the Pi 5.
 TALOS_SRC      ?= $(HOME)/Code/siderolabs/talos
-TALOS_BRANCH   ?= fix/no-cert-regen-on-ntp-spike-rc2
+TALOS_BRANCH   ?= fix/no-cert-regen-on-ntp-spike-v1.14.4
 REGISTRY       ?= 192.168.1.18:5005
-# v0.2.1 is the first release carrying the SATA HAT fix; earlier tags time out on every
-# command. Not yet A/B tested against the old local overlay -- see barnes-c/homelab-issues#18 for the fallback.
-OVERLAY_IMAGE  ?= ghcr.io/siderolabs/sbc-raspberrypi:v0.2.1
+# v0.2.1+ carries the SATA HAT fix; earlier tags time out on every command. Not yet A/B
+# tested against the old local overlay -- see barnes-c/homelab-issues#18 for the fallback.
+OVERLAY_IMAGE  ?= ghcr.io/siderolabs/sbc-raspberrypi:v0.2.2
 
 # System extensions. The worker schematics name these and let Image Factory resolve the
-# version; a local imager build has to pin them by tag.
+# version; a local imager build has to pin them by tag. These match what Image Factory
+# resolves for TALOS_VERSION.
 ISCSI_TOOLS_IMAGE      ?= ghcr.io/siderolabs/iscsi-tools:v0.2.0
-UTIL_LINUX_TOOLS_IMAGE ?= ghcr.io/siderolabs/util-linux-tools:v1.6.8
+UTIL_LINUX_TOOLS_IMAGE ?= ghcr.io/siderolabs/util-linux-tools:2.42.2
 DOCKER         := /opt/homebrew/bin/docker
 
 # TAG comes from `git describe`, so a dirty tree yields "-dirty" and is not reproducible.

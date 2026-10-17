@@ -43,7 +43,9 @@ longhornDriver:
       cpu: 200m
       memory: 128Mi
 csi:
-  attacherReplicaCount: 1
-  provisionerReplicaCount: 1
+  # Longhorn gives these two a PDB with minAvailable: 1, so a single replica blocks every
+  # drain of its node. Two keep one eviction allowed. See barnes-c/homelab-issues#47.
+  attacherReplicaCount: 2
+  provisionerReplicaCount: 2
   resizerReplicaCount: 1
   snapshotterReplicaCount: 1

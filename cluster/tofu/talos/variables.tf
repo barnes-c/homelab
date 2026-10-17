@@ -12,11 +12,11 @@ variable "cluster_vip" {
 
 variable "talos_version" {
   description = <<-EOT
-    Talos version the machine config schema is generated for. v1.14.0 is not released
-    yet -- rc.2 is the newest tag, and the Pi 5 runs one commit past it.
+    Talos version the machine config schema is generated for. Must not be newer than the
+    oldest node: the Pi 5 runs one commit past v1.14.4, the workers run v1.14.4.
   EOT
   type        = string
-  default     = "v1.14.0-rc.2"
+  default     = "v1.14.4"
 }
 
 variable "kubernetes_version" {
@@ -40,7 +40,7 @@ variable "nodes" {
     Cluster nodes, keyed by hostname.
 
     install_image: Pi 5 points at a locally built installer carrying the NTP cert-regen
-    fix (cb393a0d7), which is not upstream. Workers use stock Image Factory images,
+    fix (d1da2caa8, on v1.14.4), which is not upstream. Workers use stock Image Factory images,
     written here by `make schematics`.
 
     ephemeral_selector / longhorn_selector: CEL over Talos DiskSpec. Pin by wwid when
@@ -75,7 +75,7 @@ variable "nodes" {
       ip            = "192.168.1.11"
       role          = "controlplane"
       install_disk  = "/dev/mmcblk0"
-      install_image = "192.168.1.18:5005/talos/installer:v1.14.0-rc.2-1-gcb393a0d7"
+      install_image = "192.168.1.18:5005/talos/installer:v1.14.4-1-gd1da2caa8"
 
       # Verified on hardware: md127 is RAID1 over sda+sdb (Samsung 870 2TB), [UU], and
       # already backs EPHEMERAL at /dev/md127p2. The array has no wwid of its own, so

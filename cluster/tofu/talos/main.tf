@@ -238,6 +238,12 @@ locals {
 
 resource "talos_machine_secrets" "cluster" {
   talos_version = var.talos_version
+
+  # Changing talos_version regenerates every CA and the cluster ID, which locks all nodes out.
+  # The secrets are generated once; only the machine configs follow var.talos_version.
+  lifecycle {
+    ignore_changes = [talos_version]
+  }
 }
 
 data "talos_client_configuration" "cluster" {

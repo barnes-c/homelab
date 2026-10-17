@@ -28,7 +28,7 @@ image is then downloaded per `TALOS_VERSION`. The factory resolves extension ver
 
 **Pi 5** — a local imager build, because Image Factory can only layer onto a published
 release (see barnes-c/homelab-issues#15). It builds `installer-base` + `imager` from `TALOS_SRC`
-(`~/Code/siderolabs/talos`, branch `fix/no-cert-regen-on-ntp-spike-rc2`) and pushes them to
+(`~/Code/siderolabs/talos`, branch `fix/no-cert-regen-on-ntp-spike-v1.14.4`) and pushes them to
 the local registry at `REGISTRY` (`192.168.1.18:5005`) under `talos/`. A profile has to pin
 extension image refs by tag, unlike a schematic.
 
