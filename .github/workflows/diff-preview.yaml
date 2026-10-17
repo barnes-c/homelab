@@ -44,6 +44,7 @@ jobs:
             -v /var/run/docker.sock:/var/run/docker.sock \
             -v "$PWD/base:/base-branch" \
             -v "$PWD/pull-request:/target-branch" \
+            -v "$PWD/pull-request/.github/argocd-diff-preview/values.yaml:/argocd-config/values.yaml" \
             -v "$PWD/output:/output" \
             -e BASE_BRANCH -e TARGET_BRANCH -e REPO \
             -e ARGOCD_CHART_VERSION="$ARGOCD_CHART_VERSION" \

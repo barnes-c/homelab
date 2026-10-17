@@ -1,0 +1,7 @@
+# Helm values for the throwaway Argo CD that argocd-diff-preview installs in CI, not the
+# cluster's. The chart pulls redis anonymously from ECR Public, which rate-limits GitHub's
+# shared runner IPs (429) and fails the run; mirror.gcr.io serves the same image digest.
+# See dag-andersen/argocd-diff-preview#494.
+redis:
+  image:
+    repository: mirror.gcr.io/library/redis
