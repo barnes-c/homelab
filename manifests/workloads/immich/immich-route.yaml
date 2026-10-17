@@ -10,8 +10,14 @@ spec:
       name: public
       namespace: gateway
       sectionName: https
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: private
+      namespace: gateway
+      sectionName: https
   hostnames:
     - img.barnes.biz
+    - img-lan.barnes.biz
   rules:
     - matches:
         - path:
