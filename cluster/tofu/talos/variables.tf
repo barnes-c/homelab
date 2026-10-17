@@ -99,14 +99,15 @@ variable "nodes" {
 
     # Samsung T7 500GB on USB: scratch storage for Longhorn (metrics, logs), no replicas.
     # Matched by model because the USB bridge reports a generic wwid (naa.5000000000000001).
-    # EPHEMERAL stays on the SD card; only Longhorn moves to the T7.
     "rpi4b-wk-01" = {
-      ip                = "192.168.1.12"
-      role              = "worker"
-      install_disk      = "/dev/mmcblk0"
-      install_image     = "factory.talos.dev/metal-installer/b3a0359a76da43ab16121ec916e421be6af9ed098dc5740d88683cf93eef2133:v1.14.0-rc.2"
-      longhorn_selector = "disk.model == 'PSSD T7'"
-      longhorn_min_size = "400GiB"
+      ip                 = "192.168.1.12"
+      role               = "worker"
+      install_disk       = "/dev/mmcblk0"
+      install_image      = "factory.talos.dev/metal-installer/b3a0359a76da43ab16121ec916e421be6af9ed098dc5740d88683cf93eef2133:v1.14.4"
+      ephemeral_selector = "disk.model == 'PSSD T7'"
+      ephemeral_max_size = "50GiB"
+      longhorn_selector  = "disk.model == 'PSSD T7'"
+      longhorn_min_size  = "400GiB"
 
       node_labels = {
         "node.longhorn.io/create-default-disk" = "config"
@@ -120,7 +121,7 @@ variable "nodes" {
     #   ip            = "192.168.1.13"
     #   role          = "worker"
     #   install_disk  = "/dev/nvme0n1"
-    #   install_image = "factory.talos.dev/metal-installer/CHANGEME:v1.14.0-rc.2"
+    #   install_image = "factory.talos.dev/metal-installer/CHANGEME:v1.14.4"
     #   longhorn_selector = "disk.transport == 'nvme'"
     #   longhorn_min_size = "100GiB"
     # }
@@ -128,7 +129,7 @@ variable "nodes" {
     #   ip            = "192.168.1.14"
     #   role          = "worker"
     #   install_disk  = "/dev/nvme0n1"
-    #   install_image = "factory.talos.dev/metal-installer/CHANGEME:v1.14.0-rc.2"
+    #   install_image = "factory.talos.dev/metal-installer/CHANGEME:v1.14.4"
     #   longhorn_selector = "disk.transport == 'nvme'"
     #   longhorn_min_size = "100GiB"
     # }

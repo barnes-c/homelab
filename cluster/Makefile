@@ -5,7 +5,7 @@
 
 SHELL          := /bin/bash
 FACTORY_HOST   := factory.talos.dev
-TALOS_VERSION  ?= v1.14.0-rc.2
+TALOS_VERSION  ?= v1.14.4
 
 # Local build inputs for the Pi 5.
 TALOS_SRC      ?= $(HOME)/Code/siderolabs/talos
