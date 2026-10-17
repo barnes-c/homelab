@@ -4,6 +4,9 @@ defaultSettings:
   defaultDataPath: /var/mnt/longhorn
   defaultReplicaCount: "1"
   replicaAutoBalance: disabled
+  # Every volume has one replica, so the default (block-if-contains-last-replica) blocks
+  # every drain. This lets the drain proceed once evicted pods have detached their volumes.
+  nodeDrainPolicy: allow-if-replica-is-stopped
   # Only nodes labelled node.longhorn.io/create-default-disk get a disk; with "config" its
   # path and tags come from the node.longhorn.io/default-disks-config annotation.
   # Without this Longhorn creates one at defaultDataPath on EVERY node, and on a
