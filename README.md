@@ -3,11 +3,12 @@
 Talos Linux cluster on Raspberry Pi hardware, and everything running on it.
 
 ```txt
-Makefile              tofu/talos            tofu/bootstrap        apps/
-──────────            ──────────            ──────────────        ─────
+Makefile              tofu                                        apps/
+──────────            ──────────────────────────────────          ─────
 Talos images    ──►   machine config  ──►   Cilium          ──►   apps-root Application
 (factory +            bootstrap             ArgoCD                ArgoCD syncs apps/
  local build)         kubeconfig            apps-root
+                      (talos.tf)            (gateway-api.tf, cilium.tf, argocd.tf)
 ```
 
 The split is deliberate: OpenTofu owns the cluster and the two things that must exist
@@ -78,11 +79,18 @@ A **steady-dark ACT LED means it never booted** — don't debug the network.
 ## Step 3 — Provision
 
 ```sh
-cd tofu/talos
-tofu init && tofu apply
+cd tofu
+tofu init
+tofu apply -target=talos_cluster_kubeconfig.cluster
 tofu output -raw kubeconfig  > ~/.kube/config
 tofu output -raw talosconfig > ~/.talos/config
 ```
+
+The first apply stops at the kubeconfig: it provisions the nodes and bootstraps etcd, but
+installs nothing into Kubernetes yet. The helm and kubectl providers are configured from
+`talos_cluster_kubeconfig`, which doesn't exist until then, and Step 4 needs a gap for the
+sealed-secrets keys. The kubeconfig written here is for `kubectl` only; OpenTofu doesn't
+read it.
 
 Before the first apply, fill in the real disk selectors. They are CEL over Talos'
 `DiskSpec`, and device names are not stable — pin by `wwid` when disks are identical:
@@ -135,15 +143,17 @@ kubectl apply -f sealed-secrets-keys.json
 ```
 
 ```sh
-cd tofu/bootstrap
-tofu init && tofu apply
+cd tofu
+tofu apply
 ```
 
-Installs Cilium, then ArgoCD, then the `apps-root` Application. ArgoCD takes over.
+The full apply installs the rest: the Gateway API CRDs (`gateway-api.tf`), Cilium
+(`cilium.tf`), then ArgoCD and the `apps-root` Application (`argocd.tf`). ArgoCD takes over.
 
 Cilium is **not** an ArgoCD Application. ArgoCD runs on the network Cilium provides, so a
 selfHeal loop on the CNI can cut ArgoCD's own connectivity and leave nothing able to
-repair it. Upgrade Cilium by bumping `cilium_version` and re-applying.
+repair it. Upgrade Cilium by bumping `helm_release.cilium`'s `version` in `cilium.tf` and
+re-applying.
 
 ## Backups
 
@@ -177,8 +187,7 @@ kubeseal --recovery-unseal --recovery-private-key sealed-secrets-keys.json \
 Makefile              image builds
 schematics/           Image Factory schematics (workers)
 profiles/             imager profiles (Pi 5) — *.tmpl, rendered by the Makefile
-tofu/talos/           machine config, bootstrap, kubeconfig
-tofu/bootstrap/       Cilium, ArgoCD, apps-root
+tofu/                 talos.tf (machine config, kubeconfig), gateway-api.tf, cilium.tf, argocd.tf
 apps/                 ArgoCD Applications
 manifests/            raw manifests referenced by those Applications
 ```
@@ -191,7 +200,7 @@ manifests/            raw manifests referenced by those Applications
   machinery `v1.13.0` and rejects them with `"UnattendedInstallConfig" "v1alpha1": not
   registered`; `0.12.0-beta.0` bundles `v1.14.0-rc.2`. Setting a field in both v1alpha1 and
   its document fails validation with `X is already set in v1alpha1 config`, so
-  `tofu/talos/main.tf` deliberately keeps only what has no document equivalent.
+  `tofu/talos.tf` deliberately keeps only what has no document equivalent.
 - **The OpenTofu registry cannot install `0.12.0-beta.0`** — it fails with
   `authentication signature from unknown issuer`. Install it as a filesystem mirror:
 
@@ -203,11 +212,25 @@ manifests/            raw manifests referenced by those Applications
   unzip -o /tmp/p.zip -d "$DIR"
   ```
 
+- **One root means every plan also talks to Kubernetes.** `tofu plan` refreshes Cilium,
+  ArgoCD and the Gateway API CRDs through the API server at the VIP. When that API is down
+  (a bad machine config, a node that won't boot), the plan fails before it reaches the Talos
+  fix. Skip the Kubernetes side:
+
+  ```sh
+  tofu -chdir=tofu apply -refresh=false -target='talos_machine_configuration_apply.node["rpi5b-cp-01"]'
+  ```
+
+  The same applies when `talos_cluster_kubeconfig` is due for replacement (its client cert is
+  renewed near expiry, or the control-plane IP changed): the helm and kubectl providers then
+  have no known credentials at plan time. Apply `-target=talos_cluster_kubeconfig.cluster`
+  first, then the rest.
+
 - **Validate patches before applying.** A bad patch costs a failed apply and a round trip:
 
   ```sh
-  tofu -chdir=tofu/talos plan -out=/tmp/p.bin
-  tofu -chdir=tofu/talos show -json /tmp/p.bin \
+  tofu -chdir=tofu plan -out=/tmp/p.bin
+  tofu -chdir=tofu show -json /tmp/p.bin \
     | jq -r '.planned_values.root_module.resources[]     |              |                    |            |
     | select(.type=="talos_machine_configuration_apply") |              |                    |            |
     | .values.config_patches                             | to_entries[] | "\(.key)\t\(.value | @base64)"' |

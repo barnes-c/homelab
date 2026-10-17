@@ -152,3 +152,33 @@ variable "registry_mirrors" {
     "192.168.1.18:5005" = ["http://192.168.1.18:5005"]
   }
 }
+
+variable "cilium_extra_values" {
+  description = "Merged over the Talos-specific Cilium defaults"
+  type        = any
+  default     = {}
+}
+
+variable "argocd_extra_values" {
+  description = "Merged over the ArgoCD defaults"
+  type        = any
+  default     = {}
+}
+
+variable "apps_repo" {
+  description = "Git repository holding the ArgoCD Application manifests"
+  type        = string
+  default     = "https://github.com/barnes-c/homelab"
+}
+
+variable "apps_revision" {
+  description = "Git revision to track"
+  type        = string
+  default     = "master"
+}
+
+variable "apps_path" {
+  description = "Path within the repo containing Application manifests"
+  type        = string
+  default     = "apps"
+}
