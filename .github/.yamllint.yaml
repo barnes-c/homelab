@@ -2,7 +2,7 @@
 extends: default
 
 ignore: |
-  cluster/tofu/bootstrap/gateway-api/experimental-install.yaml
+  cluster/tofu/gateway-api/experimental-install.yaml
 
 rules:
   line-length:

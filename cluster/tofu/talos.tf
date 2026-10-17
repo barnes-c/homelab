@@ -298,8 +298,9 @@ resource "talos_cluster_kubeconfig" "cluster" {
   depends_on = [talos_machine_bootstrap.cluster]
 }
 
-# Without a CNI the API server never reports ready, so this is the real gate on
-# tofu/bootstrap being able to run.
+# The Kubernetes resources (gateway-api.tf, cilium.tf, argocd.tf) are ordered after this
+# kubeconfig only through the provider config, and it doesn't wait for the API server: on a
+# fresh cluster, apply this first with -target (README Step 3) and only then apply the rest.
 # Deliberately no talos_cluster_health data source here.
 #
 # It was declared as a gate on the cluster being up, but nothing consumed its output, so

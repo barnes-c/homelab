@@ -9,11 +9,11 @@ set -euo pipefail
 #        scripts/gateway-api-crds.sh --update   download the required CRDs
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-MAIN_TF="$ROOT/cluster/tofu/bootstrap/main.tf"
-CRDS="$ROOT/cluster/tofu/bootstrap/gateway-api/experimental-install.yaml"
+CILIUM_TF="$ROOT/cluster/tofu/cilium.tf"
+CRDS="$ROOT/cluster/tofu/gateway-api/experimental-install.yaml"
 
-cilium=$(awk '/resource "helm_release" "cilium"/,/^}/' "$MAIN_TF" | sed -n 's/^ *version *= *"\(.*\)"$/\1/p')
-[ -n "$cilium" ] || { echo "error: no Cilium version found in $MAIN_TF" >&2; exit 1; }
+cilium=$(awk '/resource "helm_release" "cilium"/,/^}/' "$CILIUM_TF" | sed -n 's/^ *version *= *"\(.*\)"$/\1/p')
+[ -n "$cilium" ] || { echo "error: no Cilium version found in $CILIUM_TF" >&2; exit 1; }
 
 # Cilium's go.mod pins the Gateway API module it is built and tested against. Some releases
 # pin a pre-release (1.19.4: v1.4.0-rc.2); its release counterpart is the requirement.
