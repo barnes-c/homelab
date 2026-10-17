@@ -47,11 +47,7 @@ longhornDriver:
       cpu: 200m
       memory: 128Mi
 csi:
-  attacher:
-    replicas: 1
-  provisioner:
-    replicas: 1
-  resizer:
-    replicas: 1
-  snapshotter:
-    replicas: 1
+  attacherReplicaCount: 1
+  provisionerReplicaCount: 1
+  resizerReplicaCount: 1
+  snapshotterReplicaCount: 1
