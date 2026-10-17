@@ -30,14 +30,10 @@ longhornManager:
     requests:
       cpu: 50m
       memory: 128Mi
+longhornGlobalManager:
+  replicas: 2
 longhornUI:
-  resources:
-    requests:
-      cpu: 25m
-      memory: 32Mi
-    limits:
-      cpu: 200m
-      memory: 128Mi
+  replicas: 0
 longhornDriver:
   resources:
     requests:
