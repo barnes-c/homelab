@@ -51,6 +51,16 @@ Gotchas:
   `/opt/homebrew/bin/docker`), not podman's alias. Running the imager and pushing use
   **podman** and **crane**, both with TLS verification off for the plaintext local registry.
 - `INSTALLER_ARCH=targetarch` is required; the default `all` pulls `pkg-kernel-amd64`.
+- The Pi 5 kernel is **local too**: `PKG_KERNEL` adds the RP1 PWM (fan) driver, built from
+  `~/Code/siderolabs/pkgs` branch `feat/pwm-rp1-fan-v1.14.4` (barnes-c/homelab-issues#8).
+  BuildKit treats `192.168.1.18:5005` as HTTPS, so pushes pass `registry.insecure=true` and
+  the kernel is pulled as `localhost:5005/...`.
+- **Check the podman VM has ≥ 45 GB free before a kernel build** (`podman machine ssh -- df -h /`).
+  The kernel build takes ~36 GB at its peak and fails only at the final copy, after ~40 min of
+  compiling. BuildKit cache is the usual culprit: `podman exec buildx_buildkit_local0 buildctl du`.
+  `buildctl prune --keep-duration 48h` frees little when newer builds share old layers.
+- **Upgrade the Pi 5 with `talosctl upgrade --reboot-mode powercycle`.** The default kexec
+  reboot hung the node until it was power-cycled by hand (barnes-c/homelab-issues#47).
 
 ## Conventions
 

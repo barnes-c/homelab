@@ -20,10 +20,17 @@ OVERLAY_IMAGE  ?= ghcr.io/siderolabs/sbc-raspberrypi:v0.2.2
 # resolves for TALOS_VERSION.
 ISCSI_TOOLS_IMAGE      ?= ghcr.io/siderolabs/iscsi-tools:v0.2.0
 UTIL_LINUX_TOOLS_IMAGE ?= ghcr.io/siderolabs/util-linux-tools:2.42.2
+
+# Kernel with the RP1 PWM driver, without which the Pi 5 fan never spins. Built from
+# ~/Code/siderolabs/pkgs branch feat/pwm-rp1-fan-v1.14.4, see barnes-c/homelab-issues#8.
+# Referenced via localhost: BuildKit only pulls over plain HTTP from localhost registries.
+PKG_KERNEL     ?= localhost:5005/kernel:v1.14.0-44-g2ec10eb-pwmrp1v12
+KERNEL_SUFFIX  ?= -pwmfan
 DOCKER         := /opt/homebrew/bin/docker
 
 # TAG comes from `git describe`, so a dirty tree yields "-dirty" and is not reproducible.
-TALOS_TAG       = $(shell git -C $(TALOS_SRC) describe --tag --always --dirty --match 'v[0-9]*')
+# KERNEL_SUFFIX marks images built with PKG_KERNEL; the Talos version string itself is unchanged.
+TALOS_TAG       = $(shell git -C $(TALOS_SRC) describe --tag --always --dirty --match 'v[0-9]*')$(KERNEL_SUFFIX)
 INSTALLER_TAG  ?= $(TALOS_TAG)
 
 WORKER_SCHEMATICS := rpi4b cm5
@@ -58,7 +65,7 @@ check-clean:
 	@test -z "$$(git -C $(TALOS_SRC) status --porcelain --untracked-files=no)" || \
 		{ echo "!! $(TALOS_SRC) has uncommitted tracked changes -- TAG would be '-dirty'"; \
 		  git -C $(TALOS_SRC) status --short --untracked-files=no; exit 1; }
-	@case '$(TALOS_TAG)' in *-dirty) \
+	@case '$(TALOS_TAG)' in *-dirty*) \
 		echo "!! TAG is $(TALOS_TAG) -- refusing to build something unreproducible"; exit 1 ;; esac
 	@echo ">> talos @ $(TALOS_TAG)"
 
@@ -67,7 +74,8 @@ check-clean:
 .imager-$(TALOS_TAG): check-clean
 	BUILDX_BUILDER=local $(MAKE) -C $(TALOS_SRC) installer-base imager \
 		PLATFORM=linux/arm64 INSTALLER_ARCH=targetarch \
-		PUSH=true REGISTRY_AND_USERNAME=$(REGISTRY)/talos
+		PUSH=true REGISTRY_AND_USERNAME=$(REGISTRY)/talos PKG_KERNEL=$(PKG_KERNEL) \
+		"IMAGE_TAG_OUT=$(TALOS_TAG),registry.insecure=true"
 	@touch $@
 
 profiles/%.yaml: profiles/%.yaml.tmpl

@@ -66,6 +66,9 @@ variable "nodes" {
     # Extra Kubernetes node labels and annotations, applied via KubeNodeConfig.
     node_labels      = optional(map(string), {})
     node_annotations = optional(map(string), {})
+
+    # Written to /sys by a SysfsConfig document; keys are /sys paths with dots for slashes.
+    sysfs = optional(map(string), {})
   }))
 
   default = {
@@ -75,7 +78,7 @@ variable "nodes" {
       ip            = "192.168.1.11"
       role          = "controlplane"
       install_disk  = "/dev/mmcblk0"
-      install_image = "192.168.1.18:5005/talos/installer:v1.14.4-1-gd1da2caa8"
+      install_image = "192.168.1.18:5005/talos/installer:v1.14.4-1-gd1da2caa8-pwmfan"
 
       # Verified on hardware: md127 is RAID1 over sda+sdb (Samsung 870 2TB), [UU], and
       # already backs EPHEMERAL at /dev/md127p2. The array has no wwid of its own, so
@@ -94,6 +97,13 @@ variable "nodes" {
       }
       node_annotations = {
         "node.longhorn.io/default-disks-config" = "[{\"path\":\"/var/mnt/longhorn\",\"allowScheduling\":true,\"tags\":[\"persistent\"]}]"
+      }
+
+      # Keep the fan PWM enabled at 0% instead of disabling it: the v12 rp1-pwm driver drops
+      # the inverted polarity on disable, which runs the fan at full speed. See
+      # barnes-c/homelab-issues#8. hwmon2 is fixed by driver probe order on this kernel.
+      sysfs = {
+        "devices.platform.cooling_fan.hwmon.hwmon2.pwm1_enable" = "2"
       }
     }
 
