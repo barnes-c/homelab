@@ -152,6 +152,14 @@ locals {
     } if v.ephemeral_selector != null
   }
 
+  sysfs_patch = {
+    for k, v in var.nodes : k => {
+      apiVersion = "v1alpha1"
+      kind       = "SysfsConfig"
+      params     = v.sysfs
+    } if length(v.sysfs) > 0
+  }
+
   # Longhorn backing store, mounted at /var/mnt/longhorn.
   longhorn_patch = {
     for k, v in var.nodes : k => {
@@ -232,6 +240,7 @@ locals {
       lookup(local.worker_label_patch, k, null) != null ? [local.worker_label_patch[k]] : [],
       lookup(local.ephemeral_patch, k, null) != null ? [yamlencode(local.ephemeral_patch[k])] : [],
       lookup(local.longhorn_patch, k, null) != null ? [yamlencode(local.longhorn_patch[k])] : [],
+      lookup(local.sysfs_patch, k, null) != null ? [yamlencode(local.sysfs_patch[k])] : [],
     ))
   }
 }
