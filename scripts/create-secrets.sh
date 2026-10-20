@@ -46,6 +46,8 @@ prompt PORKBUN_API_KEY         "Porkbun API key (pk1_...)"
 prompt PORKBUN_SECRET_API_KEY  "Porkbun secret API key (sk1_...)"
 prompt SMTP_USER             "SMTP username (barnes-biz)" false
 prompt SMTP_PASS             "SMTP password (barnes-biz)"
+prompt ASURA_EMAIL           "Asura Scans email" false
+prompt ASURA_PASSWORD        "Asura Scans password"
 echo ""
 echo "=== Sealing secrets ==="
 
@@ -72,6 +74,11 @@ seal authentik smtp-credentials \
 seal blog-barnes-biz goatcounter-admin \
   "$MANIFESTS/workloads/blog-barnes-biz/goatcounter-admin.yaml" \
   --from-literal=password="$GOATCOUNTER_ADMIN_PASSWORD"
+
+seal asurascans asurascans-credentials \
+  "$MANIFESTS/workloads/asurascans/asurascans-credentials.yaml" \
+  --from-literal=email="$ASURA_EMAIL" \
+  --from-literal=password="$ASURA_PASSWORD"
 
 echo ""
 echo "Done. Review the files, then commit and push."

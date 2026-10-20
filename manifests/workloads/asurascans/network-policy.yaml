@@ -1,0 +1,15 @@
+# On top of workloads-baseline: the claim job calls the Asura Scans API.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: claim-token
+  namespace: asurascans
+spec:
+  endpointSelector: {}
+  egress:
+    - toFQDNs:
+        - matchName: api.asurascans.com
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP

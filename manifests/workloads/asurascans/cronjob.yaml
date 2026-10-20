@@ -1,0 +1,80 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: claim-token
+  namespace: asurascans
+spec:
+  schedule: "0 7 * * *"
+  timeZone: Etc/UTC
+  startingDeadlineSeconds: 3600
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      # Caps the Job, retries included, so nothing claims much past 09:00.
+      activeDeadlineSeconds: 7500
+      template:
+        spec:
+          restartPolicy: Never
+          securityContext:
+            runAsUser: 65532
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+            - name: claim-token
+              image: docker.io/curlimages/curl:8.23.0@sha256:a134550be58ab783810e613ae96fd253c38f7bdd16d9bf9be350700c7a29ac06
+              env:
+                - name: ASURA_EMAIL
+                  valueFrom:
+                    secretKeyRef:
+                      name: asurascans-credentials
+                      key: email
+                - name: ASURA_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: asurascans-credentials
+                      key: password
+              command:
+                - sh
+                - -c
+                - |
+                  set -eu
+
+                  B=https://api.asurascans.com/api
+                  api() { curl -sS -A "Mozilla/5.0" "$@"; }
+
+                  sleep $(( $(od -An -N2 -tu2 /dev/urandom) % 7200 ))
+
+                  # The claim button only POSTs /tokens/claim; it does not depend on the comic page.
+                  RESP=$(api -H "Content-Type: application/json" \
+                    --data "{\"email\":\"$ASURA_EMAIL\",\"password\":\"$ASURA_PASSWORD\"}" "$B/auth/login")
+                  TOKEN=$(echo "$RESP" | sed -n 's/.*"access_token":"\([^"]*\)".*/\1/p')
+                  [ -n "$TOKEN" ] || { echo "login failed: $RESP" >&2; exit 1; }
+
+                  claimed() { api -H "Authorization: Bearer $TOKEN" "$B/tokens/claim-status" \
+                                | grep -q '"claimed_today":true'; }
+
+                  if claimed; then
+                    echo "already claimed today"
+                    exit 0
+                  fi
+
+                  RESP=$(api -X POST -H "Authorization: Bearer $TOKEN" "$B/tokens/claim")
+                  claimed || { echo "claim failed: $RESP" >&2; exit 1; }
+                  echo "claimed: $RESP"
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 32Mi
+                limits:
+                  cpu: 100m
+                  memory: 64Mi
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop:
+                    - ALL

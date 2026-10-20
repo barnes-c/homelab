@@ -13,12 +13,17 @@ spec:
     - ghcr.io/immich-app/immich-charts
   destinations:
     - server: https://kubernetes.default.svc
+      namespace: asurascans
+    - server: https://kubernetes.default.svc
       namespace: barnes-biz
     - server: https://kubernetes.default.svc
       namespace: blog-barnes-biz
     - server: https://kubernetes.default.svc
       namespace: immich
   clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+      name: asurascans
     - group: ""
       kind: Namespace
       name: barnes-biz
