@@ -46,7 +46,10 @@ spec:
                   B=https://api.asurascans.com/api
                   api() { curl -sS -A "Mozilla/5.0" "$@"; }
 
-                  sleep $(( $(od -An -N2 -tu2 /dev/urandom) % 7200 ))
+                  DELAY=$(( $(od -An -N2 -tu2 /dev/urandom) % 1800 ))
+                  AT=$(date -u -d "@$(( $(date +%s) + DELAY ))" '+%H:%M:%S UTC')
+                  echo "running in $((DELAY / 60))m $((DELAY % 60))s, at $AT"
+                  sleep "$DELAY"
 
                   # The claim button only POSTs /tokens/claim; it does not depend on the comic page.
                   RESP=$(api -H "Content-Type: application/json" \
