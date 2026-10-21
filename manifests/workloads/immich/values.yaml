@@ -53,6 +53,22 @@ server:
           main:
             - path: /config
               readOnly: true
+    # Trial of a patch restoring HTTP request metrics; v3.3.5 only. See barnes-c/homelab-issues#51.
+    immich-http-metrics-patch:
+      type: configMap
+      name: immich-http-metrics-patch
+      advancedMounts:
+        main:
+          main:
+            - path: /usr/src/app/server/dist/repositories/telemetry.repository.js
+              subPath: telemetry.repository.js
+              readOnly: true
+            - path: /usr/src/app/server/dist/app.module.js
+              subPath: app.module.js
+              readOnly: true
+            - path: /usr/src/app/server/dist/middleware/http-route.interceptor.js
+              subPath: http-route.interceptor.js
+              readOnly: true
 
 machine-learning:
   enabled: false

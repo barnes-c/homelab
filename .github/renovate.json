@@ -67,6 +67,13 @@
             "minimumReleaseAge": "3 days"
         },
         {
+            "description": "immich-server has v3.3.5 files mounted over it, which break on any other version. Remove with barnes-c/homelab-issues#51.",
+            "matchDepNames": [
+                "ghcr.io/immich-app/immich-server"
+            ],
+            "automerge": false
+        },
+        {
             "matchManagers": [
                 "github-actions"
             ],
