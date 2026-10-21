@@ -2,5 +2,5 @@
   "name": "blackbox-exporter",
   "repoURL": "https://prometheus-community.github.io/helm-charts",
   "chart": "prometheus-blackbox-exporter",
-  "chartVersion": "11.20.0"
+  "chartVersion": "11.20.1"
 }
