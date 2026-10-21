@@ -107,6 +107,9 @@ datasources:
         url: http://prometheus.monitoring.svc.cluster.local
         access: proxy
         isDefault: true
+        # Prometheus's global scrape_interval. Without it $__rate_interval assumes 15s and rate() comes back empty.
+        jsonData:
+          timeInterval: 1m
       - name: Loki
         uid: loki
         type: loki
