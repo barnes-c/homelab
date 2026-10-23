@@ -30,6 +30,8 @@ config:
         Keep_Log            Off
         K8S-Logging.Parser  On
         K8S-Logging.Exclude On
+        # The 32k default is smaller than the cilium-agent pod object; metadata lookup fails.
+        Buffer_Size         256k
 
     # NestJS apps (Immich) log info as "log", which Loki's level detection doesn't know.
     [FILTER]
