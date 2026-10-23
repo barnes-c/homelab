@@ -19,6 +19,8 @@ spec:
     - server: https://kubernetes.default.svc
       namespace: blog-barnes-biz
     - server: https://kubernetes.default.svc
+      namespace: garmin-exporter
+    - server: https://kubernetes.default.svc
       namespace: immich
   clusterResourceWhitelist:
     - group: ""
@@ -30,6 +32,9 @@ spec:
     - group: ""
       kind: Namespace
       name: blog-barnes-biz
+    - group: ""
+      kind: Namespace
+      name: garmin-exporter
     - group: ""
       kind: Namespace
       name: immich

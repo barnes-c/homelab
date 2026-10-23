@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: garmin-exporter
+  namespace: garmin-exporter
+spec:
+  replicas: 1
+  # The token volume is RWO: the old pod must stop first.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: garmin-exporter
+  template:
+    metadata:
+      labels:
+        app: garmin-exporter
+    spec:
+      securityContext:
+        fsGroup: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: garmin-exporter
+          image: ghcr.io/barnes-c/garmin_exporter:1.1.6@sha256:aea63bb891480c43d6791f6f1e9e271f2c79ba70ac8bf50000e0be14ae81ea1e
+          # Login prompts for the MFA code on stdin; enter it via `kubectl attach -it`.
+          stdin: true
+          tty: true
+          ports:
+            - name: metrics
+              containerPort: 10045
+          env:
+            - name: GARMIN_TOKEN_FILE
+              value: /data/garmin_token.json
+            - name: GARMIN_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: garmin-credentials
+                  key: username
+            - name: GARMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: garmin-credentials
+                  key: password
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 10045
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 10045
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          securityContext:
+            runAsUser: 65532
+            runAsGroup: 65532
+            runAsNonRoot: true
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: data
+              mountPath: /data
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: garmin-exporter-data

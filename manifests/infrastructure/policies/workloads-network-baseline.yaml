@@ -9,7 +9,8 @@ spec:
     matchExpressions:
       - key: k8s:io.kubernetes.pod.namespace
         operator: In
-        values: [asurascans, barnes-biz, blog-barnes-biz, immich]
+        values:
+          [asurascans, barnes-biz, blog-barnes-biz, garmin-exporter, immich]
   ingress:
     # Gateway traffic carries the ingress identity, which plain NetworkPolicy cannot select.
     - fromEntities:

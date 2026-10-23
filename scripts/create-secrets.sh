@@ -48,6 +48,8 @@ prompt SMTP_USER             "SMTP username (barnes-biz)" false
 prompt SMTP_PASS             "SMTP password (barnes-biz)"
 prompt ASURA_EMAIL           "Asura Scans email" false
 prompt ASURA_PASSWORD        "Asura Scans password"
+prompt GARMIN_USERNAME       "Garmin Connect email" false
+prompt GARMIN_PASSWORD       "Garmin Connect password"
 echo ""
 echo "=== Sealing secrets ==="
 
@@ -79,6 +81,11 @@ seal asurascans asurascans-credentials \
   "$MANIFESTS/workloads/asurascans/asurascans-credentials.yaml" \
   --from-literal=email="$ASURA_EMAIL" \
   --from-literal=password="$ASURA_PASSWORD"
+
+seal garmin-exporter garmin-credentials \
+  "$MANIFESTS/workloads/garmin-exporter/garmin-credentials.yaml" \
+  --from-literal=username="$GARMIN_USERNAME" \
+  --from-literal=password="$GARMIN_PASSWORD"
 
 echo ""
 echo "Done. Review the files, then commit and push."
