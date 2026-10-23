@@ -1,0 +1,28 @@
+# On top of workloads-baseline: Prometheus scrapes the exporter, which calls Garmin Connect.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: garmin-exporter
+  namespace: garmin-exporter
+spec:
+  endpointSelector: {}
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: monitoring
+            app.kubernetes.io/name: prometheus
+      toPorts:
+        - ports:
+            - port: "10045"
+              protocol: TCP
+  egress:
+    # The hosts go-garminconnect calls for login and the API.
+    - toFQDNs:
+        - matchName: sso.garmin.com
+        - matchName: diauth.garmin.com
+        - matchName: connectapi.garmin.com
+        - matchName: mobile.integration.garmin.com
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP
