@@ -1,3 +1,33 @@
+variable "apps_path" {
+  description = "Path within the repo containing Application manifests"
+  type        = string
+  default     = "apps"
+}
+
+variable "apps_repo" {
+  description = "Git repository holding the ArgoCD Application manifests"
+  type        = string
+  default     = "https://github.com/barnes-c/homelab"
+}
+
+variable "apps_revision" {
+  description = "Git revision to track"
+  type        = string
+  default     = "master"
+}
+
+variable "argocd_extra_values" {
+  description = "Merged over the ArgoCD defaults"
+  type        = any
+  default     = {}
+}
+
+variable "cilium_extra_values" {
+  description = "Merged over the Talos-specific Cilium defaults"
+  type        = any
+  default     = {}
+}
+
 variable "cluster_name" {
   description = "Name of the Talos cluster"
   type        = string
@@ -10,15 +40,6 @@ variable "cluster_vip" {
   default     = "192.168.1.10"
 }
 
-variable "talos_version" {
-  description = <<-EOT
-    Talos version the machine config schema is generated for. Must not be newer than the
-    oldest node: the Pi 5 runs one commit past v1.14.4, the workers run v1.14.4.
-  EOT
-  type        = string
-  default     = "v1.14.4"
-}
-
 variable "kubernetes_version" {
   description = <<-EOT
     Kubernetes version. Talos v1.14.0-rc.2 defaults to 1.37.0-rc.1 only because it was cut
@@ -27,12 +48,6 @@ variable "kubernetes_version" {
   EOT
   type        = string
   default     = "1.37.0"
-}
-
-variable "ntp_servers" {
-  description = "NTP servers. Anycast Cloudflare + Google, v4 and v6."
-  type        = list(string)
-  default     = ["162.159.200.1", "216.239.35.0", "2606:4700:f1::1", "2001:4860:4806::"]
 }
 
 variable "nodes" {
@@ -151,6 +166,12 @@ variable "nodes" {
   }
 }
 
+variable "ntp_servers" {
+  description = "NTP servers. Anycast Cloudflare + Google, v4 and v6."
+  type        = list(string)
+  default     = ["162.159.200.1", "216.239.35.0", "2606:4700:f1::1", "2001:4860:4806::"]
+}
+
 variable "registry_mirrors" {
   description = <<-EOT
     Extra registry mirrors. The local build registry is plain HTTP, and insecureSkipVerify
@@ -163,32 +184,11 @@ variable "registry_mirrors" {
   }
 }
 
-variable "cilium_extra_values" {
-  description = "Merged over the Talos-specific Cilium defaults"
-  type        = any
-  default     = {}
-}
-
-variable "argocd_extra_values" {
-  description = "Merged over the ArgoCD defaults"
-  type        = any
-  default     = {}
-}
-
-variable "apps_repo" {
-  description = "Git repository holding the ArgoCD Application manifests"
+variable "talos_version" {
+  description = <<-EOT
+    Talos version the machine config schema is generated for. Must not be newer than the
+    oldest node: the Pi 5 runs one commit past v1.14.4, the workers run v1.14.4.
+  EOT
   type        = string
-  default     = "https://github.com/barnes-c/homelab"
-}
-
-variable "apps_revision" {
-  description = "Git revision to track"
-  type        = string
-  default     = "master"
-}
-
-variable "apps_path" {
-  description = "Path within the repo containing Application manifests"
-  type        = string
-  default     = "apps"
+  default     = "v1.14.4"
 }

@@ -1,9 +1,4 @@
 locals {
-  control_planes = { for k, v in var.nodes : k => v if v.role == "controlplane" }
-  workers        = { for k, v in var.nodes : k => v if v.role == "worker" }
-
-  control_plane_ips = [for node in local.control_planes : node.ip]
-
   common_patch = {
     machine = {
       time = { servers = var.ntp_servers }
@@ -20,7 +15,29 @@ locals {
       }
     }
   }
-
+  control_plane_ips = [for node in local.control_planes : node.ip]
+  control_planes    = { for k, v in var.nodes : k => v if v.role == "controlplane" }
+  disable_flannel_patch = {
+    apiVersion = "v1alpha1"
+    kind       = "KubeFlannelCNIConfig"
+    "$patch"   = "delete"
+  }
+  disable_kubeproxy_patch = {
+    apiVersion = "v1alpha1"
+    kind       = "KubeProxyConfig"
+    enabled    = false
+  }
+  install_patch = {
+    for k, v in var.nodes : k => {
+      apiVersion = "v1alpha1"
+      kind       = "UnattendedInstallConfig"
+      installer  = { image = v.install_image }
+      provisioning = {
+        diskSelector = { match = "disk.dev_path == \"${v.install_disk}\"" }
+        wipe         = false
+      }
+    }
+  }
   kubelet_patch = {
     apiVersion = "v1alpha1"
     kind       = "KubeletConfig"
@@ -28,29 +45,6 @@ locals {
       rotate-server-certificates = "true"
     }
   }
-
-  resolver_patch = {
-    apiVersion = "v1alpha1"
-    kind       = "ResolverConfig"
-    hostDNS = {
-      enabled              = true
-      resolveMemberNames   = true
-      forwardKubeDNSToHost = false
-    }
-  }
-
-  disable_flannel_patch = {
-    apiVersion = "v1alpha1"
-    kind       = "KubeFlannelCNIConfig"
-    "$patch"   = "delete"
-  }
-
-  disable_kubeproxy_patch = {
-    apiVersion = "v1alpha1"
-    kind       = "KubeProxyConfig"
-    enabled    = false
-  }
-
   pod_security_patch = {
     apiVersion = "v1alpha1"
     kind       = "KubeAdmissionControlConfig"
@@ -68,16 +62,29 @@ locals {
       }
     }
   }
+  resolver_patch = {
+    apiVersion = "v1alpha1"
+    kind       = "ResolverConfig"
+    hostDNS = {
+      enabled              = true
+      resolveMemberNames   = true
+      forwardKubeDNSToHost = false
+    }
+  }
+  workers = { for k, v in var.nodes : k => v if v.role == "worker" }
 
-  install_patch = {
+  # Hostname moved out of v1alpha1 in Talos v1.14. Config generation now emits a
+  # HostnameConfig document with `auto: stable`, and setting machine.network.hostname
+  # alongside it fails validation with "static hostname is already set in v1alpha1 config"
+  # (network/hostname.go:153). `auto` and `hostname` are also mutually exclusive unless
+  # auto is "off", and since a patch merges into the generated document, auto has to be
+  # overridden explicitly rather than just omitted. Quoted so YAML cannot read it as false.
+  hostname_patch = {
     for k, v in var.nodes : k => {
       apiVersion = "v1alpha1"
-      kind       = "UnattendedInstallConfig"
-      installer  = { image = v.install_image }
-      provisioning = {
-        diskSelector = { match = "disk.dev_path == \"${v.install_disk}\"" }
-        wipe         = false
-      }
+      kind       = "HostnameConfig"
+      auto       = "off"
+      hostname   = k
     }
   }
 
@@ -114,21 +121,6 @@ locals {
     )) if length(v.node_labels) > 0 || length(v.node_annotations) > 0
   }
 
-  # Hostname moved out of v1alpha1 in Talos v1.14. Config generation now emits a
-  # HostnameConfig document with `auto: stable`, and setting machine.network.hostname
-  # alongside it fails validation with "static hostname is already set in v1alpha1 config"
-  # (network/hostname.go:153). `auto` and `hostname` are also mutually exclusive unless
-  # auto is "off", and since a patch merges into the generated document, auto has to be
-  # overridden explicitly rather than just omitted. Quoted so YAML cannot read it as false.
-  hostname_patch = {
-    for k, v in var.nodes : k => {
-      apiVersion = "v1alpha1"
-      kind       = "HostnameConfig"
-      auto       = "off"
-      hostname   = k
-    }
-  }
-
   # EPHEMERAL carries ETCD/CRI/KUBELET/LOG as directories underneath it. Whether those are
   # directories or dedicated partitions is fixed at cluster creation and cannot be changed
   # on a provisioned node (machinery/config/types/block/volume_config.go). Directories are
@@ -151,13 +143,24 @@ locals {
       )
     } if v.ephemeral_selector != null
   }
-
   sysfs_patch = {
     for k, v in var.nodes : k => {
       apiVersion = "v1alpha1"
       kind       = "SysfsConfig"
       params     = v.sysfs
     } if length(v.sysfs) > 0
+  }
+
+  # Workaround for TX checksum offload stalls on the RP1 MAC. May be redundant since the
+  # macb fixes landed in v1.14.0-rc.2 -- see barnes-c/homelab-issues#20.
+  ethernet_patch = {
+    apiVersion = "v1alpha1"
+    kind       = "EthernetConfig"
+    name       = "end0"
+    features = {
+      "tx-tcp-segmentation" = false
+      "tx-scatter-gather"   = false
+    }
   }
 
   # Longhorn backing store, mounted at /var/mnt/longhorn.
@@ -186,18 +189,6 @@ locals {
     }
   }
 
-  # Workaround for TX checksum offload stalls on the RP1 MAC. May be redundant since the
-  # macb fixes landed in v1.14.0-rc.2 -- see barnes-c/homelab-issues#20.
-  ethernet_patch = {
-    apiVersion = "v1alpha1"
-    kind       = "EthernetConfig"
-    name       = "end0"
-    features = {
-      "tx-tcp-segmentation" = false
-      "tx-scatter-gather"   = false
-    }
-  }
-
   # The Pi cores idle at 1.5GHz under the default governor, which shows up as etcd
   # fsync latency on a cluster this small.
   governor_patch = {
@@ -207,7 +198,6 @@ locals {
       }
     }
   }
-
   patches = {
     for k, v in var.nodes : k => compact(concat(
       [

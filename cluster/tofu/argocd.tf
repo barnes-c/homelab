@@ -27,7 +27,6 @@ locals {
       }
     }
   }
-
   argocd_values = {
     configs = {
       params = { "server.insecure" = true }

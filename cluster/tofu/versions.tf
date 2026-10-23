@@ -2,10 +2,6 @@ terraform {
   required_version = "~> 1.12"
 
   required_providers {
-    talos = {
-      source  = "siderolabs/talos"
-      version = "0.12.0"
-    }
     helm = {
       source  = "hashicorp/helm"
       version = "~> 3.2"
@@ -13,6 +9,10 @@ terraform {
     kubectl = {
       source  = "alekc/kubectl"
       version = "~> 2.4"
+    }
+    talos = {
+      source  = "siderolabs/talos"
+      version = "0.12.0"
     }
   }
 }
