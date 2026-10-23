@@ -82,8 +82,8 @@ Gotchas:
 - **Secrets** are sealed by `scripts/create-secrets.sh`. SealedSecrets are namespace-scoped,
   so a value used in two namespaces is sealed twice (see the Porkbun API key).
 - **DNS is Porkbun**, not Cloudflare. Both the ACME DNS-01 solver and the ddns CronJob go
-  through the Porkbun API; the solver is a vendored third-party webhook, see
-  `manifests/cert-manager-webhook-porkbun/README.md`.
+  through the Porkbun API; the solver is a third-party webhook chart, see
+  `manifests/infrastructure/cert-manager-webhook-porkbun/README.md`.
 - **`gmake`, not `make`** — macOS ships GNU Make 3.81; the Makefile needs 4.0+.
 
 ## Where decision context lives

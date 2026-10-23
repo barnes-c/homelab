@@ -9,12 +9,19 @@ metadata:
     - resources-finalizer.argocd.argoproj.io
 spec:
   project: infrastructure
-  source:
-    repoURL: https://github.com/barnes-c/homelab
-    targetRevision: master
-    path: manifests/infrastructure/cert-manager-webhook-porkbun
+  sources:
+    - repoURL: https://porkbun.octabits.io
+      chart: cert-manager-webhook-porkbun
+      targetRevision: 2.0.8
+      helm:
+        valueFiles:
+          - $values/manifests/infrastructure/cert-manager-webhook-porkbun/values.yaml
+    - repoURL: https://github.com/barnes-c/homelab
+      targetRevision: master
+      ref: values
   destination:
     server: https://kubernetes.default.svc
+    namespace: cert-manager
   syncPolicy:
     automated:
       prune: true

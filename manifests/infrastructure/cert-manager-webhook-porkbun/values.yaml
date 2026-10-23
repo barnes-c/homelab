@@ -1,0 +1,6 @@
+groupName: acme.barnes.biz
+
+rbac:
+  secretAccess:
+    secretNames:
+      - porkbun-api-key

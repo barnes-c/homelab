@@ -1,12 +1,6 @@
 misconfigurations:
   - id: KSV-0113
     paths:
-      - manifests/infrastructure/cert-manager-webhook-porkbun/rbac.yaml
-    statement: >-
-      secret-reader is get on a single secret via resourceNames; the check ignores
-      resourceNames. See barnes-c/homelab-issues#26
-  - id: KSV-0113
-    paths:
       - manifests/infrastructure/authentik/oidc-client-readers.yaml
     statement: >-
       Each Role is get on its own OIDC client Secret via resourceNames; the check ignores
