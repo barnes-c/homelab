@@ -57,17 +57,14 @@ spec:
                   TOKEN=$(echo "$RESP" | sed -n 's/.*"access_token":"\([^"]*\)".*/\1/p')
                   [ -n "$TOKEN" ] || { echo "login failed: $RESP" >&2; exit 1; }
 
-                  claimed() { api -H "Authorization: Bearer $TOKEN" "$B/tokens/claim-status" \
-                                | grep -q '"claimed_today":true'; }
-
-                  if claimed; then
-                    echo "already claimed today"
-                    exit 0
-                  fi
-
+                  # Judge by the POST body: /tokens/claim-status can lag a successful claim.
+                  # See barnes-c/homelab-issues#52.
                   RESP=$(api -X POST -H "Authorization: Bearer $TOKEN" "$B/tokens/claim")
-                  claimed || { echo "claim failed: $RESP" >&2; exit 1; }
-                  echo "claimed: $RESP"
+                  case "$RESP" in
+                    *'"claimed":true'*) echo "claimed: $RESP" ;;
+                    *'already claimed today'*) echo "already claimed today" ;;
+                    *) echo "claim failed: $RESP" >&2; exit 1 ;;
+                  esac
               resources:
                 requests:
                   cpu: 10m
