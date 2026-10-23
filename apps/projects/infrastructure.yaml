@@ -17,6 +17,7 @@ spec:
     - https://charts.longhorn.io
     - https://fluent.github.io/helm-charts
     - https://grafana-community.github.io/helm-charts
+    - https://piraeus.io/helm-charts
     - https://postfinance.github.io/kubelet-csr-approver
     - https://prometheus-community.github.io/helm-charts
   destinations:
