@@ -40,6 +40,36 @@ config:
         Condition  Key_Value_Equals level log
         Set        level info
 
+    # klog lines (I1023 ...) carry their severity in the prefix. Without a level field Loki
+    # guesses from keywords, so an info line containing "error=" shows up as an error.
+    [FILTER]
+        Name       modify
+        Match      kube.*
+        Condition  Key_does_not_exist level
+        Condition  Key_value_matches log ^I\d{4}
+        Set        level info
+
+    [FILTER]
+        Name       modify
+        Match      kube.*
+        Condition  Key_does_not_exist level
+        Condition  Key_value_matches log ^W\d{4}
+        Set        level warning
+
+    [FILTER]
+        Name       modify
+        Match      kube.*
+        Condition  Key_does_not_exist level
+        Condition  Key_value_matches log ^E\d{4}
+        Set        level error
+
+    [FILTER]
+        Name       modify
+        Match      kube.*
+        Condition  Key_does_not_exist level
+        Condition  Key_value_matches log ^F\d{4}
+        Set        level fatal
+
   outputs: |
     [OUTPUT]
         Name                 loki
