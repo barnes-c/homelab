@@ -8,6 +8,9 @@ overlay:
       dtoverlay=disable-bt
       dtoverlay=disable-wifi
 customization:
+  # The T7 (04e8:4001) hangs and drops off the bus under UAS; force usb-storage. See barnes-c/homelab-issues#54.
+  extraKernelArgs:
+    - usb-storage.quirks=04e8:4001:u
   systemExtensions:
     officialExtensions:
       - siderolabs/iscsi-tools

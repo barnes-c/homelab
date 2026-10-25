@@ -12,9 +12,26 @@ service:
   annotations:
     prometheus.io/scrape: "true"
 
+trivyOperator:
+  # The trivy image runs as root; scan jobs only read images and write to emptyDirs.
+  scanJobPodTemplatePodSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 65534
+    runAsGroup: 65534
+    seccompProfile:
+      type: RuntimeDefault
+
 trivy:
   storageClassName: longhorn
   timeout: 10m0s
+  server:
+    securityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+          - ALL
+      seccompProfile:
+        type: RuntimeDefault
 
 compliance:
   # k8s-cis-1.23 is built from node-collector reports, which are disabled above.
@@ -22,6 +39,11 @@ compliance:
     - k8s-nsa-1.0
     - k8s-pss-baseline-0.1
     - k8s-pss-restricted-0.1
+
+podSecurityContext:
+  runAsNonRoot: true
+  seccompProfile:
+    type: RuntimeDefault
 
 resources:
   requests:
