@@ -7,6 +7,10 @@ defaultSettings:
   # Every volume has one replica, so the default (block-if-contains-last-replica) blocks
   # every drain. This lets the drain proceed once evicted pods have detached their volumes.
   nodeDrainPolicy: allow-if-replica-is-stopped
+  # Moves existing volumes onto the new engine after a Longhorn upgrade; otherwise they keep
+  # the old one indefinitely. Live upgrades only work from the previous minor, so upgrade
+  # Longhorn one minor at a time. See barnes-c/homelab-issues#57.
+  concurrentAutomaticEngineUpgradePerNodeLimit: "1"
   # Only nodes labelled node.longhorn.io/create-default-disk get a disk; with "config" its
   # path and tags come from the node.longhorn.io/default-disks-config annotation.
   # Without this Longhorn creates one at defaultDataPath on EVERY node, and on a
