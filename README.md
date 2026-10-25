@@ -21,8 +21,25 @@ before GitOps can work; ArgoCD owns everything after. Nothing is owned by both.
 | —           | —                    | VIP (cluster API) | `192.168.1.10` | —                                        |
 | rpi5b-cp-01 | Raspberry Pi 5 16GB  | Control plane     | `192.168.1.11` | SD (META+STATE) + 2× 2TB SATA SSD, RAID1 |
 | rpi4b-wk-01 | Raspberry Pi 4B 8GB  | Worker            | `192.168.1.12` | SD + 500GB USB SSD                       |
-| cm5-wk-01   | Raspberry Pi CM5 8GB | Worker            | `192.168.1.13` | 256GB NVMe                               |
-| cm5-wk-02   | Raspberry Pi CM5 8GB | Worker            | `192.168.1.14` | 256GB NVMe                               |
+| cm5-wk-01   | Raspberry Pi CM5 8GB | Worker            | `192.168.1.13` | eMMC + 256GB NVMe                        |
+| cm5-wk-02   | Raspberry Pi CM5 8GB | Worker            | `192.168.1.14` | eMMC + 256GB NVMe                        |
+
+### Addresses
+
+The Freebox hands out DHCP leases from `.2` to `.200`, so anything fixed below `.201` needs a
+static lease there.
+
+|          IP          |                              Use                              |
+| -------------------- | ------------------------------------------------------------- |
+| `192.168.1.10`–`.14` | VIP and nodes, see above                                      |
+| `192.168.1.18`       | Mac, local registry (`:5005`)                                 |
+| `192.168.1.201`      | Cilium LB, `main` Gateway (public)                            |
+| `192.168.1.202`      | Cilium LB, `internal` Gateway (LAN-only)                      |
+| `192.168.1.250`      | NanoCluster switch web UI (fallback `10.10.11.10`)            |
+| `192.168.1.254`      | Freebox                                                       |
+
+Never disable the switch's fallback IP in its web UI: the board's RESET button resets slot 1,
+not the switch, so a switch without a reachable IP cannot be recovered (sipeed/NanoCluster#18).
 
 ## Step 1 — Images
 
