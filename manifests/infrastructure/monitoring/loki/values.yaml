@@ -60,3 +60,7 @@ lokiCanary:
 
 test:
   enabled: false
+
+sidecar:
+  rules:
+    enabled: false

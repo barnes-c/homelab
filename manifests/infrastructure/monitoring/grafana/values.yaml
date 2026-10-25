@@ -18,20 +18,14 @@ persistence:
   enabled: true
   size: 1Gi
 
+initChownData:
+  enabled: false
+
 deploymentStrategy:
   type: Recreate
 
 admin:
   existingSecret: grafana-admin
-
-sidecar:
-  dashboards:
-    enabled: true
-    label: grafana_dashboard
-    labelValue: "1"
-    folderAnnotation: grafana_folder
-    provider:
-      foldersFromFilesStructure: true
 
 grafana.ini:
   analytics:

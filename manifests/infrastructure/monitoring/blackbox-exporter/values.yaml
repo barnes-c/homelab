@@ -1,5 +1,9 @@
 fullnameOverride: blackbox-exporter
 
+podSecurityContext:
+  seccompProfile:
+    type: RuntimeDefault
+
 resources:
   requests:
     cpu: 10m
