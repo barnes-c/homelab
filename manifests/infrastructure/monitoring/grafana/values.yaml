@@ -96,6 +96,10 @@ dashboards:
       gnetId: 15760
       revision: 37
       datasource: Prometheus
+    trivy-operator:
+      gnetId: 17813
+      revision: 2
+      datasource: Prometheus
 
 datasources:
   datasources.yaml:

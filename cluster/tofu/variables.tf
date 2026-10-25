@@ -128,7 +128,7 @@ variable "nodes" {
       ip                 = "192.168.1.12"
       role               = "worker"
       install_disk       = "/dev/mmcblk0"
-      install_image      = "factory.talos.dev/metal-installer/b3a0359a76da43ab16121ec916e421be6af9ed098dc5740d88683cf93eef2133:v1.14.4"
+      install_image      = "factory.talos.dev/metal-installer/8bde169869ab746320f8f4b1f622aafd538ca787658d8bce46be35b4484d39fe:v1.14.4"
       ephemeral_selector = "disk.model == 'PSSD T7'"
       ephemeral_max_size = "50GiB"
       longhorn_selector  = "disk.model == 'PSSD T7'"
