@@ -8,6 +8,9 @@ server:
     main:
       strategy: Recreate
       pod:
+        # The library volume's only replica is on rpi5b-cp-01; elsewhere every read crosses the network.
+        nodeSelector:
+          kubernetes.io/hostname: rpi5b-cp-01
         securityContext:
           runAsNonRoot: true
           runAsUser: 1000

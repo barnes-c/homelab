@@ -15,6 +15,9 @@ spec:
       labels:
         app: immich-postgres
     spec:
+      # The volume's only replica is on rpi5b-cp-01; elsewhere every read crosses the network.
+      nodeSelector:
+        kubernetes.io/hostname: rpi5b-cp-01
       securityContext:
         seccompProfile:
           type: RuntimeDefault
