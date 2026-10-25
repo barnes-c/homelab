@@ -9,6 +9,7 @@ spec:
   description: Shared cluster services other apps depend on.
   sourceRepos:
     - https://github.com/barnes-c/homelab
+    - https://aquasecurity.github.io/helm-charts
     - https://argoproj.github.io/argo-helm
     - https://bitnami.github.io/sealed-secrets
     - https://charts.external-secrets.io

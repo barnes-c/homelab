@@ -1,0 +1,32 @@
+operator:
+  # Scan jobs pull whole images; more than a few at once saturates a Pi.
+  scanJobsConcurrentLimit: 2
+  scanJobTimeout: 10m
+  # node-collector mounts kubeadm host paths Talos doesn't have, and its hostPath volumes
+  # would need a privileged namespace.
+  infraAssessmentScannerEnabled: false
+  # One server keeps the vulnerability DB on a PVC instead of every scan job downloading it.
+  builtInTrivyServer: true
+
+service:
+  annotations:
+    prometheus.io/scrape: "true"
+
+trivy:
+  storageClassName: longhorn
+  timeout: 10m0s
+
+compliance:
+  # k8s-cis-1.23 is built from node-collector reports, which are disabled above.
+  specs:
+    - k8s-nsa-1.0
+    - k8s-pss-baseline-0.1
+    - k8s-pss-restricted-0.1
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 1Gi
