@@ -141,28 +141,6 @@ variable "nodes" {
         "node.longhorn.io/default-disks-config" = "[{\"path\":\"/var/mnt/longhorn\",\"allowScheduling\":true,\"tags\":[\"scratch\"]}]"
       }
     }
-
-    # CM5 on the NanoCluster: Talos on the eMMC, EPHEMERAL and Longhorn on the NVMe.
-    # "cm5-wk-01" = {
-    #   ip                 = "192.168.1.13"
-    #   role               = "worker"
-    #   install_disk       = "/dev/mmcblk0"
-    #   install_image      = "factory.talos.dev/metal-installer/6dc0d3260da69e0dd793b1b912ac845525852656d3219f3db79b9816f1193126:v1.14.4"
-    #   ephemeral_selector = "disk.transport == 'nvme'"
-    #   ephemeral_max_size = "50GiB"
-    #   longhorn_selector  = "disk.transport == 'nvme'"
-    #   longhorn_min_size  = "100GiB"
-    # }
-    # "cm5-wk-02" = {
-    #   ip                 = "192.168.1.14"
-    #   role               = "worker"
-    #   install_disk       = "/dev/mmcblk0"
-    #   install_image      = "factory.talos.dev/metal-installer/6dc0d3260da69e0dd793b1b912ac845525852656d3219f3db79b9816f1193126:v1.14.4"
-    #   ephemeral_selector = "disk.transport == 'nvme'"
-    #   ephemeral_max_size = "50GiB"
-    #   longhorn_selector  = "disk.transport == 'nvme'"
-    #   longhorn_min_size  = "100GiB"
-    # }
   }
 
   validation {
