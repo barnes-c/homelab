@@ -60,8 +60,7 @@ spec:
   egress:
     - toFQDNs:
         - matchName: huggingface.co
-        - matchPattern: "*.hf.co"
-        - matchPattern: "*.xethub.hf.co"
+        - matchPattern: "**.hf.co"
       toPorts:
         - ports:
             - port: "443"
