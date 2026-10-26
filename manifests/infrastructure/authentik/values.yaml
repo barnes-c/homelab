@@ -28,6 +28,8 @@ authentik:
     password: ""
 
 server:
+  deploymentAnnotations:
+    reloader.stakater.com/auto: "true"
   securityContext:
     runAsNonRoot: true
     runAsUser: 1000
@@ -57,6 +59,8 @@ server:
     timeoutSeconds: 5
 
 worker:
+  deploymentAnnotations:
+    reloader.stakater.com/auto: "true"
   securityContext:
     runAsNonRoot: true
     runAsUser: 1000

@@ -7,6 +7,8 @@ server:
   controllers:
     main:
       strategy: Recreate
+      annotations:
+        reloader.stakater.com/auto: "true"
       pod:
         # The library volume's only replica is on rpi5b-cp-01; elsewhere every read crosses the network.
         nodeSelector:

@@ -22,6 +22,7 @@ spec:
     - https://postfinance.github.io/kubelet-csr-approver
     - https://porkbun.octabits.io
     - https://prometheus-community.github.io/helm-charts
+    - https://stakater.github.io/stakater-charts
   destinations:
     - server: https://kubernetes.default.svc
       namespace: "*"
