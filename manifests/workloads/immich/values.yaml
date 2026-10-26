@@ -92,6 +92,8 @@ machine-learning:
         main:
           image:
             tag: v3.3.5@sha256:5b28c9352c8374b8a1ed96fbdd8d6755fea6e43510ec43fdf6538aa02ea40f56
+          env:
+            ORT_DISABLE_TELEMETRY: "1"
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:
