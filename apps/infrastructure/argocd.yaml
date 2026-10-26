@@ -15,7 +15,7 @@ spec:
         exclude: values.yaml
     - repoURL: https://argoproj.github.io/argo-helm
       chart: argo-cd
-      targetRevision: 10.11.1
+      targetRevision: 10.11.6
       helm:
         valueFiles:
           - $values/manifests/infrastructure/argocd/values.yaml
