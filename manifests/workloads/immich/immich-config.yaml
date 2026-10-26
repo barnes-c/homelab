@@ -78,7 +78,7 @@ spec:
               "enabled": false
             },
             "machineLearning": {
-              "enabled": false
+              "enabled": true
             },
             "server": {
               "externalDomain": "https://img.barnes.biz",
