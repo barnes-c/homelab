@@ -74,7 +74,36 @@ server:
               readOnly: true
 
 machine-learning:
-  enabled: false
+  enabled: true
+  controllers:
+    main:
+      pod:
+        # On the control plane until a CM5 is labelled workload/ml=true. See barnes-c/homelab-issues#14.
+        nodeSelector:
+          kubernetes.io/hostname: rpi5b-cp-01
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          runAsGroup: 1000
+          fsGroup: 1000
+          seccompProfile:
+            type: RuntimeDefault
+      containers:
+        main:
+          image:
+            tag: v3.3.5@sha256:5b28c9352c8374b8a1ed96fbdd8d6755fea6e43510ec43fdf6538aa02ea40f56
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            requests:
+              cpu: 100m
+              memory: 512Mi
+            limits:
+              cpu: 4000m
+              memory: 8Gi
 
 valkey:
   enabled: true

@@ -46,3 +46,23 @@ spec:
               protocol: TCP
             - port: "8082"
               protocol: TCP
+---
+# Models are downloaded from Hugging Face on first use; downloads redirect to its CDN.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: immich-machine-learning
+  namespace: immich
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: machine-learning
+  egress:
+    - toFQDNs:
+        - matchName: huggingface.co
+        - matchPattern: "*.hf.co"
+        - matchPattern: "*.xethub.hf.co"
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP
