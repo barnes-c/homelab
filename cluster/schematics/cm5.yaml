@@ -1,4 +1,4 @@
-# Raspberry Pi CM5 8GB on NanoCluster, NVMe boot
+# Raspberry Pi CM5 8GB on NanoCluster, eMMC boot
 ---
 overlay:
   name: rpi_5
