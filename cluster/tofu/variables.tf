@@ -89,7 +89,7 @@ variable "nodes" {
   default = {
     # 2x Samsung 870 2TB on a Radxa Penta SATA HAT, mirrored as md127.
     # EPHEMERAL on the mirror keeps etcd off the SD card; the SD keeps only META + STATE.
-    "rpi5b-cp-01" = {
+    "pi5-cp-01" = {
       ip            = "192.168.1.11"
       role          = "controlplane"
       install_disk  = "/dev/mmcblk0"
@@ -124,9 +124,10 @@ variable "nodes" {
 
     # Samsung T7 500GB on USB: scratch storage for Longhorn (metrics, logs), no replicas.
     # Matched by model because the USB bridge reports a generic wwid (naa.5000000000000001).
-    "rpi4b-wk-01" = {
+    # EPHEMERAL, and so this node's etcd member, is on the T7 too. See barnes-c/homelab-issues#54.
+    "pi4-cp-01" = {
       ip                 = "192.168.1.12"
-      role               = "worker"
+      role               = "controlplane"
       install_disk       = "/dev/mmcblk0"
       install_image      = "factory.talos.dev/metal-installer/8bde169869ab746320f8f4b1f622aafd538ca787658d8bce46be35b4484d39fe:v1.14.4"
       ephemeral_selector = "disk.model == 'PSSD T7'"
@@ -142,15 +143,15 @@ variable "nodes" {
       }
     }
 
-    # "cm5-wk-01" = {
+    # "cm5-cp-01" = {
     #   ip            = "192.168.1.13"
-    #   role          = "worker"
+    #   role          = "controlplane"
     #   install_disk  = "/dev/nvme0n1"
     #   install_image = "factory.talos.dev/metal-installer/CHANGEME:v1.14.4"
     #   longhorn_selector = "disk.transport == 'nvme'"
     #   longhorn_min_size = "100GiB"
     # }
-    # "cm5-wk-02" = {
+    # "cm5-wk-01" = {
     #   ip            = "192.168.1.14"
     #   role          = "worker"
     #   install_disk  = "/dev/nvme0n1"

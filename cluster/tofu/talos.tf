@@ -15,6 +15,9 @@ locals {
       }
     }
   }
+  # Pinned rather than control_plane_ips[0]: map order is alphabetical, and a different
+  # first control plane would replace the bootstrap and kubeconfig resources.
+  bootstrap_ip      = var.nodes["pi5-cp-01"].ip
   control_plane_ips = [for node in local.control_planes : node.ip]
   control_planes    = { for k, v in var.nodes : k => v if v.role == "controlplane" }
   disable_flannel_patch = {
@@ -281,18 +284,24 @@ resource "talos_machine_configuration_apply" "node" {
   }
 }
 
+# Without this the rename destroys the old key, and on_destroy resets the node.
+moved {
+  from = talos_machine_configuration_apply.node["rpi5b-cp-01"]
+  to   = talos_machine_configuration_apply.node["pi5-cp-01"]
+}
+
 resource "talos_machine_bootstrap" "cluster" {
   client_configuration = talos_machine_secrets.cluster.client_configuration
-  node                 = local.control_plane_ips[0]
-  endpoint             = local.control_plane_ips[0]
+  node                 = local.bootstrap_ip
+  endpoint             = local.bootstrap_ip
 
   depends_on = [talos_machine_configuration_apply.node]
 }
 
 resource "talos_cluster_kubeconfig" "cluster" {
   client_configuration = talos_machine_secrets.cluster.client_configuration
-  node                 = local.control_plane_ips[0]
-  endpoint             = local.control_plane_ips[0]
+  node                 = local.bootstrap_ip
+  endpoint             = local.bootstrap_ip
 
   depends_on = [talos_machine_bootstrap.cluster]
 }
