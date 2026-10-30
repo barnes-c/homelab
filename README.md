@@ -178,7 +178,7 @@ Check a backup offline by decrypting a committed SealedSecret; this prints key n
 
 ```sh
 kubeseal --recovery-unseal --recovery-private-key sealed-secrets-keys.json \
-  < manifests/ddns/porkbun-api-key.yaml | yq '.data | keys'
+  < manifests/infrastructure/ddns/porkbun-api-key.yaml | yq '.data | keys'
 ```
 
 ## Layout
