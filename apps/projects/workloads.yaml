@@ -22,6 +22,8 @@ spec:
       namespace: garmin-exporter
     - server: https://kubernetes.default.svc
       namespace: immich
+    - server: https://kubernetes.default.svc
+      namespace: tarcycle
   clusterResourceWhitelist:
     - group: ""
       kind: Namespace
@@ -38,6 +40,9 @@ spec:
     - group: ""
       kind: Namespace
       name: immich
+    - group: ""
+      kind: Namespace
+      name: tarcycle
   orphanedResources:
     warn: true
     ignore:
