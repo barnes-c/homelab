@@ -40,18 +40,13 @@ spec:
                       key: secret-api-key
                 - name: ZONE
                   value: barnes.biz
-                # Subdomain labels, not FQDNs -- Porkbun addresses records by label, with
-                # the empty string for the apex. "@" is spelled out here and translated
-                # below to keep the list readable.
                 - name: RECORDS
-                  value: "@,*"
+                  value: "@,www,blog,comments,stats,auth,img"
               command:
                 - sh
                 - -c
                 - |
-                  # -f: RECORDS contains "*", which would otherwise glob against the cwd
-                  # when the loop word-splits it.
-                  set -euf
+                  set -eu
 
                   B=https://api.porkbun.com/api/json/v3
                   AUTH="\"apikey\":\"$PORKBUN_API_KEY\",\"secretapikey\":\"$PORKBUN_SECRET_API_KEY\""
