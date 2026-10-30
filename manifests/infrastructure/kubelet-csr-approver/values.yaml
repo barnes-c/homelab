@@ -1,4 +1,7 @@
 providerIpRanges:
-  - 192.168.1.0/24
+  - 192.168.1.11/32
+  - 192.168.1.12/32
+  - 192.168.1.13/32
+  - 192.168.1.14/32
 bypassDnsResolution: true
 maxExpirationSeconds: 604800
