@@ -5,7 +5,6 @@ locals {
     for k, v in var.nodes : k => concat(
       [
         templatefile("${local.patches_dir}/time-sync.yaml.tftpl", { ntp_servers = var.ntp_servers }),
-        file("${local.patches_dir}/sysctl.yaml"),
         templatefile("${local.patches_dir}/install.yaml.tftpl", { image = v.install_image, disk = v.install_disk }),
         templatefile("${local.patches_dir}/hostname.yaml.tftpl", { hostname = k }),
         file("${local.patches_dir}/kubelet.yaml"),
