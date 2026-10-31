@@ -24,6 +24,7 @@ locals {
         file("${local.patches_dir}/controlplane/disable-flannel.yaml"),
         file("${local.patches_dir}/controlplane/disable-kubeproxy.yaml"),
         file("${local.patches_dir}/controlplane/pod-security.yaml"),
+        file("${local.patches_dir}/controlplane/controller-manager.yaml"),
         templatefile("${local.patches_dir}/controlplane/vip.yaml.tftpl", { vip = var.cluster_vip }),
         file("${local.patches_dir}/controlplane/etcd.yaml"),
         file("${local.patches_dir}/controlplane/node-delete.yaml"),

@@ -1,0 +1,4 @@
+apiVersion: v1alpha1
+kind: KubeControllerManagerConfig
+extraArgs:
+  cluster-signing-duration: 168h # 7 days
