@@ -121,19 +121,6 @@ locals {
     } if v.longhorn_selector != null
   }
 
-  # Ordering matters: the VIP has to exist before the second control plane joins.
-  vip_patch = {
-    machine = {
-      network = {
-        interfaces = [{
-          interface = "end0"
-          dhcp      = true
-          vip       = { ip = var.cluster_vip }
-        }]
-      }
-    }
-  }
-
   # Static patches live in patches/; the ones built from variables stay here.
   patches = {
     for k, v in var.nodes : k => compact(concat(
@@ -166,6 +153,19 @@ locals {
       lookup(local.longhorn_patch, k, null) != null ? [yamlencode(local.longhorn_patch[k])] : [],
       lookup(local.sysfs_patch, k, null) != null ? [yamlencode(local.sysfs_patch[k])] : [],
     ))
+  }
+
+  # Ordering matters: the VIP has to exist before the second control plane joins.
+  vip_patch = {
+    machine = {
+      network = {
+        interfaces = [{
+          interface = "end0"
+          dhcp      = true
+          vip       = { ip = var.cluster_vip }
+        }]
+      }
+    }
   }
 }
 
