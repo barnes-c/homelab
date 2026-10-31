@@ -12,10 +12,10 @@ portSelector:
   ports: ["1-65535"]
   protocol: tcp
 ingress:
-  - subnet: 192.168.1.0/24 # LAN
-  - subnet: 192.168.27.64/27 # Freebox WireGuard clients (routed, not NATed)
   - subnet: 10.244.0.0/16 # pods (Talos default)
   - subnet: 10.96.0.0/12 # services (Talos default)
+  - subnet: 192.168.1.0/24 # LAN
+  - subnet: 192.168.27.64/27 # Freebox WireGuard clients (routed, not NATed)
 ---
 apiVersion: v1alpha1
 kind: NetworkRuleConfig
@@ -24,10 +24,10 @@ portSelector:
   ports: ["1-65535"]
   protocol: udp
 ingress:
-  - subnet: 192.168.1.0/24 # LAN
-  - subnet: 192.168.27.64/27 # Freebox WireGuard clients (routed, not NATed)
   - subnet: 10.244.0.0/16 # pods (Talos default)
   - subnet: 10.96.0.0/12 # services (Talos default)
+  - subnet: 192.168.1.0/24 # LAN
+  - subnet: 192.168.27.64/27 # Freebox WireGuard clients (routed, not NATed)
 ---
 # Gateway traffic reaches the host-network Envoy via TPROXY with its internet source
 # address intact, so the input chain sees it.
