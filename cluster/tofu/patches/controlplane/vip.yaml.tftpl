@@ -1,8 +1,11 @@
-# Ordering matters: the VIP has to exist before the second control plane joins.
-machine:
-  network:
-    interfaces:
-      - interface: end0
-        dhcp: true
-        vip:
-          ip: ${jsonencode(vip)}
+apiVersion: v1alpha1
+kind: Layer2VIPConfig
+name: ${jsonencode(vip)}
+link: end0
+---
+# The v1alpha1 interface config sent no client identifier; this document defaults to MAC,
+# which the Freebox could treat as a new DHCP client.
+apiVersion: v1alpha1
+kind: DHCPv4Config
+name: end0
+clientIdentifier: none

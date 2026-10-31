@@ -1,4 +1,5 @@
+# Serving certs are approved by kubelet-csr-approver.
 apiVersion: v1alpha1
 kind: KubeletConfig
-extraArgs:
-  rotate-server-certificates: "true"
+config:
+  serverTLSBootstrap: true

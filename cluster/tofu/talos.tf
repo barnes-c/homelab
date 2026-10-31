@@ -4,26 +4,22 @@ locals {
   patches = {
     for k, v in var.nodes : k => concat(
       [
-        templatefile("${local.patches_dir}/common.yaml.tftpl", {
-          ntp_servers      = var.ntp_servers
-          registry_mirrors = var.registry_mirrors
-        }),
+        templatefile("${local.patches_dir}/time-sync.yaml.tftpl", { ntp_servers = var.ntp_servers }),
         templatefile("${local.patches_dir}/install.yaml.tftpl", { image = v.install_image, disk = v.install_disk }),
         templatefile("${local.patches_dir}/hostname.yaml.tftpl", { hostname = k }),
         file("${local.patches_dir}/kubelet.yaml"),
         file("${local.patches_dir}/resolver.yaml"),
-        file("${local.patches_dir}/ethernet.yaml"),
-        file("${local.patches_dir}/governor.yaml"),
         file("${local.patches_dir}/firewall.yaml"),
+        file("${local.patches_dir}/watchdog.yaml"),
       ],
-      # KubeProxyConfig and KubeFlannelCNIConfig are rejected on workers -- Talos allows
-      # them only on control planes ("the following document kinds are only allowed on
-      # control plane machines"). That is correct: they decide which manifests the control
-      # plane renders cluster-wide, so a worker has no business carrying them.
+      length(var.registry_mirrors) > 0 ? [
+        templatefile("${local.patches_dir}/registry-mirrors.yaml.tftpl", { registry_mirrors = var.registry_mirrors }),
+      ] : [],
       v.role == "controlplane" ? [
         file("${local.patches_dir}/controlplane/disable-flannel.yaml"),
         file("${local.patches_dir}/controlplane/disable-kubeproxy.yaml"),
         file("${local.patches_dir}/controlplane/pod-security.yaml"),
+        file("${local.patches_dir}/controlplane/controller-manager.yaml"),
         templatefile("${local.patches_dir}/controlplane/vip.yaml.tftpl", { vip = var.cluster_vip }),
         file("${local.patches_dir}/controlplane/etcd.yaml"),
         file("${local.patches_dir}/controlplane/node-delete.yaml"),
@@ -118,16 +114,6 @@ resource "talos_cluster_kubeconfig" "cluster" {
   depends_on = [talos_machine_bootstrap.cluster]
 }
 
-# The Kubernetes resources (gateway-api.tf, cilium.tf, argocd.tf) are ordered after this
-# kubeconfig only through the provider config, and it doesn't wait for the API server: on a
-# fresh cluster, apply this first with -target (README Step 3) and only then apply the rest.
-# Deliberately no talos_cluster_health data source here.
-#
-# It was declared as a gate on the cluster being up, but nothing consumed its output, so
-# it only ever blocked. Worse, once every input is known (which it is as soon as the
-# secrets exist in state) OpenTofu reads it during PLAN -- so adding a node that has not
-# been provisioned yet makes `tofu plan` hang waiting for that node to report healthy,
-# before you have had a chance to apply the config that would make it healthy.
-#
-# Check health explicitly instead:
-#   talosctl -n <control-plane-ip> health
+# A fresh cluster is applied in two steps on purpose (README Step 3): -target this first, then
+# restore the sealed-secrets keys before anything syncs. No talos_cluster_health gate: it is
+# read during plan and hangs on unprovisioned nodes. See barnes-c/homelab-issues#48.
