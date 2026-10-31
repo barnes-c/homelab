@@ -12,7 +12,12 @@ spec:
       port: 80
       allowedRoutes:
         namespaces:
-          from: All
+          from: Selector
+          selector:
+            matchExpressions:
+              - key: kubernetes.io/metadata.name
+                operator: In
+                values: [gateway]
     - name: https
       protocol: HTTPS
       port: 443
@@ -24,4 +29,9 @@ spec:
             name: barnes-biz-tls
       allowedRoutes:
         namespaces:
-          from: All
+          from: Selector
+          selector:
+            matchExpressions:
+              - key: kubernetes.io/metadata.name
+                operator: In
+                values: [authentik, barnes-biz, blog-barnes-biz, immich]
