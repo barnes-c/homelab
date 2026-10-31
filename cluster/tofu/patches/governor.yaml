@@ -1,6 +1,0 @@
-# The Pi cores idle at 1.5GHz under the default governor, which shows up as etcd
-# fsync latency on a cluster this small.
-apiVersion: v1alpha1
-kind: UdevRulesConfig
-rules:
-  - SUBSYSTEM=="cpu", ACTION=="add", ATTR{cpufreq/scaling_governor}="performance"
