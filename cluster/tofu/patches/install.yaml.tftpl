@@ -1,0 +1,8 @@
+apiVersion: v1alpha1
+kind: UnattendedInstallConfig
+installer:
+  image: ${jsonencode(image)}
+provisioning:
+  diskSelector:
+    match: ${jsonencode("disk.dev_path == \"${disk}\"")}
+  wipe: false

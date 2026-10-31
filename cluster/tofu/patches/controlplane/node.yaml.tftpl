@@ -1,0 +1,17 @@
+# Re-adds the KubeNodeConfig deleted by node-delete.yaml. The control-plane labels are
+# restated deliberately, since the delete drops them too.
+apiVersion: v1alpha1
+kind: KubeNodeConfig
+nodeIP: {}
+labels:
+  node-role.kubernetes.io/control-plane: ""
+  node.kubernetes.io/exclude-from-external-load-balancers: ""
+%{ for key, value in labels ~}
+  ${jsonencode(key)}: ${jsonencode(value)}
+%{ endfor ~}
+%{ if length(annotations) > 0 ~}
+annotations:
+%{ for key, value in annotations ~}
+  ${jsonencode(key)}: ${jsonencode(value)}
+%{ endfor ~}
+%{ endif ~}

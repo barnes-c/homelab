@@ -1,0 +1,15 @@
+machine:
+  time:
+    servers: ${jsonencode(ntp_servers)}
+  sysctls:
+    kernel.printk: "8 4 1 7"
+  registries:
+    mirrors:
+%{ for host, endpoints in registry_mirrors ~}
+      ${jsonencode(host)}:
+        endpoints: ${jsonencode(endpoints)}
+%{ endfor ~}
+  features:
+    rbac: true
+    apidCheckExtKeyUsage: true
+    diskQuotaSupport: true

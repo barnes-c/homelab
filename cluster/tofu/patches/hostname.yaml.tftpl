@@ -1,0 +1,10 @@
+# Hostname moved out of v1alpha1 in Talos v1.14. Config generation now emits a
+# HostnameConfig document with `auto: stable`, and setting machine.network.hostname
+# alongside it fails validation with "static hostname is already set in v1alpha1 config"
+# (network/hostname.go:153). `auto` and `hostname` are also mutually exclusive unless
+# auto is "off", and since a patch merges into the generated document, auto has to be
+# overridden explicitly rather than just omitted. Quoted so YAML cannot read it as false.
+apiVersion: v1alpha1
+kind: HostnameConfig
+auto: "off"
+hostname: ${jsonencode(hostname)}

@@ -1,0 +1,8 @@
+# Ordering matters: the VIP has to exist before the second control plane joins.
+machine:
+  network:
+    interfaces:
+      - interface: end0
+        dhcp: true
+        vip:
+          ip: ${jsonencode(vip)}

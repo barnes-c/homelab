@@ -1,0 +1,7 @@
+# allowSchedulingOnControlPlanes is deprecated (k8s/node.go:188); scheduling is now governed
+# by the taints in KubeNodeConfig. A strategic-merge patch cannot remove a map key and
+# JSON6902 is rejected on multi-document configs, so the document is deleted here and
+# re-added by node.yaml.tftpl without the control-plane NoSchedule taint.
+apiVersion: v1alpha1
+kind: KubeNodeConfig
+$patch: delete
