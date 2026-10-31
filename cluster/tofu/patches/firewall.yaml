@@ -1,0 +1,41 @@
+# Nodes get global IPv6 addresses by SLAAC, so without a host firewall the Talos and
+# Kubernetes APIs rest on the Freebox IPv6 firewall alone. Every rule is IPv4-only, so
+# inbound IPv6 TCP/UDP is dropped. See barnes-c/homelab-issues#67.
+apiVersion: v1alpha1
+kind: NetworkDefaultActionConfig
+ingress: block
+---
+apiVersion: v1alpha1
+kind: NetworkRuleConfig
+name: lan-and-cluster-tcp
+portSelector:
+  ports: ["1-65535"]
+  protocol: tcp
+ingress:
+  - subnet: 10.244.0.0/16 # pods (Talos default)
+  - subnet: 10.96.0.0/12 # services (Talos default)
+  - subnet: 192.168.1.0/24 # LAN
+  - subnet: 192.168.27.64/27 # Freebox WireGuard clients (routed, not NATed)
+---
+apiVersion: v1alpha1
+kind: NetworkRuleConfig
+name: lan-and-cluster-udp
+portSelector:
+  ports: ["1-65535"]
+  protocol: udp
+ingress:
+  - subnet: 10.244.0.0/16 # pods (Talos default)
+  - subnet: 10.96.0.0/12 # services (Talos default)
+  - subnet: 192.168.1.0/24 # LAN
+  - subnet: 192.168.27.64/27 # Freebox WireGuard clients (routed, not NATed)
+---
+# Gateway traffic reaches the host-network Envoy via TPROXY with its internet source
+# address intact, so the input chain sees it.
+apiVersion: v1alpha1
+kind: NetworkRuleConfig
+name: gateway-public
+portSelector:
+  ports: [80, 443]
+  protocol: tcp
+ingress:
+  - subnet: 0.0.0.0/0 # any IPv4 source

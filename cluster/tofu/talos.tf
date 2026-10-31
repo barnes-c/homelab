@@ -17,16 +17,6 @@ locals {
   }
   control_plane_ips = [for node in local.control_planes : node.ip]
   control_planes    = { for k, v in var.nodes : k => v if v.role == "controlplane" }
-  disable_flannel_patch = {
-    apiVersion = "v1alpha1"
-    kind       = "KubeFlannelCNIConfig"
-    "$patch"   = "delete"
-  }
-  disable_kubeproxy_patch = {
-    apiVersion = "v1alpha1"
-    kind       = "KubeProxyConfig"
-    enabled    = false
-  }
   install_patch = {
     for k, v in var.nodes : k => {
       apiVersion = "v1alpha1"
@@ -36,39 +26,6 @@ locals {
         diskSelector = { match = "disk.dev_path == \"${v.install_disk}\"" }
         wipe         = false
       }
-    }
-  }
-  kubelet_patch = {
-    apiVersion = "v1alpha1"
-    kind       = "KubeletConfig"
-    extraArgs = {
-      rotate-server-certificates = "true"
-    }
-  }
-  pod_security_patch = {
-    apiVersion = "v1alpha1"
-    kind       = "KubeAdmissionControlConfig"
-    name       = "PodSecurity"
-    configuration = {
-      apiVersion = "pod-security.admission.config.k8s.io/v1alpha1"
-      kind       = "PodSecurityConfiguration"
-      defaults = {
-        enforce           = "restricted"
-        "enforce-version" = "latest"
-        audit             = "restricted"
-        "audit-version"   = "latest"
-        warn              = "restricted"
-        "warn-version"    = "latest"
-      }
-    }
-  }
-  resolver_patch = {
-    apiVersion = "v1alpha1"
-    kind       = "ResolverConfig"
-    hostDNS = {
-      enabled              = true
-      resolveMemberNames   = true
-      forwardKubeDNSToHost = false
     }
   }
   workers = { for k, v in var.nodes : k => v if v.role == "worker" }
@@ -151,18 +108,6 @@ locals {
     } if length(v.sysfs) > 0
   }
 
-  # Workaround for TX checksum offload stalls on the RP1 MAC. May be redundant since the
-  # macb fixes landed in v1.14.0-rc.2 -- see barnes-c/homelab-issues#20.
-  ethernet_patch = {
-    apiVersion = "v1alpha1"
-    kind       = "EthernetConfig"
-    name       = "end0"
-    features = {
-      "tx-tcp-segmentation" = false
-      "tx-scatter-gather"   = false
-    }
-  }
-
   # Longhorn backing store, mounted at /var/mnt/longhorn.
   longhorn_patch = {
     for k, v in var.nodes : k => {
@@ -176,6 +121,40 @@ locals {
     } if v.longhorn_selector != null
   }
 
+  # Static patches live in patches/; the ones built from variables stay here.
+  patches = {
+    for k, v in var.nodes : k => compact(concat(
+      [
+        yamlencode(local.common_patch),
+        yamlencode(local.install_patch[k]),
+        yamlencode(local.hostname_patch[k]),
+        file("${path.module}/patches/kubelet.yaml"),
+        file("${path.module}/patches/resolver.yaml"),
+        file("${path.module}/patches/ethernet.yaml"),
+        file("${path.module}/patches/governor.yaml"),
+        file("${path.module}/patches/firewall.yaml"),
+      ],
+      # KubeProxyConfig and KubeFlannelCNIConfig are rejected on workers -- Talos allows
+      # them only on control planes ("the following document kinds are only allowed on
+      # control plane machines"). That is correct: they decide which manifests the control
+      # plane renders cluster-wide, so a worker has no business carrying them.
+      v.role == "controlplane" ? concat(
+        [
+          file("${path.module}/patches/controlplane/disable-flannel.yaml"),
+          file("${path.module}/patches/controlplane/disable-kubeproxy.yaml"),
+          file("${path.module}/patches/controlplane/pod-security.yaml"),
+          yamlencode(local.vip_patch),
+          file("${path.module}/patches/controlplane/etcd.yaml"),
+        ],
+        local.schedulable_patches[k],
+      ) : [],
+      lookup(local.worker_label_patch, k, null) != null ? [local.worker_label_patch[k]] : [],
+      lookup(local.ephemeral_patch, k, null) != null ? [yamlencode(local.ephemeral_patch[k])] : [],
+      lookup(local.longhorn_patch, k, null) != null ? [yamlencode(local.longhorn_patch[k])] : [],
+      lookup(local.sysfs_patch, k, null) != null ? [yamlencode(local.sysfs_patch[k])] : [],
+    ))
+  }
+
   # Ordering matters: the VIP has to exist before the second control plane joins.
   vip_patch = {
     machine = {
@@ -187,81 +166,6 @@ locals {
         }]
       }
     }
-  }
-
-  # The Pi cores idle at 1.5GHz under the default governor, which shows up as etcd
-  # fsync latency on a cluster this small.
-  governor_patch = {
-    machine = {
-      udev = {
-        rules = ["SUBSYSTEM==\"cpu\", ACTION==\"add\", ATTR{cpufreq/scaling_governor}=\"performance\""]
-      }
-    }
-  }
-  # Nodes get global IPv6 addresses by SLAAC, so without a host firewall the Talos and
-  # Kubernetes APIs rest on the Freebox IPv6 firewall alone. Ingress is allowed only from
-  # the LAN, the Freebox WireGuard clients (routed, not NATed) and the pod/service CIDRs
-  # (Talos defaults). See barnes-c/homelab-issues#67.
-  firewall_patches = concat(
-    [yamlencode({ apiVersion = "v1alpha1", kind = "NetworkDefaultActionConfig", ingress = "block" })],
-    [for proto in ["tcp", "udp"] : yamlencode({
-      apiVersion   = "v1alpha1"
-      kind         = "NetworkRuleConfig"
-      name         = "lan-and-cluster-${proto}"
-      portSelector = { ports = ["1-65535"], protocol = proto }
-      ingress = [for s in [
-        "192.168.1.0/24",   # LAN
-        "192.168.27.64/27", # Freebox WireGuard clients
-        "10.244.0.0/16",    # pods
-        "10.96.0.0/12",     # services
-      ] : { subnet = s }]
-    })],
-    # Gateway traffic reaches the host-network Envoy via TPROXY with its internet source
-    # address intact, so the input chain sees it. IPv4 only, like the rules above.
-    [yamlencode({
-      apiVersion   = "v1alpha1"
-      kind         = "NetworkRuleConfig"
-      name         = "gateway-public"
-      portSelector = { ports = [80, 443], protocol = "tcp" }
-      ingress      = [{ subnet = "0.0.0.0/0" }] # any IPv4 source
-    })],
-  )
-
-  patches = {
-    for k, v in var.nodes : k => compact(concat(
-      [
-        yamlencode(local.common_patch),
-        yamlencode(local.install_patch[k]),
-        yamlencode(local.hostname_patch[k]),
-        yamlencode(local.kubelet_patch),
-        yamlencode(local.resolver_patch),
-        yamlencode(local.ethernet_patch),
-        yamlencode(local.governor_patch),
-      ],
-      local.firewall_patches,
-      # KubeProxyConfig and KubeFlannelCNIConfig are rejected on workers -- Talos allows
-      # them only on control planes ("the following document kinds are only allowed on
-      # control plane machines"). That is correct: they decide which manifests the control
-      # plane renders cluster-wide, so a worker has no business carrying them.
-      v.role == "controlplane" ? concat(
-        [
-          yamlencode(local.disable_flannel_patch),
-          yamlencode(local.disable_kubeproxy_patch),
-          yamlencode(local.pod_security_patch),
-          yamlencode(local.vip_patch),
-          yamlencode({
-            cluster = {
-              etcd = { advertisedSubnets = ["192.168.0.0/16"] }
-            }
-          }),
-        ],
-        local.schedulable_patches[k],
-      ) : [],
-      lookup(local.worker_label_patch, k, null) != null ? [local.worker_label_patch[k]] : [],
-      lookup(local.ephemeral_patch, k, null) != null ? [yamlencode(local.ephemeral_patch[k])] : [],
-      lookup(local.longhorn_patch, k, null) != null ? [yamlencode(local.longhorn_patch[k])] : [],
-      lookup(local.sysfs_patch, k, null) != null ? [yamlencode(local.sysfs_patch[k])] : [],
-    ))
   }
 }
 

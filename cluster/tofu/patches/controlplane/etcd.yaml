@@ -1,0 +1,4 @@
+cluster:
+  etcd:
+    advertisedSubnets:
+      - 192.168.0.0/16
