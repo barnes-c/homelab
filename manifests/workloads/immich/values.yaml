@@ -78,9 +78,6 @@ machine-learning:
   controllers:
     main:
       pod:
-        # On the control plane until a CM5 is labelled workload/ml=true. See barnes-c/homelab-issues#14.
-        nodeSelector:
-          kubernetes.io/hostname: rpi5b-cp-01
         securityContext:
           runAsNonRoot: true
           runAsUser: 1000
