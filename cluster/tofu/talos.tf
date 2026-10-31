@@ -198,6 +198,35 @@ locals {
       }
     }
   }
+  # Nodes get global IPv6 addresses by SLAAC, so without a host firewall the Talos and
+  # Kubernetes APIs rest on the Freebox IPv6 firewall alone. Ingress is allowed only from
+  # the LAN, the Freebox WireGuard clients (routed, not NATed) and the pod/service CIDRs
+  # (Talos defaults). See barnes-c/homelab-issues#67.
+  firewall_patches = concat(
+    [yamlencode({ apiVersion = "v1alpha1", kind = "NetworkDefaultActionConfig", ingress = "block" })],
+    [for proto in ["tcp", "udp"] : yamlencode({
+      apiVersion   = "v1alpha1"
+      kind         = "NetworkRuleConfig"
+      name         = "lan-and-cluster-${proto}"
+      portSelector = { ports = ["1-65535"], protocol = proto }
+      ingress = [for s in [
+        "192.168.1.0/24",   # LAN
+        "192.168.27.64/27", # Freebox WireGuard clients
+        "10.244.0.0/16",    # pods
+        "10.96.0.0/12",     # services
+      ] : { subnet = s }]
+    })],
+    # Gateway traffic reaches the host-network Envoy via TPROXY with its internet source
+    # address intact, so the input chain sees it. IPv4 only, like the rules above.
+    [yamlencode({
+      apiVersion   = "v1alpha1"
+      kind         = "NetworkRuleConfig"
+      name         = "gateway-public"
+      portSelector = { ports = [80, 443], protocol = "tcp" }
+      ingress      = [{ subnet = "0.0.0.0/0" }] # any IPv4 source
+    })],
+  )
+
   patches = {
     for k, v in var.nodes : k => compact(concat(
       [
@@ -209,6 +238,7 @@ locals {
         yamlencode(local.ethernet_patch),
         yamlencode(local.governor_patch),
       ],
+      local.firewall_patches,
       # KubeProxyConfig and KubeFlannelCNIConfig are rejected on workers -- Talos allows
       # them only on control planes ("the following document kinds are only allowed on
       # control plane machines"). That is correct: they decide which manifests the control
