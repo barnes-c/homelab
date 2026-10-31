@@ -12,6 +12,7 @@ locals {
         file("${local.patches_dir}/ethernet.yaml"),
         file("${local.patches_dir}/governor.yaml"),
         file("${local.patches_dir}/firewall.yaml"),
+        file("${local.patches_dir}/watchdog.yaml"),
       ],
       length(var.registry_mirrors) > 0 ? [
         templatefile("${local.patches_dir}/registry-mirrors.yaml.tftpl", { registry_mirrors = var.registry_mirrors }),
