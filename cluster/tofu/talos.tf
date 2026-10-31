@@ -4,10 +4,8 @@ locals {
   patches = {
     for k, v in var.nodes : k => concat(
       [
-        templatefile("${local.patches_dir}/common.yaml.tftpl", {
-          ntp_servers      = var.ntp_servers
-          registry_mirrors = var.registry_mirrors
-        }),
+        templatefile("${local.patches_dir}/time-sync.yaml.tftpl", { ntp_servers = var.ntp_servers }),
+        file("${local.patches_dir}/sysctl.yaml"),
         templatefile("${local.patches_dir}/install.yaml.tftpl", { image = v.install_image, disk = v.install_disk }),
         templatefile("${local.patches_dir}/hostname.yaml.tftpl", { hostname = k }),
         file("${local.patches_dir}/kubelet.yaml"),
@@ -16,10 +14,9 @@ locals {
         file("${local.patches_dir}/governor.yaml"),
         file("${local.patches_dir}/firewall.yaml"),
       ],
-      # KubeProxyConfig and KubeFlannelCNIConfig are rejected on workers -- Talos allows
-      # them only on control planes ("the following document kinds are only allowed on
-      # control plane machines"). That is correct: they decide which manifests the control
-      # plane renders cluster-wide, so a worker has no business carrying them.
+      length(var.registry_mirrors) > 0 ? [
+        templatefile("${local.patches_dir}/registry-mirrors.yaml.tftpl", { registry_mirrors = var.registry_mirrors }),
+      ] : [],
       v.role == "controlplane" ? [
         file("${local.patches_dir}/controlplane/disable-flannel.yaml"),
         file("${local.patches_dir}/controlplane/disable-kubeproxy.yaml"),

@@ -1,0 +1,4 @@
+apiVersion: v1alpha1
+kind: SysctlConfig
+params:
+  kernel.printk: "8 4 1 7"

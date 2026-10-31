@@ -1,0 +1,10 @@
+%{ for host, endpoints in registry_mirrors ~}
+---
+apiVersion: v1alpha1
+kind: RegistryMirrorConfig
+name: ${jsonencode(host)}
+endpoints:
+%{ for url in endpoints ~}
+  - url: ${jsonencode(url)}
+%{ endfor ~}
+%{ endfor ~}
