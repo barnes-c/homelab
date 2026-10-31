@@ -116,16 +116,6 @@ resource "talos_cluster_kubeconfig" "cluster" {
   depends_on = [talos_machine_bootstrap.cluster]
 }
 
-# The Kubernetes resources (gateway-api.tf, cilium.tf, argocd.tf) are ordered after this
-# kubeconfig only through the provider config, and it doesn't wait for the API server: on a
-# fresh cluster, apply this first with -target (README Step 3) and only then apply the rest.
-# Deliberately no talos_cluster_health data source here.
-#
-# It was declared as a gate on the cluster being up, but nothing consumed its output, so
-# it only ever blocked. Worse, once every input is known (which it is as soon as the
-# secrets exist in state) OpenTofu reads it during PLAN -- so adding a node that has not
-# been provisioned yet makes `tofu plan` hang waiting for that node to report healthy,
-# before you have had a chance to apply the config that would make it healthy.
-#
-# Check health explicitly instead:
-#   talosctl -n <control-plane-ip> health
+# A fresh cluster is applied in two steps on purpose (README Step 3): -target this first, then
+# restore the sealed-secrets keys before anything syncs. No talos_cluster_health gate: it is
+# read during plan and hangs on unprovisioned nodes. See barnes-c/homelab-issues#48.
