@@ -1,0 +1,6 @@
+apiVersion: v1alpha1
+kind: SysfsConfig
+params:
+%{ for key, value in params ~}
+  ${jsonencode(key)}: ${jsonencode(value)}
+%{ endfor ~}

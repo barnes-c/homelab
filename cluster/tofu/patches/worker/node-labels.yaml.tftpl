@@ -1,0 +1,14 @@
+# Workers keep the generated KubeNodeConfig (it carries no control-plane taint), so
+# labels and annotations merge in rather than needing the delete/re-add dance.
+apiVersion: v1alpha1
+kind: KubeNodeConfig
+labels:
+%{ for key, value in labels ~}
+  ${jsonencode(key)}: ${jsonencode(value)}
+%{ endfor ~}
+%{ if length(annotations) > 0 ~}
+annotations:
+%{ for key, value in annotations ~}
+  ${jsonencode(key)}: ${jsonencode(value)}
+%{ endfor ~}
+%{ endif ~}

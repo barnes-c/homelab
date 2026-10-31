@@ -1,0 +1,11 @@
+# Longhorn backing store, mounted at /var/mnt/longhorn.
+apiVersion: v1alpha1
+kind: UserVolumeConfig
+name: longhorn
+provisioning:
+  diskSelector:
+    match: ${jsonencode(selector)}
+  grow: true
+%{ if min_size != null ~}
+  minSize: ${jsonencode(min_size)}
+%{ endif ~}

@@ -1,0 +1,16 @@
+# EPHEMERAL carries ETCD/CRI/KUBELET/LOG as directories underneath it. Whether those are
+# directories or dedicated partitions is fixed at cluster creation and cannot be changed
+# on a provisioned node (machinery/config/types/block/volume_config.go). Directories are
+# the right call on mirrored SSDs for a cluster this size.
+apiVersion: v1alpha1
+kind: VolumeConfig
+name: EPHEMERAL
+provisioning:
+  diskSelector:
+    match: ${jsonencode(selector)}
+%{ if max_size != null ~}
+  grow: false
+  maxSize: ${jsonencode(max_size)}
+%{ else ~}
+  grow: true
+%{ endif ~}
