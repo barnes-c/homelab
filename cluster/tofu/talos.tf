@@ -1,9 +1,6 @@
 locals {
   control_plane_ips = [for node in local.control_planes : node.ip]
   control_planes    = { for k, v in var.nodes : k => v if v.role == "controlplane" }
-
-  # Patches live in patches/: plain YAML where static, templates where built from variables.
-  # Top level applies to every node; controlplane/ and worker/ only to that role.
   patches = {
     for k, v in var.nodes : k => concat(
       [
