@@ -9,7 +9,6 @@ locals {
         templatefile("${local.patches_dir}/hostname.yaml.tftpl", { hostname = k }),
         file("${local.patches_dir}/kubelet.yaml"),
         file("${local.patches_dir}/resolver.yaml"),
-        file("${local.patches_dir}/ethernet.yaml"),
         file("${local.patches_dir}/governor.yaml"),
         file("${local.patches_dir}/firewall.yaml"),
         file("${local.patches_dir}/watchdog.yaml"),
