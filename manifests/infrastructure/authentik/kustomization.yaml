@@ -18,6 +18,7 @@ configMapGenerator:
       - blueprints/recovery.yaml
       - blueprints/sessions.yaml
       - blueprints/notifications.yaml
+      - blueprints/reputation.yaml
 generatorOptions:
   # values.yaml mounts it by this name, on the worker at /blueprints/custom.
   disableNameSuffixHash: true

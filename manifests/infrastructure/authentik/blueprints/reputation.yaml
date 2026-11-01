@@ -1,0 +1,58 @@
+# yaml-language-server: $schema=https://goauthentik.io/blueprints/schema.json
+version: 1
+metadata:
+  name: Reputation
+entries:
+  # Provides default-recovery-flow, found below.
+  - model: authentik_blueprints.metaapplyblueprint
+    attrs:
+      identifiers:
+        name: Recovery with email verification
+      required: true
+
+  # Failed logins lower the score of the client IP; at -5 the IP can no longer start a login
+  # or recovery until the score expires (reputation.expiry, 24h after the first failure).
+  # Per IP only: checking usernames would let anyone lock out a user they can name.
+  - model: authentik_policies_reputation.reputationpolicy
+    id: bad-ip
+    identifiers:
+      name: reputation-bad-ip
+    attrs:
+      check_ip: true
+      check_username: false
+      threshold: -5
+
+  # LAN clients reach the public IP through the Freebox's NAT loopback, so they all appear as
+  # its address and would share one score.
+  - model: authentik_policies_expression.expressionpolicy
+    id: lan
+    identifiers:
+      name: reputation-exempt-lan
+    attrs:
+      expression: return ak_client_ip == ip_address("192.168.1.254")
+
+  # Flows pass when any binding passes: a good score, or the LAN.
+  - model: authentik_policies.policybinding
+    identifiers:
+      target: !Find [authentik_flows.flow, [slug, default-authentication-flow]]
+      policy: !KeyOf bad-ip
+      order: 0
+    attrs:
+      negate: true
+  - model: authentik_policies.policybinding
+    identifiers:
+      target: !Find [authentik_flows.flow, [slug, default-authentication-flow]]
+      policy: !KeyOf lan
+      order: 1
+  - model: authentik_policies.policybinding
+    identifiers:
+      target: !Find [authentik_flows.flow, [slug, default-recovery-flow]]
+      policy: !KeyOf bad-ip
+      order: 0
+    attrs:
+      negate: true
+  - model: authentik_policies.policybinding
+    identifiers:
+      target: !Find [authentik_flows.flow, [slug, default-recovery-flow]]
+      policy: !KeyOf lan
+      order: 1
