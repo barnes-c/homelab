@@ -122,7 +122,7 @@ variable "nodes" {
       }
     }
 
-    # Samsung T7 500GB on USB: scratch storage for Longhorn (metrics, logs), no replicas.
+    # Samsung T7 500GB on USB: scratch storage for Longhorn (metrics, logs), replicated across the scratch disks.
     # Matched by model because the USB bridge reports a generic wwid (naa.5000000000000001).
     "rpi4b-wk-01" = {
       ip                 = "192.168.1.12"

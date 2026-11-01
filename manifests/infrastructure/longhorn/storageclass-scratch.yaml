@@ -2,12 +2,15 @@ apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
   name: longhorn-scratch
+  annotations:
+    # StorageClass parameters are immutable, so a change has to delete and recreate it.
+    argocd.argoproj.io/sync-options: Replace=true,Force=true
 provisioner: driver.longhorn.io
 allowVolumeExpansion: true
 reclaimPolicy: Delete
 volumeBindingMode: Immediate
 parameters:
-  numberOfReplicas: "1"
+  numberOfReplicas: "2"
   diskSelector: scratch
   dataLocality: disabled
   staleReplicaTimeout: "30"
