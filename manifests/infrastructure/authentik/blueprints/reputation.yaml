@@ -23,13 +23,18 @@ entries:
       threshold: -5
 
   # LAN clients reach the public IP through the Freebox's NAT loopback, so they all appear as
-  # its address and would share one score.
+  # its address and would share one score. A denied flow shows the messages of its policies,
+  # and with only these two bindings a denial always means a blocked IP: hence the text here.
   - model: authentik_policies_expression.expressionpolicy
     id: lan
     identifiers:
       name: reputation-exempt-lan
     attrs:
-      expression: return ak_client_ip == ip_address("192.168.1.254")
+      expression: |
+        if ak_client_ip == ip_address("192.168.1.254"):
+            return True
+        ak_message("Too many failed sign-in attempts from your network.")
+        return False
 
   # Flows pass when any binding passes: a good score, or the LAN.
   - model: authentik_policies.policybinding
