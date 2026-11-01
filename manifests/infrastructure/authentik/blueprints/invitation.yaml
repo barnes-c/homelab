@@ -177,15 +177,6 @@ entries:
       target: !KeyOf flow
       stage: !KeyOf mfa
       order: 40
-  # Recovery codes are not accepted at login; removes the binding from earlier deployments.
-  - model: authentik_flows.flowstagebinding
-    state: absent
-    identifiers:
-      target: !KeyOf flow
-      stage: !Find
-        - authentik_stages_authenticator_static.authenticatorstaticstage
-        - [name, default-authenticator-static-setup]
-      order: 50
   - model: authentik_flows.flowstagebinding
     identifiers:
       target: !KeyOf flow
