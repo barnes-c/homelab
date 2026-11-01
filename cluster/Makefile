@@ -86,7 +86,7 @@ profiles/%.yaml: profiles/%.yaml.tmpl
 # Installer image, for machine.install.image and `talosctl upgrade`.
 rpi5b-installer: .imager-$(TALOS_TAG) profiles/rpi5b-installer.yaml
 	@mkdir -p _out
-	podman run -i --rm --tls-verify=false -v $(PWD)/_out:/out \
+	podman run -i --rm --tls-verify=false -v $(CURDIR)/_out:/out \
 		$(REGISTRY)/talos/imager:$(TALOS_TAG) - < profiles/rpi5b-installer.yaml
 	crane push --insecure _out/installer-arm64.tar $(REGISTRY)/talos/installer:$(INSTALLER_TAG)
 	@echo ">> installer: $(REGISTRY)/talos/installer:$(INSTALLER_TAG)"
@@ -94,7 +94,7 @@ rpi5b-installer: .imager-$(TALOS_TAG) profiles/rpi5b-installer.yaml
 # Bootable SD image, for the initial flash only.
 rpi5b-image: .imager-$(TALOS_TAG) profiles/rpi5b-metal.yaml
 	@mkdir -p images
-	podman run -i --rm --tls-verify=false -v $(PWD)/images:/out \
+	podman run -i --rm --tls-verify=false -v $(CURDIR)/images:/out \
 		$(REGISTRY)/talos/imager:$(TALOS_TAG) - < profiles/rpi5b-metal.yaml
 	@mv images/metal-arm64.raw.xz images/talos-rpi5b.raw.xz
 	@echo ">> image: images/talos-rpi5b.raw.xz"
