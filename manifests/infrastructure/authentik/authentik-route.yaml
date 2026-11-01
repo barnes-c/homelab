@@ -32,6 +32,11 @@ spec:
         - path:
             type: PathPrefix
             value: /api/v3/stages/captcha
+        # Envoy matches %2F as part of a segment but Authentik decodes it to "/", so
+        # /api/v3/policies/expression%2F reached the API. Authentik never puts %2F in a path.
+        - path:
+            type: RegularExpression
+            value: ".*%2[fF].*"
       filters:
         - type: RequestRedirect
           requestRedirect:
