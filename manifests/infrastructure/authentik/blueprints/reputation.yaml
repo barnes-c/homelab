@@ -36,28 +36,40 @@ entries:
         ak_message("Too many failed sign-in attempts from your network.")
         return False
 
+  # Declared here only to be referenced: !Find yields the flow's own pk, which never matches
+  # a binding's target (the parent table's pbm_uuid), so re-applies failed as duplicates.
+  # !KeyOf resolves to pbm_uuid.
+  - model: authentik_flows.flow
+    id: authentication
+    identifiers:
+      slug: default-authentication-flow
+  - model: authentik_flows.flow
+    id: recovery
+    identifiers:
+      slug: default-recovery-flow
+
   # Flows pass when any binding passes: a good score, or the LAN.
   - model: authentik_policies.policybinding
     identifiers:
-      target: !Find [authentik_flows.flow, [slug, default-authentication-flow]]
+      target: !KeyOf authentication
       policy: !KeyOf bad-ip
       order: 0
     attrs:
       negate: true
   - model: authentik_policies.policybinding
     identifiers:
-      target: !Find [authentik_flows.flow, [slug, default-authentication-flow]]
+      target: !KeyOf authentication
       policy: !KeyOf lan
       order: 1
   - model: authentik_policies.policybinding
     identifiers:
-      target: !Find [authentik_flows.flow, [slug, default-recovery-flow]]
+      target: !KeyOf recovery
       policy: !KeyOf bad-ip
       order: 0
     attrs:
       negate: true
   - model: authentik_policies.policybinding
     identifiers:
-      target: !Find [authentik_flows.flow, [slug, default-recovery-flow]]
+      target: !KeyOf recovery
       policy: !KeyOf lan
       order: 1
