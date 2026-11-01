@@ -28,7 +28,7 @@ image is then downloaded per `TALOS_VERSION`. The factory resolves extension ver
 
 **Pi 5** — a local imager build, because Image Factory can only layer onto a published
 release (see barnes-c/homelab-issues#15). It builds `installer-base` + `imager` from `TALOS_SRC`
-(`~/Code/siderolabs/talos`, branch `fix/no-cert-regen-on-ntp-spike-v1.14.4`) and pushes them to
+(`~/Code/siderolabs/talos`, branch `fix/no-cert-regen-on-ntp-spike-v1.14.5`) and pushes them to
 the local registry at `REGISTRY` (`192.168.1.18:5005`) under `talos/`. A profile has to pin
 extension image refs by tag, unlike a schematic.
 
@@ -52,7 +52,7 @@ Gotchas:
   **podman** and **crane**, both with TLS verification off for the plaintext local registry.
 - `INSTALLER_ARCH=targetarch` is required; the default `all` pulls `pkg-kernel-amd64`.
 - The Pi 5 kernel is **local too**: `PKG_KERNEL` adds the RP1 PWM (fan) driver, built from
-  `~/Code/siderolabs/pkgs` branch `feat/pwm-rp1-fan-v1.14.4` (barnes-c/homelab-issues#8).
+  `~/Code/siderolabs/pkgs` branch `feat/pwm-rp1-fan-v1.14.5` (barnes-c/homelab-issues#8).
   BuildKit treats `192.168.1.18:5005` as HTTPS, so pushes pass `registry.insecure=true` and
   the kernel is pulled as `localhost:5005/...`.
 - **Check the podman VM has ≥ 45 GB free before a kernel build** (`podman machine ssh -- df -h /`).

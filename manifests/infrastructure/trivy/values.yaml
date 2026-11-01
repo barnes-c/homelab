@@ -22,7 +22,7 @@ trivyOperator:
       type: RuntimeDefault
 
 trivy:
-  storageClassName: longhorn
+  storageClassName: longhorn-scratch
   timeout: 10m0s
   server:
     securityContext:

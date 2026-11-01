@@ -4,8 +4,8 @@ defaultSettings:
   defaultDataPath: /var/mnt/longhorn
   defaultReplicaCount: "1"
   replicaAutoBalance: disabled
-  # Every volume has one replica, so the default (block-if-contains-last-replica) blocks
-  # every drain. This lets the drain proceed once evicted pods have detached their volumes.
+  # Persistent volumes have one replica, so the default (block-if-contains-last-replica)
+  # blocks every drain of rpi5b-cp-01. This lets it proceed once evicted pods have detached.
   nodeDrainPolicy: allow-if-replica-is-stopped
   # Moves existing volumes onto the new engine after a Longhorn upgrade; otherwise they keep
   # the old one indefinitely. Live upgrades only work from the previous minor, so upgrade

@@ -5,11 +5,11 @@
 
 SHELL          := /bin/bash
 FACTORY_HOST   := factory.talos.dev
-TALOS_VERSION  ?= v1.14.4
+TALOS_VERSION  ?= v1.14.5
 
 # Local build inputs for the Pi 5.
 TALOS_SRC      ?= $(HOME)/Code/siderolabs/talos
-TALOS_BRANCH   ?= fix/no-cert-regen-on-ntp-spike-v1.14.4
+TALOS_BRANCH   ?= fix/no-cert-regen-on-ntp-spike-v1.14.5
 REGISTRY       ?= 192.168.1.18:5005
 # v0.2.1+ carries the SATA HAT fix; earlier tags time out on every command. Not yet A/B
 # tested against the old local overlay -- see barnes-c/homelab-issues#18 for the fallback.
@@ -22,9 +22,9 @@ ISCSI_TOOLS_IMAGE      ?= ghcr.io/siderolabs/iscsi-tools:v0.2.0
 UTIL_LINUX_TOOLS_IMAGE ?= ghcr.io/siderolabs/util-linux-tools:2.42.2
 
 # Kernel with the RP1 PWM driver, without which the Pi 5 fan never spins. Built from
-# ~/Code/siderolabs/pkgs branch feat/pwm-rp1-fan-v1.14.4, see barnes-c/homelab-issues#8.
+# ~/Code/siderolabs/pkgs branch feat/pwm-rp1-fan-v1.14.5, see barnes-c/homelab-issues#8.
 # Referenced via localhost: BuildKit only pulls over plain HTTP from localhost registries.
-PKG_KERNEL     ?= localhost:5005/kernel:v1.14.0-44-g2ec10eb-pwmrp1v12
+PKG_KERNEL     ?= localhost:5005/kernel:v1.14.0-48-gf4bda77-pwmrp1v12
 KERNEL_SUFFIX  ?= -pwmfan
 DOCKER         := /opt/homebrew/bin/docker
 
@@ -86,7 +86,7 @@ profiles/%.yaml: profiles/%.yaml.tmpl
 # Installer image, for machine.install.image and `talosctl upgrade`.
 rpi5b-installer: .imager-$(TALOS_TAG) profiles/rpi5b-installer.yaml
 	@mkdir -p _out
-	podman run -i --rm --tls-verify=false -v $(PWD)/_out:/out \
+	podman run -i --rm --tls-verify=false -v $(CURDIR)/_out:/out \
 		$(REGISTRY)/talos/imager:$(TALOS_TAG) - < profiles/rpi5b-installer.yaml
 	crane push --insecure _out/installer-arm64.tar $(REGISTRY)/talos/installer:$(INSTALLER_TAG)
 	@echo ">> installer: $(REGISTRY)/talos/installer:$(INSTALLER_TAG)"
@@ -94,7 +94,7 @@ rpi5b-installer: .imager-$(TALOS_TAG) profiles/rpi5b-installer.yaml
 # Bootable SD image, for the initial flash only.
 rpi5b-image: .imager-$(TALOS_TAG) profiles/rpi5b-metal.yaml
 	@mkdir -p images
-	podman run -i --rm --tls-verify=false -v $(PWD)/images:/out \
+	podman run -i --rm --tls-verify=false -v $(CURDIR)/images:/out \
 		$(REGISTRY)/talos/imager:$(TALOS_TAG) - < profiles/rpi5b-metal.yaml
 	@mv images/metal-arm64.raw.xz images/talos-rpi5b.raw.xz
 	@echo ">> image: images/talos-rpi5b.raw.xz"

@@ -122,13 +122,13 @@ variable "nodes" {
       }
     }
 
-    # Samsung T7 500GB on USB: scratch storage for Longhorn (metrics, logs), no replicas.
+    # Samsung T7 500GB on USB: scratch storage for Longhorn (metrics, logs), replicated across the scratch disks.
     # Matched by model because the USB bridge reports a generic wwid (naa.5000000000000001).
     "rpi4b-wk-01" = {
       ip                 = "192.168.1.12"
       role               = "worker"
       install_disk       = "/dev/mmcblk0"
-      install_image      = "factory.talos.dev/metal-installer/8bde169869ab746320f8f4b1f622aafd538ca787658d8bce46be35b4484d39fe:v1.14.4"
+      install_image      = "factory.talos.dev/metal-installer/8bde169869ab746320f8f4b1f622aafd538ca787658d8bce46be35b4484d39fe:v1.14.5"
       ephemeral_selector = "disk.model == 'PSSD T7'"
       ephemeral_max_size = "50GiB"
       longhorn_selector  = "disk.model == 'PSSD T7'"
@@ -148,7 +148,7 @@ variable "nodes" {
       ip                 = "192.168.1.13"
       role               = "worker"
       install_disk       = "/dev/mmcblk0"
-      install_image      = "factory.talos.dev/metal-installer/6dc0d3260da69e0dd793b1b912ac845525852656d3219f3db79b9816f1193126:v1.14.4"
+      install_image      = "factory.talos.dev/metal-installer/6dc0d3260da69e0dd793b1b912ac845525852656d3219f3db79b9816f1193126:v1.14.5"
       ephemeral_selector = "disk.wwid == 'eui.00000000000000007c35485256bde646'"
       ephemeral_max_size = "50GiB"
       longhorn_selector  = "disk.wwid == 'eui.00000000000000007c35485256bde646'"
@@ -166,7 +166,7 @@ variable "nodes" {
       ip                 = "192.168.1.14"
       role               = "worker"
       install_disk       = "/dev/mmcblk0"
-      install_image      = "factory.talos.dev/metal-installer/6dc0d3260da69e0dd793b1b912ac845525852656d3219f3db79b9816f1193126:v1.14.4"
+      install_image      = "factory.talos.dev/metal-installer/6dc0d3260da69e0dd793b1b912ac845525852656d3219f3db79b9816f1193126:v1.14.5"
       ephemeral_selector = "disk.wwid == 'eui.00000000000000007c35485256bde5a1'"
       ephemeral_max_size = "50GiB"
       longhorn_selector  = "disk.wwid == 'eui.00000000000000007c35485256bde5a1'"
@@ -201,7 +201,7 @@ variable "registry_mirrors" {
   EOT
   type        = map(list(string))
   default = {
-    "192.168.1.18:5005" = ["http://192.168.1.18:5005"]
+    "192.168.1.18:5005" = ["http://192.168.27.67:5005", "http://192.168.1.18:5005"]
   }
 }
 
