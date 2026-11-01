@@ -24,6 +24,12 @@ entries:
     attrs:
       action: impersonation_started
   - model: authentik_policies_event_matcher.eventmatcherpolicy
+    id: match-impersonation-ended
+    identifiers:
+      name: security-match-impersonation-ended
+    attrs:
+      action: impersonation_ended
+  - model: authentik_policies_event_matcher.eventmatcherpolicy
     id: match-secret-view
     identifiers:
       name: security-match-secret-view
@@ -54,6 +60,11 @@ entries:
     identifiers:
       order: 2
       policy: !KeyOf match-secret-view
+      target: !KeyOf notify-security
+  - model: authentik_policies.policybinding
+    identifiers:
+      order: 3
+      policy: !KeyOf match-impersonation-ended
       target: !KeyOf notify-security
 
   # Failed logins are routine on a public host: in-app only, no email.

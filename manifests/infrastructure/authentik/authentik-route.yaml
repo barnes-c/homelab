@@ -45,6 +45,11 @@ spec:
             type: PathPrefix
             value: /files/media
       filters:
+        - type: RequestHeaderModifier
+          requestHeaderModifier:
+            set:
+              - name: X-Forwarded-For
+                value: "%DOWNSTREAM_REMOTE_ADDRESS_WITHOUT_PORT%"
         - type: ResponseHeaderModifier
           responseHeaderModifier:
             set:
@@ -65,6 +70,11 @@ spec:
             type: PathPrefix
             value: /
       filters:
+        - type: RequestHeaderModifier
+          requestHeaderModifier:
+            set:
+              - name: X-Forwarded-For
+                value: "%DOWNSTREAM_REMOTE_ADDRESS_WITHOUT_PORT%"
         - type: ResponseHeaderModifier
           responseHeaderModifier:
             set:
