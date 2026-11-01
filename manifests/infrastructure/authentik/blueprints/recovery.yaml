@@ -3,6 +3,12 @@ version: 1
 metadata:
   name: Recovery with email verification
 entries:
+  - model: authentik_blueprints.metaapplyblueprint
+    attrs:
+      identifiers:
+        name: Invitation enrollment
+      required: true
+
   - identifiers:
       slug: default-recovery-flow
     id: flow
@@ -76,6 +82,7 @@ entries:
       user_fields:
         - email
         - username
+      show_matched_user: false
   - identifiers:
       name: default-recovery-user-login
     model: authentik_stages_user_login.userloginstage
@@ -88,7 +95,10 @@ entries:
       fields:
         - !KeyOf prompt-field-password
         - !KeyOf prompt-field-password-repeat
-      validation_policies: []
+      validation_policies:
+        - !Find
+          - authentik_policies_password.passwordpolicy
+          - [name, invitation-enrollment-password]
   - identifiers:
       target: !KeyOf flow
       stage: !KeyOf default-recovery-identification
@@ -183,4 +193,5 @@ entries:
         - email
         - username
       case_insensitive_matching: true
+      show_matched_user: false
       recovery_flow: !Find [authentik_flows.flow, [slug, default-recovery-flow]]

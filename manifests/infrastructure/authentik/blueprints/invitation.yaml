@@ -4,7 +4,7 @@ metadata:
   name: Invitation enrollment
 entries:
   # Enrollment by invitation link only; not linked from the login page or the brand. The
-  # user enrolls an MFA device before the first login. New users join Immich Users; access
+  # user enrolls a passkey (WebAuthn) before the first login. New users join Immich Users; access
   # to any other app is a separate step: add them to its group.
   #
   # Imports "SSO Applications" first: the !Find for Immich Users below would otherwise yield
@@ -44,11 +44,11 @@ entries:
       amount_lowercase: 0
       amount_uppercase: 0
       amount_symbols: 0
-      # Have I Been Pwned would need egress; zxcvbn runs locally.
-      check_have_i_been_pwned: false
+      check_have_i_been_pwned: true
+      hibp_allowed_count: 0
       check_zxcvbn: true
       zxcvbn_score_threshold: 3
-      error_message: Use at least 12 characters and avoid common words or patterns.
+      error_message: Use at least 12 characters and avoid common words, patterns and leaked passwords.
 
   - model: authentik_stages_prompt.prompt
     id: field-username
@@ -141,21 +141,21 @@ entries:
       name: invitation-enrollment-mfa
     attrs:
       device_classes:
-        - totp
         - webauthn
+      webauthn_user_verification: required
       not_configured_action: configure
       configuration_stages:
         - !Find
           - authentik_stages_authenticator_webauthn.authenticatorwebauthnstage
           - [name, default-authenticator-webauthn-setup]
-        - !Find
-          - authentik_stages_authenticator_totp.authenticatortotpstage
-          - [name, default-authenticator-totp-setup]
 
   - model: authentik_stages_user_login.userloginstage
     id: login
     identifiers:
       name: invitation-enrollment-login
+    attrs:
+      terminate_other_sessions: true
+      remember_device: seconds=0
 
   - model: authentik_flows.flowstagebinding
     identifiers:
@@ -177,8 +177,9 @@ entries:
       target: !KeyOf flow
       stage: !KeyOf mfa
       order: 40
-  # Recovery codes, for when the device is lost.
+  # Recovery codes are not accepted at login; removes the binding from earlier deployments.
   - model: authentik_flows.flowstagebinding
+    state: absent
     identifiers:
       target: !KeyOf flow
       stage: !Find
