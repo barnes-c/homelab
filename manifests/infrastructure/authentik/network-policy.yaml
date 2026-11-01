@@ -37,3 +37,9 @@ spec:
         - ports:
             - port: "587"
               protocol: TCP
+    - toFQDNs:
+        - matchName: api.pwnedpasswords.com
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP

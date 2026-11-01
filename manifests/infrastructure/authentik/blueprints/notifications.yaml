@@ -1,0 +1,90 @@
+# yaml-language-server: $schema=https://goauthentik.io/blueprints/schema.json
+version: 1
+metadata:
+  name: Security notifications
+entries:
+  # Provides the transports and the authentik Admins group found below.
+  - model: authentik_blueprints.metaapplyblueprint
+    attrs:
+      identifiers:
+        name: Default - Events Transport & Rules
+      required: true
+
+  # Rare and worth an email.
+  - model: authentik_policies_event_matcher.eventmatcherpolicy
+    id: match-suspicious-request
+    identifiers:
+      name: security-match-suspicious-request
+    attrs:
+      action: suspicious_request
+  - model: authentik_policies_event_matcher.eventmatcherpolicy
+    id: match-impersonation-started
+    identifiers:
+      name: security-match-impersonation-started
+    attrs:
+      action: impersonation_started
+  - model: authentik_policies_event_matcher.eventmatcherpolicy
+    id: match-impersonation-ended
+    identifiers:
+      name: security-match-impersonation-ended
+    attrs:
+      action: impersonation_ended
+  - model: authentik_policies_event_matcher.eventmatcherpolicy
+    id: match-secret-view
+    identifiers:
+      name: security-match-secret-view
+    attrs:
+      action: secret_view
+
+  - model: authentik_events.notificationrule
+    id: notify-security
+    identifiers:
+      name: security-notify-alert
+    attrs:
+      severity: alert
+      destination_group: !Find [authentik_core.group, [name, authentik Admins]]
+      transports:
+        - !Find [authentik_events.notificationtransport, [name, default-email-transport]]
+        - !Find [authentik_events.notificationtransport, [name, default-local-transport]]
+  - model: authentik_policies.policybinding
+    identifiers:
+      order: 0
+      policy: !KeyOf match-suspicious-request
+      target: !KeyOf notify-security
+  - model: authentik_policies.policybinding
+    identifiers:
+      order: 1
+      policy: !KeyOf match-impersonation-started
+      target: !KeyOf notify-security
+  - model: authentik_policies.policybinding
+    identifiers:
+      order: 2
+      policy: !KeyOf match-secret-view
+      target: !KeyOf notify-security
+  - model: authentik_policies.policybinding
+    identifiers:
+      order: 3
+      policy: !KeyOf match-impersonation-ended
+      target: !KeyOf notify-security
+
+  # Failed logins are routine on a public host: in-app only, no email.
+  - model: authentik_policies_event_matcher.eventmatcherpolicy
+    id: match-login-failed
+    identifiers:
+      name: security-match-login-failed
+    attrs:
+      action: login_failed
+  - model: authentik_events.notificationrule
+    id: notify-login-failed
+    identifiers:
+      name: security-notify-login-failed
+    attrs:
+      severity: notice
+      destination_group: !Find [authentik_core.group, [name, authentik Admins]]
+      transports:
+        - !Find [authentik_events.notificationtransport, [name, default-local-transport]]
+  - model: authentik_policies.policybinding
+    identifiers:
+      order: 0
+      policy: !KeyOf match-login-failed
+      target: !KeyOf notify-login-failed

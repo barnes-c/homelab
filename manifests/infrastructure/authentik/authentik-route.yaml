@@ -13,16 +13,82 @@ spec:
   hostnames:
     - auth.barnes.biz
   rules:
+    # APIs that create code-running or flow-shaping objects (expression policies, property
+    # mappings, prompts, blueprints, captcha) never reach Authentik; those objects change only
+    # through blueprints in git. PathPrefix matches whole segments, so it covers the subpaths.
     - matches:
         - path:
             type: PathPrefix
-            value: /
+            value: /api/v3/policies/expression
+        - path:
+            type: PathPrefix
+            value: /api/v3/propertymappings
+        - path:
+            type: PathPrefix
+            value: /api/v3/stages/prompt/prompts
+        - path:
+            type: PathPrefix
+            value: /api/v3/managed/blueprints
+        - path:
+            type: PathPrefix
+            value: /api/v3/stages/captcha
       filters:
+        - type: RequestRedirect
+          requestRedirect:
+            path:
+              type: ReplaceFullPath
+              replaceFullPath: /
+            statusCode: 302
+    # Uploaded media carries Authentik's own sandboxing CSP, which the rule below would replace.
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /files/media
+      filters:
+        - type: RequestHeaderModifier
+          requestHeaderModifier:
+            set:
+              - name: X-Forwarded-For
+                value: "%DOWNSTREAM_REMOTE_ADDRESS_WITHOUT_PORT%"
         - type: ResponseHeaderModifier
           responseHeaderModifier:
             set:
               - name: Strict-Transport-Security
                 value: max-age=31536000; includeSubDomains
+              - name: X-Content-Type-Options
+                value: nosniff
+              - name: Referrer-Policy
+                value: strict-origin-when-cross-origin
+      backendRefs:
+        - group: ""
+          kind: Service
+          name: authentik-server
+          port: 80
+          weight: 1
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      filters:
+        - type: RequestHeaderModifier
+          requestHeaderModifier:
+            set:
+              - name: X-Forwarded-For
+                value: "%DOWNSTREAM_REMOTE_ADDRESS_WITHOUT_PORT%"
+        - type: ResponseHeaderModifier
+          responseHeaderModifier:
+            set:
+              - name: Strict-Transport-Security
+                value: max-age=31536000; includeSubDomains
+              - name: X-Content-Type-Options
+                value: nosniff
+              - name: Referrer-Policy
+                value: strict-origin-when-cross-origin
+              - name: Content-Security-Policy
+                value: >-
+                  default-src 'self'; img-src https: data:; object-src 'none';
+                  frame-ancestors 'self'; style-src 'self' 'unsafe-inline';
+                  script-src 'self' 'unsafe-inline'
       backendRefs:
         - group: ""
           kind: Service
