@@ -201,7 +201,7 @@ variable "registry_mirrors" {
   EOT
   type        = map(list(string))
   default = {
-    "192.168.1.18:5005" = ["http://192.168.1.18:5005"]
+    "192.168.1.18:5005" = ["http://192.168.27.67:5005", "http://192.168.1.18:5005"]
   }
 }
 
