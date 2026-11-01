@@ -28,8 +28,8 @@ before GitOps can work; ArgoCD owns everything after. Nothing is owned by both.
 
 Workers use stock Image Factory schematics. **There is deliberately no Pi 5 schematic** —
 Image Factory can only layer extensions and overlay options onto a *published* Talos
-release, and the Pi 5 needs `d1da2caa8` *"don't regenerate k8s certs on NTP spike status
-changes"*, which is local-only and one commit past `v1.14.4`. Without it the control
+release, and the Pi 5 needs `5a2630749` *"don't regenerate k8s certs on NTP spike status
+changes"*, which is local-only and one commit past `v1.14.5`. Without it the control
 plane bounces roughly 1.2×/day. A schematic cannot express that, so the Pi 5 goes through
 `profiles/` and a local imager instead.
 

@@ -55,7 +55,7 @@ variable "nodes" {
     Cluster nodes, keyed by hostname.
 
     install_image: Pi 5 points at a locally built installer carrying the NTP cert-regen
-    fix (d1da2caa8, on v1.14.4), which is not upstream. Workers use stock Image Factory images,
+    fix (5a2630749, on v1.14.5), which is not upstream. Workers use stock Image Factory images,
     written here by `make schematics`.
 
     ephemeral_selector / longhorn_selector: CEL over Talos DiskSpec. Pin by wwid when
@@ -93,7 +93,7 @@ variable "nodes" {
       ip            = "192.168.1.11"
       role          = "controlplane"
       install_disk  = "/dev/mmcblk0"
-      install_image = "192.168.1.18:5005/talos/installer:v1.14.4-1-gd1da2caa8-pwmfan"
+      install_image = "192.168.1.18:5005/talos/installer:v1.14.5-1-g5a2630749-pwmfan-r2"
 
       # Verified on hardware: md127 is RAID1 over sda+sdb (Samsung 870 2TB), [UU], and
       # already backs EPHEMERAL at /dev/md127p2. The array has no wwid of its own, so
@@ -208,8 +208,8 @@ variable "registry_mirrors" {
 variable "talos_version" {
   description = <<-EOT
     Talos version the machine config schema is generated for. Must not be newer than the
-    oldest node: the Pi 5 runs one commit past v1.14.4, the workers run v1.14.4.
+    oldest node: the Pi 5 runs one commit past v1.14.5, the workers run v1.14.5.
   EOT
   type        = string
-  default     = "v1.14.4"
+  default     = "v1.14.5"
 }

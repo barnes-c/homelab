@@ -16,10 +16,11 @@ REGISTRY       ?= 192.168.1.18:5005
 OVERLAY_IMAGE  ?= ghcr.io/siderolabs/sbc-raspberrypi:v0.2.2
 
 # System extensions. The worker schematics name these and let Image Factory resolve the
-# version; a local imager build has to pin them by tag. These match what Image Factory
-# resolves for TALOS_VERSION.
-ISCSI_TOOLS_IMAGE      ?= ghcr.io/siderolabs/iscsi-tools:v0.2.0
-UTIL_LINUX_TOOLS_IMAGE ?= ghcr.io/siderolabs/util-linux-tools:2.42.2
+# version; a local imager build has to pin them by digest, because extension tags are
+# re-pushed for newer Talos releases and a newer build fails to load on this one. These
+# match what factory.talos.dev/version/$(TALOS_VERSION)/extensions/official resolves.
+ISCSI_TOOLS_IMAGE      ?= ghcr.io/siderolabs/iscsi-tools:v0.2.0@sha256:584e1d106e424d3e17ddd43bddf892b386748f10d11a9fd024a358f0d42c0a2e
+UTIL_LINUX_TOOLS_IMAGE ?= ghcr.io/siderolabs/util-linux-tools:2.42.2@sha256:f93f23e96b28e00228cf9a006a15c1648bd5975be989adb1bee6c05c046001a1
 
 # Kernel with the RP1 PWM driver, without which the Pi 5 fan never spins. Built from
 # ~/Code/siderolabs/pkgs branch feat/pwm-rp1-fan-v1.14.5, see barnes-c/homelab-issues#8.
