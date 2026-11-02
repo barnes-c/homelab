@@ -7,12 +7,11 @@ kind: CiliumGatewayClassConfig
 metadata:
   name: access-logs
   namespace: gateway
-  annotations:
-    argocd.argoproj.io/compare-options: ServerSideDiff=true
 spec:
   telemetry:
     accessLogs:
       - format: JSON
+        targets: [HTTP]
         json:
           gateway: "%CILIUM_GATEWAY_NAMESPACE%/%CILIUM_GATEWAY_NAME%"
           client_ip: "%DOWNSTREAM_REMOTE_ADDRESS_WITHOUT_PORT%"
