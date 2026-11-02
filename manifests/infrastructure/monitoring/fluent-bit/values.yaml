@@ -121,8 +121,8 @@ config:
         Condition  Key_value_matches log ^F\d{4}
         Set        level fatal
 
-    # Public Gateway access logs (CiliumGatewayClassConfig `gateway/access-logs`). Records
-    # without a public client_ip get nulls.
+    # Gateway access logs (CiliumGatewayClassConfig `gateway/access-logs`). Records without a
+    # public client_ip get nulls; the filter only adds fields.
     [FILTER]
         Name        geoip2
         Match       kube.var.log.containers.cilium-envoy-*_kube-system_cilium-envoy-*
