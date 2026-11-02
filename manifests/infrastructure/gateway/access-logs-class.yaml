@@ -7,6 +7,8 @@ kind: CiliumGatewayClassConfig
 metadata:
   name: access-logs
   namespace: gateway
+  annotations:
+    argocd.argoproj.io/compare-options: ServerSideDiff=true
 spec:
   telemetry:
     accessLogs:
