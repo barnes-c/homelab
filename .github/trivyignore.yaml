@@ -5,3 +5,9 @@ misconfigurations:
     statement: >-
       Each Role is get on its own OIDC client Secret via resourceNames; the check ignores
       resourceNames.
+  - id: KSV-0046
+    paths:
+      - manifests/infrastructure/agent-access/readonly.yaml
+    statement: >-
+      The wildcard is resources only, with verbs get/list/watch, over named non-core API groups;
+      core Secrets stay out of reach. Listing each CRD resource would go stale as charts add them.
