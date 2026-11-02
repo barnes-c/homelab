@@ -6,7 +6,58 @@ resources:
     memory: 32Mi
   limits:
     cpu: 100m
-    memory: 128Mi
+    # The GeoIP database (~130 MB) is mmapped; its page cache counts against this limit.
+    memory: 256Mi
+
+# DB-IP City Lite (CC BY 4.0) for the geoip2 filter. Cached on the node, so a failed download
+# at pod start keeps the previous month's database instead of stopping log shipping.
+initContainers:
+  - name: geoip-db
+    image: docker.io/curlimages/curl:8.23.0@sha256:3fb7e13e5d179a845c97d78204f3f1064d1907037f26a3ebf91710571151fd93
+    command: [sh, -c]
+    args:
+      - |
+        db=/geoip/dbip-city-lite.mmdb
+        for m in $(date -u +%Y-%m) $(date -u -d @$(($(date +%s) - 32 * 86400)) +%Y-%m); do
+          if curl -fsSL --max-time 300 "https://download.db-ip.com/free/dbip-city-lite-$m.mmdb.gz" \
+              | gunzip > "$db.new" && [ -s "$db.new" ]; then
+            mv "$db.new" "$db"
+            echo "DB-IP City Lite $m"
+            exit 0
+          fi
+        done
+        rm -f "$db.new"
+        if [ -s "$db" ]; then echo "download failed, keeping cached database"; exit 0; fi
+        echo "download failed and no cached database"
+        exit 1
+    # The hostPath directory is created root-owned; fluent-bit itself already runs as root.
+    securityContext:
+      runAsUser: 0
+      readOnlyRootFilesystem: true
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop: [ALL]
+    resources:
+      requests:
+        cpu: 10m
+        memory: 16Mi
+      limits:
+        cpu: 500m
+        memory: 64Mi
+    volumeMounts:
+      - name: geoip
+        mountPath: /geoip
+
+extraVolumes:
+  - name: geoip
+    hostPath:
+      path: /var/lib/fluent-bit-geoip
+      type: DirectoryOrCreate
+
+extraVolumeMounts:
+  - name: geoip
+    mountPath: /geoip
+    readOnly: true
 
 config:
   inputs: |
@@ -69,6 +120,19 @@ config:
         Condition  Key_does_not_exist level
         Condition  Key_value_matches log ^F\d{4}
         Set        level fatal
+
+    # Gateway access logs (CiliumGatewayClassConfig `gateway/access-logs`). Records without a
+    # public client_ip get nulls; the filter only adds fields.
+    [FILTER]
+        Name        geoip2
+        Match       kube.var.log.containers.cilium-envoy-*_kube-system_cilium-envoy-*
+        Database    /geoip/dbip-city-lite.mmdb
+        Lookup_key  client_ip
+        Record      geo_country_code client_ip %{country.iso_code}
+        Record      geo_country      client_ip %{country.names.en}
+        Record      geo_city         client_ip %{city.names.en}
+        Record      geo_lat          client_ip %{location.latitude}
+        Record      geo_lon          client_ip %{location.longitude}
 
   outputs: |
     [OUTPUT]

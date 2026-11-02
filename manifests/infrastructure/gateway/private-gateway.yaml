@@ -5,7 +5,7 @@ metadata:
   name: private
   namespace: gateway
 spec:
-  gatewayClassName: cilium
+  gatewayClassName: cilium-access-logs
   listeners:
     - name: http
       protocol: HTTP
