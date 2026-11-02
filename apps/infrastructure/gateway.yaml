@@ -28,3 +28,9 @@ spec:
         duration: 30s
         factor: 2
         maxDuration: 5m
+  ignoreDifferences:
+    # The CRD defaults `text` into each item; it only applies to `format: Text`.
+    - group: cilium.io
+      kind: CiliumGatewayClassConfig
+      jqPathExpressions:
+        - .spec.telemetry.accessLogs[].text
