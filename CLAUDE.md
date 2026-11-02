@@ -86,6 +86,41 @@ Gotchas:
   `manifests/infrastructure/cert-manager-webhook-porkbun/README.md`.
 - **`gmake`, not `make`** — macOS ships GNU Make 3.81; the Makefile needs 4.0+.
 
+## Agent access
+
+Agents get read-only access to the live cluster and Grafana. Both are LAN-only.
+
+**Kubernetes** — ServiceAccount `agent-access/claude` (`manifests/infrastructure/agent-access/`),
+bound to `view` plus `agent-readonly` (nodes, PVs, RBAC, CRDs). It cannot read Secrets, exec
+or write — keep it that way. The sandbox denies `~/.kube`, so the kubeconfig lives elsewhere:
+
+```sh
+NO_PROXY=localhost no_proxy=localhost KUBECONFIG=~/.config/homelab/agent.kubeconfig kubectl get pods -A
+```
+
+The sandbox only lets traffic out through its proxy, and its default `NO_PROXY` covers
+`192.168.0.0/16`, so kubectl would connect to the API (`192.168.1.10:6443`) directly and be
+refused. Overriding `NO_PROXY` routes it through the proxy, which allows `192.168.1.10`. To create or
+rotate the kubeconfig (admin kubeconfig needed; deleting the Secret revokes the old token):
+
+```sh
+s=agent-access/claude-token; f=~/.config/homelab/agent.kubeconfig; mkdir -p ${f:h}
+kubectl -n ${s%/*} get secret ${s#*/} -o jsonpath='{.data.ca\.crt}' | base64 -d > ${f:h}/ca.crt
+kubectl --kubeconfig $f config set-cluster homelab --server https://192.168.1.10:6443 \
+  --certificate-authority ${f:h}/ca.crt --embed-certs
+kubectl --kubeconfig $f config set-credentials claude \
+  --token "$(kubectl -n ${s%/*} get secret ${s#*/} -o jsonpath='{.data.token}' | base64 -d)"
+kubectl --kubeconfig $f config set-context homelab --cluster homelab --user claude
+kubectl --kubeconfig $f config use-context homelab
+```
+
+**Grafana** — the `grafana` MCP server in `.mcp.json` (`mcp-grafana`, installed with
+`go install github.com/grafana/mcp-grafana/cmd/mcp-grafana@v1.6.3`). It authenticates as the
+Grafana service account `Claude` (Editor), token in `GRAFANA_SERVICE_ACCOUNT_TOKEN` in the
+environment Claude Code starts from — never in a file in this repo. Editor can create
+dashboards, but those are drafts: the source of truth is the provisioned JSON in git, and
+Grafana's UI edits to provisioned dashboards are lost on restart.
+
 ## Where decision context lives
 
 Conclusion in the code, reasoning in the issue.
