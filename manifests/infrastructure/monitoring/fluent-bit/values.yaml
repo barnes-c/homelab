@@ -59,6 +59,61 @@ extraVolumeMounts:
     mountPath: /geoip
     readOnly: true
 
+# Mounted at /fluent-bit/scripts. A Lua filter rather than `modify`, because modify's regex
+# conditions skip non-string values and Envoy's response_code is a number.
+luaScripts:
+  log-levels.lua: |
+    -- Sets `level` on records whose format carries a level Loki doesn't recognise, or none.
+    -- Records that already have one (app JSON, the klog filters) are left alone.
+    local zap = {
+      DEBUG = "debug", INFO = "info", WARN = "warning", ERROR = "error",
+      DPANIC = "critical", PANIC = "critical", FATAL = "fatal",
+    }
+    local valkey = { ["."] = "debug", ["-"] = "debug", ["*"] = "info", ["#"] = "warning" }
+    local postgres = {
+      LOG = "info", INFO = "info", NOTICE = "info", STATEMENT = "info", DETAIL = "info",
+      HINT = "info", CONTEXT = "info", WARNING = "warning", ERROR = "error",
+      FATAL = "fatal", PANIC = "critical",
+    }
+
+    -- 0 is Envoy's code when no response was sent (client gone, upstream reset).
+    local function from_status(code)
+      code = tonumber(code)
+      if not code then return nil end
+      if code >= 500 then return "error" end
+      if code >= 400 or code == 0 then return "warning" end
+      return "info"
+    end
+
+    local function detect(record)
+      if record.response_code ~= nil then
+        return from_status(record.response_code)
+      end
+      local line = record.log
+      if type(line) ~= "string" then return nil end
+      -- Combined access log: ip - user [time] "request" status ...
+      local status = line:match('^%S+ %- %S+ %[[^%]]+%] "[^"]*" (%d%d%d) ')
+      if status then return from_status(status) end
+      -- zap console encoder (trivy): time<TAB>LEVEL<TAB>msg
+      local z = line:match("^%S+\t(%u+)\t")
+      if z then return zap[z] end
+      -- Valkey/Redis: pid:role dd Mon yyyy hh:mm:ss.mmm <marker> msg
+      local v = line:match("^%d+:%a %d+ %a+ %d+ [%d:%.]+ ([%.%-%*#]) ")
+      if v then return valkey[v] end
+      -- Postgres: yyyy-mm-dd hh:mm:ss.mmm TZ [pid] SEVERITY:  msg
+      local p = line:match("^%d+%-%d+%-%d+ [%d:%.]+ %a+ %[%d+%] (%u+):")
+      if p then return postgres[p] end
+      return nil
+    end
+
+    function set_level(tag, timestamp, record)
+      if record.level ~= nil then return 0, timestamp, record end
+      local level = detect(record)
+      if level == nil then return 0, timestamp, record end
+      record.level = level
+      return 1, timestamp, record
+    end
+
 config:
   inputs: |
     [INPUT]
@@ -120,6 +175,19 @@ config:
         Condition  Key_does_not_exist level
         Condition  Key_value_matches log ^F\d{4}
         Set        level fatal
+
+    # Formats with no level Loki recognises (access logs, Postgres, Valkey, zap console); see the script.
+    [FILTER]
+        Name    lua
+        Match   kube.*
+        script  /fluent-bit/scripts/log-levels.lua
+        call    set_level
+
+    # The blog's kubelet probes are ~95% of its log volume and carry no information.
+    [FILTER]
+        Name     grep
+        Match    kube.var.log.containers.blog-*_blog-barnes-biz_blog-*
+        Exclude  log kube-probe/
 
     # Gateway access logs (CiliumGatewayClassConfig `gateway/access-logs`). Records without a
     # public client_ip get nulls; the filter only adds fields.
