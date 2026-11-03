@@ -47,6 +47,7 @@ locals {
         }),
       ] : [],
       length(v.sysfs) > 0 ? [templatefile("${local.patches_dir}/sysfs.yaml.tftpl", { params = v.sysfs })] : [],
+      v.rp1_ethernet ? [file("${local.patches_dir}/rp1-ethernet.yaml")] : [],
     )
   }
   patches_dir = "${path.module}/patches"
