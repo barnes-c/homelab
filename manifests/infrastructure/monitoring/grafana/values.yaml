@@ -27,6 +27,9 @@ deploymentStrategy:
 admin:
   existingSecret: grafana-admin
 
+smtp:
+  existingSecret: grafana-smtp
+
 grafana.ini:
   analytics:
     reporting_enabled: false
@@ -57,6 +60,12 @@ grafana.ini:
       contains(groups, 'Grafana Admins') && 'Admin' ||
       contains(groups, 'Grafana Editors') && 'Editor'
     role_attribute_strict: true
+  smtp:
+    enabled: true
+    host: smtp.mail.me.com:587
+    from_address: noreply@barnes.biz
+    from_name: Grafana for barnes.biz
+    startTLS_policy: MandatoryStartTLS
 
 dashboardProviders:
   dashboardproviders.yaml:
