@@ -12,7 +12,9 @@ alerting:
             condition: B
             data:
               - refId: A
-                relativeTimeRange: { from: 900, to: 0 }
+                relativeTimeRange:
+                  from: 900
+                  to: 0
                 datasourceUid: loki
                 model:
                   refId: A
@@ -27,7 +29,9 @@ alerting:
                   type: threshold
                   expression: A
                   conditions:
-                    - evaluator: { type: gt, params: [10] }
+                    - evaluator:
+                        type: gt
+                        params: [10]
             noDataState: OK
             execErrState: Error
             for: 0m
