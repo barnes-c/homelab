@@ -1,0 +1,40 @@
+alerting:
+  rules.yaml:
+    apiVersion: 1
+    groups:
+      - orgId: 1
+        name: authentik
+        folder: Alerts
+        interval: 1m
+        rules:
+          - uid: authentik-failed-logins
+            title: Authentik failed logins
+            condition: B
+            data:
+              - refId: A
+                relativeTimeRange: { from: 900, to: 0 }
+                datasourceUid: loki
+                model:
+                  refId: A
+                  queryType: instant
+                  expr: >-
+                    sum(count_over_time({namespace="authentik", container="server"}
+                    |= "authentik.events.models" | json | action="login_failed" [15m])) or vector(0)
+              - refId: B
+                datasourceUid: __expr__
+                model:
+                  refId: B
+                  type: threshold
+                  expression: A
+                  conditions:
+                    - evaluator: { type: gt, params: [10] }
+            noDataState: OK
+            execErrState: Error
+            for: 0m
+            labels:
+              severity: warning
+            annotations:
+              summary: More than 10 failed Authentik logins in 15 minutes
+              description: >-
+                See the Authentik sign-ins row on the Gateway visitors dashboard for client IPs,
+                usernames tried and networks. Context: barnes-c/homelab-issues#41.

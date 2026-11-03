@@ -1,0 +1,12 @@
+alerting:
+  contactpoints.yaml:
+    apiVersion: 1
+    contactPoints:
+      - orgId: 1
+        name: email
+        receivers:
+          - uid: email
+            type: email
+            settings:
+              addresses: alerts@barnes.biz
+              singleEmail: true

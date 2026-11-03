@@ -27,8 +27,12 @@ spec:
           chart: "{{ .chart }}"
           targetRevision: "{{ .chartVersion }}"
           helm:
+            ignoreMissingValueFiles: true
             valueFiles:
               - $values/manifests/infrastructure/monitoring/{{ .name }}/values.yaml
+              - $values/manifests/infrastructure/monitoring/{{ .name }}/alerting/contact-points.yaml
+              - $values/manifests/infrastructure/monitoring/{{ .name }}/alerting/policies.yaml
+              - $values/manifests/infrastructure/monitoring/{{ .name }}/alerting/rules.yaml
         - repoURL: https://github.com/barnes-c/homelab
           targetRevision: master
           ref: values

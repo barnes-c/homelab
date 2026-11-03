@@ -1,0 +1,7 @@
+alerting:
+  policies.yaml:
+    apiVersion: 1
+    policies:
+      - orgId: 1
+        receiver: email
+        group_by: [grafana_folder, alertname]

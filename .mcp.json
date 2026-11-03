@@ -1,0 +1,17 @@
+{
+  "mcpServers": {
+    "grafana": {
+      "command": "mcp-grafana",
+      "args": [
+        "-t",
+        "stdio",
+        "--enabled-tools",
+        "search,datasource,prometheus,loki,dashboard,folder,navigation,annotations"
+      ],
+      "env": {
+        "GRAFANA_URL": "https://monitoring.barnes.biz",
+        "GRAFANA_SERVICE_ACCOUNT_TOKEN": "${GRAFANA_SERVICE_ACCOUNT_TOKEN}"
+      }
+    }
+  }
+}
