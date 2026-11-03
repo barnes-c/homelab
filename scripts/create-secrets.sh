@@ -73,11 +73,6 @@ seal authentik smtp-credentials \
   --from-literal=AUTHENTIK_EMAIL__USERNAME="$SMTP_USER" \
   --from-literal=AUTHENTIK_EMAIL__PASSWORD="$SMTP_PASS"
 
-seal monitoring grafana-smtp \
-  "$MANIFESTS/infrastructure/monitoring/grafana-smtp.yaml" \
-  --from-literal=user="$SMTP_USER" \
-  --from-literal=password="$SMTP_PASS"
-
 seal blog-barnes-biz goatcounter-admin \
   "$MANIFESTS/workloads/blog-barnes-biz/goatcounter-admin.yaml" \
   --from-literal=password="$GOATCOUNTER_ADMIN_PASSWORD"
