@@ -84,6 +84,9 @@ variable "nodes" {
 
     # Written to /sys by a SysfsConfig document; keys are /sys paths with dots for slashes.
     sysfs = optional(map(string), {})
+
+    # Pi 5 / CM5 (RP1 MAC): turns off TX offloads on end0. Not for the Pi 4 (bcmgenet).
+    rp1_ethernet = optional(bool, false)
   }))
 
   default = {
@@ -120,6 +123,8 @@ variable "nodes" {
       sysfs = {
         "devices.platform.cooling_fan.hwmon.hwmon2.pwm1_enable" = "2"
       }
+
+      rp1_ethernet = true
     }
 
     # Samsung T7 500GB on USB: scratch storage for Longhorn (metrics, logs), replicated across the scratch disks.
@@ -160,6 +165,8 @@ variable "nodes" {
       node_annotations = {
         "node.longhorn.io/default-disks-config" = "[{\"path\":\"/var/mnt/longhorn\",\"allowScheduling\":true,\"tags\":[\"scratch\"]}]"
       }
+
+      rp1_ethernet = true
     }
 
     "cm5-wk-02" = {
@@ -178,6 +185,8 @@ variable "nodes" {
       node_annotations = {
         "node.longhorn.io/default-disks-config" = "[{\"path\":\"/var/mnt/longhorn\",\"allowScheduling\":true,\"tags\":[\"scratch\"]}]"
       }
+
+      rp1_ethernet = true
     }
   }
 
@@ -201,7 +210,8 @@ variable "registry_mirrors" {
   EOT
   type        = map(list(string))
   default = {
-    "192.168.1.18:5005" = ["http://192.168.27.67:5005", "http://192.168.1.18:5005"]
+    # Tried in order: the Mac's LAN address first, its Freebox VPN address when it's away.
+    "192.168.1.18:5005" = ["http://192.168.1.18:5005", "http://192.168.27.67:5005"]
   }
 }
 
