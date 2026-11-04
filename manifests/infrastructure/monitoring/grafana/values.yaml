@@ -5,6 +5,7 @@ env:
 
 envFromSecrets:
   - name: grafana-oidc
+  - name: grafana-secret-key
 
 resources:
   requests:
