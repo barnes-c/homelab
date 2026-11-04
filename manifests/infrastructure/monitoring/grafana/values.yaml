@@ -5,6 +5,7 @@ env:
 
 envFromSecrets:
   - name: grafana-oidc
+  - name: grafana-secret-key
 
 resources:
   requests:
@@ -56,8 +57,9 @@ grafana.ini:
     auth_url: https://auth.barnes.biz/application/o/authorize/
     token_url: https://auth.barnes.biz/application/o/token/
     api_url: https://auth.barnes.biz/application/o/userinfo/
+    allow_assign_grafana_admin: true
     role_attribute_path: >-
-      contains(groups, 'Grafana Admins') && 'Admin' ||
+      contains(groups, 'Grafana Admins') && 'GrafanaAdmin' ||
       contains(groups, 'Grafana Editors') && 'Editor'
     role_attribute_strict: true
   smtp:
