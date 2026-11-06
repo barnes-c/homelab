@@ -1,0 +1,7 @@
+# Kernel log (dmesg) to the node-local fluent-bit, which forwards to Loki. The address is the
+# fixed ClusterIP of manifests/infrastructure/monitoring/fluent-bit-kmsg.yaml; Cilium's socket LB
+# makes it reachable from the host. Records carry no hostname, so the Service is node-local.
+apiVersion: v1alpha1
+kind: KmsgLogConfig
+name: fluent-bit
+url: tcp://10.96.0.50:6050

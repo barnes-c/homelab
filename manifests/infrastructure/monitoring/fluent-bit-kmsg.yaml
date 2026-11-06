@@ -1,0 +1,19 @@
+# Receives each node's kernel log from Talos (cluster/tofu/patches/kmsg-log.yaml). Separate from
+# the chart's Service because clusterIP is immutable there. The IP is in the static band
+# (first 256 addresses of the service CIDR), which the allocator never hands out dynamically.
+apiVersion: v1
+kind: Service
+metadata:
+  name: fluent-bit-kmsg
+  namespace: monitoring
+spec:
+  clusterIP: 10.96.0.50
+  # fluent-bit tags records with its own node name, so each node must reach its local pod.
+  internalTrafficPolicy: Local
+  selector:
+    app.kubernetes.io/name: fluent-bit
+  ports:
+    - name: kmsg
+      port: 6050
+      targetPort: 6050
+      protocol: TCP
