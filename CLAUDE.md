@@ -119,7 +119,8 @@ kubectl --kubeconfig $f config use-context homelab
 Grafana service account `Claude` (Editor), token in `GRAFANA_SERVICE_ACCOUNT_TOKEN` in the
 environment Claude Code starts from — never in a file in this repo. Editor can create
 dashboards, but those are drafts: the source of truth is the provisioned JSON in git, and
-Grafana's UI edits to provisioned dashboards are lost on restart.
+Grafana's UI edits to provisioned dashboards are lost on restart. Hand-built dashboards live in
+`barnes-c/dashboard-as-code`, imported read-only by Git Sync; gnetId ones stay in `values.yaml`.
 
 ## Where decision context lives
 
