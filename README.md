@@ -5,12 +5,12 @@
 
 Talos Linux cluster on Raspberry Pi hardware. OpenTofu bootstraps the cluster, ArgoCD runs everything on it.
 
-|    Node     |        Board         |     Role      |
-| ----------- | -------------------- | ------------- |
-| rpi5b-cp-01 | Raspberry Pi 5 16GB  | Control plane |
-| rpi4b-wk-01 | Raspberry Pi 4B 8GB  | Worker        |
-| cm5-wk-01   | Raspberry Pi CM5 8GB | Worker        |
-| cm5-wk-02   | Raspberry Pi CM5 8GB | Worker        |
+|   Node    |        Board         |     Role      |
+| --------- | -------------------- | ------------- |
+| pi5-cp-01 | Raspberry Pi 5 16GB  | Control plane |
+| pi4-wk-01 | Raspberry Pi 4B 8GB  | Worker        |
+| cm5-cp-01 | Raspberry Pi CM5 8GB | Control plane |
+| cm5-cp-02 | Raspberry Pi CM5 8GB | Control plane |
 
 ```txt
 cluster/     Talos images (Makefile) and OpenTofu

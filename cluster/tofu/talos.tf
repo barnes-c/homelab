@@ -1,4 +1,5 @@
 locals {
+  bootstrap_ip      = var.nodes["rpi5b-cp-01"].ip
   control_plane_ips = [for node in local.control_planes : node.ip]
   control_planes    = { for k, v in var.nodes : k => v if v.role == "controlplane" }
   patches = {
@@ -102,16 +103,16 @@ resource "talos_machine_configuration_apply" "node" {
 
 resource "talos_machine_bootstrap" "cluster" {
   client_configuration = talos_machine_secrets.cluster.client_configuration
-  node                 = local.control_plane_ips[0]
-  endpoint             = local.control_plane_ips[0]
+  node                 = local.bootstrap_ip
+  endpoint             = local.bootstrap_ip
 
   depends_on = [talos_machine_configuration_apply.node]
 }
 
 resource "talos_cluster_kubeconfig" "cluster" {
   client_configuration = talos_machine_secrets.cluster.client_configuration
-  node                 = local.control_plane_ips[0]
-  endpoint             = local.control_plane_ips[0]
+  node                 = local.bootstrap_ip
+  endpoint             = local.bootstrap_ip
 
   depends_on = [talos_machine_bootstrap.cluster]
 }
