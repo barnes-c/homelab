@@ -15,6 +15,13 @@ resources:
     cpu: 500m
     memory: 1Gi
 
+startupProbe:
+  httpGet:
+    path: /api/health
+    port: grafana
+  periodSeconds: 10
+  failureThreshold: 30
+
 persistence:
   enabled: true
   size: 1Gi
