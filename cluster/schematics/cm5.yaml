@@ -4,23 +4,15 @@ overlay:
   name: rpi_5
   image: siderolabs/sbc-raspberrypi
   options:
-    # The NanoCluster fan's PWM line is pulled low by a MOSFET driven from slot 1's GPIO13
-    # (sipeed/NanoCluster#13), so duty is inverted: 0 = full speed. pwm-gpio-fan cannot set
-    # polarity, so the speeds below are 255 minus the wanted speed, and fan_temp0 is set
-    # below any real SoC temperature to keep state 0 (always full speed) unreachable.
-    # Speeds: 40% baseline, 60% at 60 C, 80% at 67.5 C, 100% at 75 C.
-    # One dtparam per line: the firmware truncates long config.txt lines, which silently
-    # dropped the speed overrides when they were all on the dtoverlay line.
+    # The board's fan switch (Q9900, on the header's "-") is faulty, so the Noctua's PWM wire
+    # goes straight to UART header pin 1 (slot-1 TX = GPIO14) through 1 kOhm; slot 1 drives it.
     configTxtAppend: |
       dtoverlay=disable-bt
       dtoverlay=disable-wifi
       dtoverlay=pwm-gpio-fan
-      dtparam=fan_gpio=13
+      dtparam=fan_gpio=14
       dtparam=fan_temp0=10000
-      dtparam=fan_temp0_speed=153
-      dtparam=fan_temp1_speed=102
-      dtparam=fan_temp2_speed=51
-      dtparam=fan_temp3_speed=0
+      dtparam=fan_temp0_speed=102
 customization:
   systemExtensions:
     officialExtensions:
