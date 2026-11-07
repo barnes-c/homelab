@@ -183,6 +183,7 @@ config:
           "namespace_name": "namespace",
           "pod_name": "pod",
           "container_name": "container",
+          "host": "node",
           "labels": {"app.kubernetes.io/name": "app"}
         }
       }
