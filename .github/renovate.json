@@ -13,6 +13,8 @@
         "dependencies"
     ],
     "pinDigests": true,
+    "platformAutomerge": true,
+    "internalChecksFilter": "strict",
     "hostRules": [
         {
             "matchHost": "ghcr.io",
@@ -59,12 +61,12 @@
     ],
     "packageRules": [
         {
-            "description": "Automerge patches once they have been public for 3 days.",
+            "description": "Automerge patches once they have been public for 1 day.",
             "matchUpdateTypes": [
                 "patch"
             ],
             "automerge": true,
-            "minimumReleaseAge": "3 days"
+            "minimumReleaseAge": "1 day"
         },
         {
             "description": "immich-server has v3.3.5 files mounted over it, which break on any other version. Remove with barnes-c/homelab-issues#51.",
