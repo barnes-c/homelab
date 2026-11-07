@@ -1,6 +1,6 @@
 # homelab
 
-[![Talos](https://img.shields.io/badge/Talos-v1.14.5-ff7300)](https://github.com/siderolabs/talos/releases/tag/v1.14.5)
+[![Talos](https://img.shields.io/badge/Talos-v1.14.5-ff7300?logo=talos&logoColor=white)](https://github.com/siderolabs/talos/releases/tag/v1.14.5)
 [![Kubernetes](https://img.shields.io/badge/Kubernetes-v1.37.0-326ce5?logo=kubernetes&logoColor=white)](https://kubernetes.io/releases/)
 
 Talos Linux cluster on Raspberry Pi hardware. OpenTofu bootstraps the cluster, ArgoCD runs everything on it.
