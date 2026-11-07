@@ -101,6 +101,12 @@ resource "talos_machine_configuration_apply" "node" {
   }
 }
 
+# A renamed key without a moved block destroys the old entry, and on_destroy resets that node.
+moved {
+  from = talos_machine_configuration_apply.node["rpi4b-wk-01"]
+  to   = talos_machine_configuration_apply.node["pi4-wk-01"]
+}
+
 resource "talos_machine_bootstrap" "cluster" {
   client_configuration = talos_machine_secrets.cluster.client_configuration
   node                 = local.bootstrap_ip

@@ -129,7 +129,7 @@ variable "nodes" {
 
     # Samsung T7 500GB on USB: scratch storage for Longhorn (metrics, logs), replicated across the scratch disks.
     # Matched by model because the USB bridge reports a generic wwid (naa.5000000000000001).
-    "rpi4b-wk-01" = {
+    "pi4-wk-01" = {
       ip                 = "192.168.1.12"
       role               = "worker"
       install_disk       = "/dev/mmcblk0"
@@ -145,48 +145,6 @@ variable "nodes" {
       node_annotations = {
         "node.longhorn.io/default-disks-config" = "[{\"path\":\"/var/mnt/longhorn\",\"allowScheduling\":true,\"tags\":[\"scratch\"]}]"
       }
-    }
-
-    # CM5 8GB on the NanoCluster: Talos on the 16GB eMMC, EPHEMERAL and Longhorn scratch on a
-    # Transcend 256GB NVMe. Both NVMe drives are the same model, so they are pinned by wwid.
-    "cm5-wk-01" = {
-      ip                 = "192.168.1.13"
-      role               = "worker"
-      install_disk       = "/dev/mmcblk0"
-      install_image      = "factory.talos.dev/metal-installer/a64b67b0e9fb8ab3f4f3595532da5939ac26fc35adb4760ec1a4c6893c6d52a3:v1.14.5"
-      ephemeral_selector = "disk.wwid == 'eui.00000000000000007c35485256bde646'"
-      ephemeral_max_size = "50GiB"
-      longhorn_selector  = "disk.wwid == 'eui.00000000000000007c35485256bde646'"
-      longhorn_min_size  = "100GiB"
-
-      node_labels = {
-        "node.longhorn.io/create-default-disk" = "config"
-      }
-      node_annotations = {
-        "node.longhorn.io/default-disks-config" = "[{\"path\":\"/var/mnt/longhorn\",\"allowScheduling\":true,\"tags\":[\"scratch\"]}]"
-      }
-
-      rp1_ethernet = true
-    }
-
-    "cm5-wk-02" = {
-      ip                 = "192.168.1.14"
-      role               = "worker"
-      install_disk       = "/dev/mmcblk0"
-      install_image      = "factory.talos.dev/metal-installer/a64b67b0e9fb8ab3f4f3595532da5939ac26fc35adb4760ec1a4c6893c6d52a3:v1.14.5"
-      ephemeral_selector = "disk.wwid == 'eui.00000000000000007c35485256bde5a1'"
-      ephemeral_max_size = "50GiB"
-      longhorn_selector  = "disk.wwid == 'eui.00000000000000007c35485256bde5a1'"
-      longhorn_min_size  = "100GiB"
-
-      node_labels = {
-        "node.longhorn.io/create-default-disk" = "config"
-      }
-      node_annotations = {
-        "node.longhorn.io/default-disks-config" = "[{\"path\":\"/var/mnt/longhorn\",\"allowScheduling\":true,\"tags\":[\"scratch\"]}]"
-      }
-
-      rp1_ethernet = true
     }
   }
 
