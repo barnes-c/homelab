@@ -92,7 +92,7 @@ variable "nodes" {
   default = {
     # 2x Samsung 870 2TB on a Radxa Penta SATA HAT, mirrored as md127.
     # EPHEMERAL on the mirror keeps etcd off the SD card; the SD keeps only META + STATE.
-    "rpi5b-cp-01" = {
+    "pi5-cp-01" = {
       ip            = "192.168.1.11"
       role          = "controlplane"
       install_disk  = "/dev/mmcblk0"
@@ -129,7 +129,7 @@ variable "nodes" {
 
     # Samsung T7 500GB on USB: scratch storage for Longhorn (metrics, logs), replicated across the scratch disks.
     # Matched by model because the USB bridge reports a generic wwid (naa.5000000000000001).
-    "rpi4b-wk-01" = {
+    "pi4-wk-01" = {
       ip                 = "192.168.1.12"
       role               = "worker"
       install_disk       = "/dev/mmcblk0"
@@ -147,11 +147,11 @@ variable "nodes" {
       }
     }
 
-    # CM5 8GB on the NanoCluster: Talos on the 16GB eMMC, EPHEMERAL and Longhorn scratch on a
-    # Transcend 256GB NVMe. Both NVMe drives are the same model, so they are pinned by wwid.
-    "cm5-wk-01" = {
+    # CM5 8GB on the NanoCluster: Talos on the 16GB eMMC, EPHEMERAL (and so etcd) and Longhorn
+    # scratch on a Transcend 256GB NVMe. Both NVMe drives are the same model, so they are pinned by wwid.
+    "cm5-cp-01" = {
       ip                 = "192.168.1.13"
-      role               = "worker"
+      role               = "controlplane"
       install_disk       = "/dev/mmcblk0"
       install_image      = "factory.talos.dev/metal-installer/a64b67b0e9fb8ab3f4f3595532da5939ac26fc35adb4760ec1a4c6893c6d52a3:v1.14.5"
       ephemeral_selector = "disk.wwid == 'eui.00000000000000007c35485256bde646'"
@@ -169,9 +169,9 @@ variable "nodes" {
       rp1_ethernet = true
     }
 
-    "cm5-wk-02" = {
+    "cm5-cp-02" = {
       ip                 = "192.168.1.14"
-      role               = "worker"
+      role               = "controlplane"
       install_disk       = "/dev/mmcblk0"
       install_image      = "factory.talos.dev/metal-installer/a64b67b0e9fb8ab3f4f3595532da5939ac26fc35adb4760ec1a4c6893c6d52a3:v1.14.5"
       ephemeral_selector = "disk.wwid == 'eui.00000000000000007c35485256bde5a1'"

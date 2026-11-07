@@ -1,4 +1,5 @@
 locals {
+  bootstrap_ip      = var.nodes["pi5-cp-01"].ip
   control_plane_ips = [for node in local.control_planes : node.ip]
   control_planes    = { for k, v in var.nodes : k => v if v.role == "controlplane" }
   patches = {
@@ -100,18 +101,29 @@ resource "talos_machine_configuration_apply" "node" {
   }
 }
 
+# A renamed key without a moved block destroys the old entry, and on_destroy resets that node.
+moved {
+  from = talos_machine_configuration_apply.node["rpi4b-wk-01"]
+  to   = talos_machine_configuration_apply.node["pi4-wk-01"]
+}
+
+moved {
+  from = talos_machine_configuration_apply.node["rpi5b-cp-01"]
+  to   = talos_machine_configuration_apply.node["pi5-cp-01"]
+}
+
 resource "talos_machine_bootstrap" "cluster" {
   client_configuration = talos_machine_secrets.cluster.client_configuration
-  node                 = local.control_plane_ips[0]
-  endpoint             = local.control_plane_ips[0]
+  node                 = local.bootstrap_ip
+  endpoint             = local.bootstrap_ip
 
   depends_on = [talos_machine_configuration_apply.node]
 }
 
 resource "talos_cluster_kubeconfig" "cluster" {
   client_configuration = talos_machine_secrets.cluster.client_configuration
-  node                 = local.control_plane_ips[0]
-  endpoint             = local.control_plane_ips[0]
+  node                 = local.bootstrap_ip
+  endpoint             = local.bootstrap_ip
 
   depends_on = [talos_machine_bootstrap.cluster]
 }
