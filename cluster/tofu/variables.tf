@@ -92,7 +92,7 @@ variable "nodes" {
   default = {
     # 2x Samsung 870 2TB on a Radxa Penta SATA HAT, mirrored as md127.
     # EPHEMERAL on the mirror keeps etcd off the SD card; the SD keeps only META + STATE.
-    "rpi5b-cp-01" = {
+    "pi5-cp-01" = {
       ip            = "192.168.1.11"
       role          = "controlplane"
       install_disk  = "/dev/mmcblk0"

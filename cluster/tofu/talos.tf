@@ -1,5 +1,5 @@
 locals {
-  bootstrap_ip      = var.nodes["rpi5b-cp-01"].ip
+  bootstrap_ip      = var.nodes["pi5-cp-01"].ip
   control_plane_ips = [for node in local.control_planes : node.ip]
   control_planes    = { for k, v in var.nodes : k => v if v.role == "controlplane" }
   patches = {
@@ -105,6 +105,11 @@ resource "talos_machine_configuration_apply" "node" {
 moved {
   from = talos_machine_configuration_apply.node["rpi4b-wk-01"]
   to   = talos_machine_configuration_apply.node["pi4-wk-01"]
+}
+
+moved {
+  from = talos_machine_configuration_apply.node["rpi5b-cp-01"]
+  to   = talos_machine_configuration_apply.node["pi5-cp-01"]
 }
 
 resource "talos_machine_bootstrap" "cluster" {
