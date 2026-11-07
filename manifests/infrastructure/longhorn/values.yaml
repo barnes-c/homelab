@@ -5,7 +5,7 @@ defaultSettings:
   defaultReplicaCount: "1"
   replicaAutoBalance: disabled
   # Persistent volumes have one replica, so the default (block-if-contains-last-replica)
-  # blocks every drain of rpi5b-cp-01. This lets it proceed once evicted pods have detached.
+  # blocks every drain of pi5-cp-01. This lets it proceed once evicted pods have detached.
   nodeDrainPolicy: allow-if-replica-is-stopped
   # Moves existing volumes onto the new engine after a Longhorn upgrade; otherwise they keep
   # the old one indefinitely. Live upgrades only work from the previous minor, so upgrade
@@ -21,7 +21,7 @@ defaultSettings:
 # Retiring an app (finalizer cascade) deletes its PVCs; Retain keeps the volume and its data.
 persistence:
   reclaimPolicy: Retain
-  # Persistent data lives only on rpi5b-cp-01, whose disk is a RAID1 mirror; a second
+  # Persistent data lives only on pi5-cp-01, whose disk is a RAID1 mirror; a second
   # replica on the other node would add little. Scratch data uses longhorn-scratch instead.
   defaultClassReplicaCount: 1
   defaultDiskSelector:

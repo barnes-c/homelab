@@ -1,4 +1,4 @@
-# With TSO/SG on, the RP1 MAC logs ~20 TX stalls/h; with them off, none (A/B on cm5-wk-01).
+# With TSO/SG on, the RP1 MAC logs ~20 TX stalls/h; with them off, none (A/B on cm5-cp-01, then named cm5-wk-01).
 # Line rate is the same either way. See barnes-c/homelab-issues#20.
 apiVersion: v1alpha1
 kind: EthernetConfig
