@@ -50,6 +50,8 @@ grafana.ini:
   auth:
     disable_login_form: true
     signout_redirect_url: https://auth.barnes.biz/application/o/grafana/end-session/
+  auth.basic:
+    enabled: false
   auth.generic_oauth:
     enabled: true
     name: Authentik
@@ -61,6 +63,9 @@ grafana.ini:
     auth_url: https://auth.barnes.biz/application/o/authorize/
     token_url: https://auth.barnes.biz/application/o/token/
     api_url: https://auth.barnes.biz/application/o/userinfo/
+    use_pkce: true
+    validate_id_token: true
+    jwk_set_url: https://auth.barnes.biz/application/o/grafana/jwks/
     allow_assign_grafana_admin: true
     role_attribute_path: >-
       contains(groups, 'Grafana Admins') && 'GrafanaAdmin' ||
