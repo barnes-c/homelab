@@ -36,6 +36,9 @@ grafana.ini:
     reporting_enabled: false
     check_for_updates: false
     check_for_plugin_updates: false
+    feedback_links_enabled: false
+  snapshots:
+    external_enabled: false
   news:
     news_feed_enabled: false
   server:
@@ -43,6 +46,7 @@ grafana.ini:
     root_url: https://monitoring.barnes.biz
   security:
     disable_initial_admin_creation: true
+    disable_gravatar: true
   auth:
     disable_login_form: true
     signout_redirect_url: https://auth.barnes.biz/application/o/grafana/end-session/
