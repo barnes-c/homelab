@@ -4,8 +4,11 @@ overlay:
   name: rpi_5
   image: siderolabs/sbc-raspberrypi
   options:
-    # The board's fan switch (Q9900, on the header's "-") is faulty, so the Noctua's PWM wire
-    # goes straight to UART header pin 1 (slot-1 TX = GPIO14) through 1 kOhm; slot 1 drives it.
+    # The board's fan switch (Q9900, header "-") is faulty, so the Noctua's PWM wire goes
+    # straight to UART header pin 1 (slot-1 TX = GPIO14), driven by slot 1. Not inverted;
+    # fan_temp0 below any real SoC temperature keeps a 40% floor.
+    # One dtparam per line: the firmware truncates long config.txt lines.
+    # See barnes-c/homelab-issues#76.
     configTxtAppend: |
       dtoverlay=disable-bt
       dtoverlay=disable-wifi
