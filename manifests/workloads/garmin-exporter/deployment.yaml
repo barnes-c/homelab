@@ -22,7 +22,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: garmin-exporter
-          image: ghcr.io/barnes-c/garmin_exporter:1.1.7@sha256:6fd656856ec81a140b9cbc9f04aacd7bb855020adf9923e41228a141b49e0fff
+          image: ghcr.io/barnes-c/garmin_exporter:2.0.0-rc.1@sha256:29c974badce91c27c42fbfbf58eff3a0479e556d2ef937ec04337852a867b3ae
           # Login prompts for the MFA code on stdin; enter it via `kubectl attach -it`.
           stdin: true
           tty: true
