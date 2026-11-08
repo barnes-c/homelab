@@ -30,6 +30,8 @@ spec:
             - name: metrics
               containerPort: 10045
           env:
+            - name: GARMIN_LOG_LEVEL
+              value: debug
             - name: GARMIN_TOKEN_FILE
               value: /data/garmin_token.json
             - name: GARMIN_USERNAME
