@@ -50,14 +50,12 @@ entries:
       severity: alert
       destination_group: !Find [authentik_core.group, [name, authentik Admins]]
       transports:
-        - !Find [
-            authentik_events.notificationtransport,
-            [name, default-email-transport],
-          ]
-        - !Find [
-            authentik_events.notificationtransport,
-            [name, default-local-transport],
-          ]
+        - !Find
+          - authentik_events.notificationtransport
+          - [name, default-email-transport]
+        - !Find
+          - authentik_events.notificationtransport
+          - [name, default-local-transport]
   - model: authentik_policies.policybinding
     identifiers:
       order: 0
@@ -94,10 +92,9 @@ entries:
       severity: notice
       destination_group: !Find [authentik_core.group, [name, authentik Admins]]
       transports:
-        - !Find [
-            authentik_events.notificationtransport,
-            [name, default-local-transport],
-          ]
+        - !Find
+          - authentik_events.notificationtransport
+          - [name, default-local-transport]
   - model: authentik_policies.policybinding
     identifiers:
       order: 0
