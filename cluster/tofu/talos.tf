@@ -14,9 +14,6 @@ locals {
         file("${local.patches_dir}/watchdog.yaml"),
         file("${local.patches_dir}/kmsg-log.yaml"),
       ],
-      length(var.registry_mirrors) > 0 ? [
-        templatefile("${local.patches_dir}/registry-mirrors.yaml.tftpl", { registry_mirrors = var.registry_mirrors }),
-      ] : [],
       v.role == "controlplane" ? [
         file("${local.patches_dir}/controlplane/disable-flannel.yaml"),
         file("${local.patches_dir}/controlplane/disable-kubeproxy.yaml"),

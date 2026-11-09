@@ -10,7 +10,9 @@ TALOS_VERSION  ?= v1.14.5
 # Local build inputs for the Pi 5.
 TALOS_SRC      ?= $(HOME)/Code/siderolabs/talos
 TALOS_BRANCH   ?= fix/no-cert-regen-on-ntp-spike-v1.14.5
-REGISTRY       ?= 192.168.1.18:5005
+# Public packages: Talos pulls the installer anonymously. Pushing needs `docker login`,
+# `podman login` and `crane auth login` against ghcr.io.
+REGISTRY       ?= ghcr.io/barnes-c
 # v0.2.1+ carries the SATA HAT fix; earlier tags time out on every command. Not yet A/B
 # tested against the old local overlay -- see barnes-c/homelab-issues#18 for the fallback.
 OVERLAY_IMAGE  ?= ghcr.io/siderolabs/sbc-raspberrypi:v0.2.2
@@ -24,8 +26,7 @@ UTIL_LINUX_TOOLS_IMAGE ?= ghcr.io/siderolabs/util-linux-tools:2.42.2@sha256:f93f
 
 # Kernel with the RP1 PWM driver, without which the Pi 5 fan never spins. Built from
 # ~/Code/siderolabs/pkgs branch feat/pwm-rp1-fan-v1.14.5, see barnes-c/homelab-issues#8.
-# Referenced via localhost: BuildKit only pulls over plain HTTP from localhost registries.
-PKG_KERNEL     ?= localhost:5005/kernel:v1.14.0-48-gf4bda77-pwmrp1v12
+PKG_KERNEL     ?= $(REGISTRY)/talos/kernel:v1.14.0-48-gf4bda77-pwmrp1v12
 KERNEL_SUFFIX  ?= -pwmfan
 DOCKER         := /opt/homebrew/bin/docker
 
@@ -76,7 +77,7 @@ check-clean:
 	BUILDX_BUILDER=local $(MAKE) -C $(TALOS_SRC) installer-base imager \
 		PLATFORM=linux/arm64 INSTALLER_ARCH=targetarch \
 		PUSH=true REGISTRY_AND_USERNAME=$(REGISTRY)/talos PKG_KERNEL=$(PKG_KERNEL) \
-		"IMAGE_TAG_OUT=$(TALOS_TAG),registry.insecure=true"
+		IMAGE_TAG_OUT=$(TALOS_TAG)
 	@touch $@
 
 profiles/%.yaml: profiles/%.yaml.tmpl
@@ -87,15 +88,15 @@ profiles/%.yaml: profiles/%.yaml.tmpl
 # Installer image, for machine.install.image and `talosctl upgrade`.
 rpi5b-installer: .imager-$(TALOS_TAG) profiles/rpi5b-installer.yaml
 	@mkdir -p _out
-	podman run -i --rm --tls-verify=false -v $(CURDIR)/_out:/out \
+	podman run -i --rm -v $(CURDIR)/_out:/out \
 		$(REGISTRY)/talos/imager:$(TALOS_TAG) - < profiles/rpi5b-installer.yaml
-	crane push --insecure _out/installer-arm64.tar $(REGISTRY)/talos/installer:$(INSTALLER_TAG)
+	crane push _out/installer-arm64.tar $(REGISTRY)/talos/installer:$(INSTALLER_TAG)
 	@echo ">> installer: $(REGISTRY)/talos/installer:$(INSTALLER_TAG)"
 
 # Bootable SD image, for the initial flash only.
 rpi5b-image: .imager-$(TALOS_TAG) profiles/rpi5b-metal.yaml
 	@mkdir -p images
-	podman run -i --rm --tls-verify=false -v $(CURDIR)/images:/out \
+	podman run -i --rm -v $(CURDIR)/images:/out \
 		$(REGISTRY)/talos/imager:$(TALOS_TAG) - < profiles/rpi5b-metal.yaml
 	@mv images/metal-arm64.raw.xz images/talos-rpi5b.raw.xz
 	@echo ">> image: images/talos-rpi5b.raw.xz"

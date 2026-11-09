@@ -96,7 +96,7 @@ variable "nodes" {
       ip            = "192.168.1.11"
       role          = "controlplane"
       install_disk  = "/dev/mmcblk0"
-      install_image = "192.168.1.18:5005/talos/installer:v1.14.5-1-g5a2630749-pwmfan-r2"
+      install_image = "ghcr.io/barnes-c/talos/installer:v1.14.5-1-g5a2630749-pwmfan-r2"
 
       # Verified on hardware: md127 is RAID1 over sda+sdb (Samsung 870 2TB), [UU], and
       # already backs EPHEMERAL at /dev/md127p2. The array has no wwid of its own, so
@@ -200,19 +200,6 @@ variable "ntp_servers" {
   description = "NTP servers. Anycast Cloudflare + Google, v4 and v6."
   type        = list(string)
   default     = ["162.159.200.1", "216.239.35.0", "2606:4700:f1::1", "2001:4860:4806::"]
-}
-
-variable "registry_mirrors" {
-  description = <<-EOT
-    Extra registry mirrors. The local build registry is plain HTTP, and insecureSkipVerify
-    only covers bad TLS rather than its absence, so the scheme must be explicit.
-    Note the node cannot upgrade while this registry is offline.
-  EOT
-  type        = map(list(string))
-  default = {
-    # Tried in order: the Mac's LAN address first, its Freebox VPN address when it's away.
-    "192.168.1.18:5005" = ["http://192.168.1.18:5005", "http://192.168.27.67:5005"]
-  }
 }
 
 variable "talos_version" {

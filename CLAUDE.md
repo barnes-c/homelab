@@ -29,8 +29,12 @@ image is then downloaded per `TALOS_VERSION`. The factory resolves extension ver
 **Pi 5** — a local imager build, because Image Factory can only layer onto a published
 release (see barnes-c/homelab-issues#15). It builds `installer-base` + `imager` from `TALOS_SRC`
 (`~/Code/siderolabs/talos`, branch `fix/no-cert-regen-on-ntp-spike-v1.14.5`) and pushes them to
-the local registry at `REGISTRY` (`192.168.1.18:5005`) under `talos/`. A profile has to pin
-extension image refs by tag, unlike a schematic.
+`REGISTRY` (`ghcr.io/barnes-c`) under `talos/`. A profile has to pin extension image refs by
+tag, unlike a schematic.
+
+**Push every Pi 5 image to ghcr.io, never to a registry on the Mac.** The local plain-HTTP
+registry (`192.168.1.18:5005`) is retired: it made upgrades depend on the laptop being online
+and let any LAN host serve a trojaned installer (barnes-c/homelab-issues#66).
 
 Two artifacts, not interchangeable:
 
@@ -49,12 +53,17 @@ Gotchas:
   `git describe --dirty` and a `-dirty` tag is not reproducible. Untracked files are ignored.
 - The imager build needs the real **docker** CLI with buildx (`DOCKER` is pinned to
   `/opt/homebrew/bin/docker`), not podman's alias. Running the imager and pushing use
-  **podman** and **crane**, both with TLS verification off for the plaintext local registry.
+  **podman** and **crane**. All three need a ghcr.io login with a classic PAT carrying
+  `write:packages` (fine-grained PATs cannot push). Always pass the token, e.g.
+  `crane auth login ghcr.io -u barnes-c --password-stdin`: without it crane overwrites
+  `~/.docker/config.json` with an empty password, and pushes fail with `DENIED`.
+- **The ghcr packages must be public.** Nodes pull the installer anonymously; ghcr creates
+  packages pushed from the CLI as private, so flip each new one (`talos/installer`,
+  `talos/installer-base`, `talos/imager`, `talos/kernel`) to public once in package settings.
 - `INSTALLER_ARCH=targetarch` is required; the default `all` pulls `pkg-kernel-amd64`.
 - The Pi 5 kernel is **local too**: `PKG_KERNEL` adds the RP1 PWM (fan) driver, built from
-  `~/Code/siderolabs/pkgs` branch `feat/pwm-rp1-fan-v1.14.5` (barnes-c/homelab-issues#8).
-  BuildKit treats `192.168.1.18:5005` as HTTPS, so pushes pass `registry.insecure=true` and
-  the kernel is pulled as `localhost:5005/...`.
+  `~/Code/siderolabs/pkgs` branch `feat/pwm-rp1-fan-v1.14.5` (barnes-c/homelab-issues#8),
+  and pushed to `$(REGISTRY)/talos/kernel`.
 - **Check the podman VM has ≥ 45 GB free before a kernel build** (`podman machine ssh -- df -h /`).
   The kernel build takes ~36 GB at its peak and fails only at the final copy, after ~40 min of
   compiling. BuildKit cache is the usual culprit: `podman exec buildx_buildkit_local0 buildctl du`.
