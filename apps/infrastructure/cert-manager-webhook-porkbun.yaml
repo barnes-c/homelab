@@ -12,7 +12,7 @@ spec:
   sources:
     - repoURL: https://porkbun.octabits.io
       chart: cert-manager-webhook-porkbun
-      targetRevision: 2.0.8
+      targetRevision: 2.0.10
       helm:
         valueFiles:
           - $values/manifests/infrastructure/cert-manager-webhook-porkbun/values.yaml
