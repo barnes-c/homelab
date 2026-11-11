@@ -56,7 +56,7 @@ server:
           main:
             - path: /config
               readOnly: true
-    # Trial of a patch restoring HTTP request metrics; v3.3.5 only. See barnes-c/homelab-issues#51.
+    # Trial of a patch restoring HTTP request metrics; v3.4.0 only. See barnes-c/homelab-issues#51.
     immich-http-metrics-patch:
       type: configMap
       name: immich-http-metrics-patch
