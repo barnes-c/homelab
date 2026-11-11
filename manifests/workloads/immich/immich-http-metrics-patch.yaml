@@ -1,4 +1,4 @@
-# Compiled immich v3.3.5 files; line length is the compiler's. Remove with barnes-c/homelab-issues#51.
+# Compiled immich v3.4.0 files; line length is the compiler's. Remove with barnes-c/homelab-issues#51.
 # yamllint disable rule:line-length
 apiVersion: v1
 kind: ConfigMap
@@ -18,6 +18,7 @@ data:
     };
     import { Injectable } from '@nestjs/common';
     import { Reflector } from '@nestjs/core';
+    import { ValueType } from '@opentelemetry/api';
     import { AsyncLocalStorageContextManager } from '@opentelemetry/context-async-hooks';
     import { PrometheusExporter } from '@opentelemetry/exporter-prometheus';
     import { HttpInstrumentation } from '@opentelemetry/instrumentation-http';
@@ -26,7 +27,7 @@ data:
     import { PgInstrumentation } from '@opentelemetry/instrumentation-pg';
     import { resourceFromAttributes } from '@opentelemetry/resources';
     import { AggregationType } from '@opentelemetry/sdk-metrics';
-    import { NodeSDK, contextBase } from '@opentelemetry/sdk-node';
+    import { NodeSDK } from '@opentelemetry/sdk-node';
     import { ATTR_SERVICE_NAME, ATTR_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
     import { snakeCase, startCase } from 'lodash-es';
     import { MetricService } from 'nestjs-otel';
@@ -76,7 +77,7 @@ data:
                 [ATTR_SERVICE_NAME]: `immich`,
                 [ATTR_SERVICE_VERSION]: serverVersion.toString(),
             }),
-            metricReader: new PrometheusExporter({ port }),
+            metricReaders: [new PrometheusExporter({ port })],
             contextManager: new AsyncLocalStorageContextManager(),
             instrumentations: [
                 new HttpInstrumentation({
@@ -162,7 +163,7 @@ data:
                     prefix: 'immich',
                     description: `The elapsed time in ${unit} for the ${startCase(className)} to ${propertyName.toLowerCase()}`,
                     unit,
-                    valueType: contextBase.ValueType.DOUBLE,
+                    valueType: ValueType.DOUBLE,
                 });
                 descriptor.value = function (...args) {
                     const start = performance.now();
@@ -200,24 +201,28 @@ data:
     var __param = (this && this.__param) || function (paramIndex, decorator) {
         return function (target, key) { decorator(target, key, paramIndex); }
     };
+    import { OrchestrationApiModule, controllers as futoBackupsControllers } from '@futo-org/backups-orchestrator-api';
     import { BullModule } from '@nestjs/bullmq';
-    import { Inject, Module } from '@nestjs/common';
+    import { Inject, Module, applyDecorators, forwardRef } from '@nestjs/common';
     import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
     import { ScheduleModule, SchedulerRegistry } from '@nestjs/schedule';
+    import { ApiExcludeController } from '@nestjs/swagger';
     import { ClsModule } from 'nestjs-cls';
     import { KyselyModule } from 'nestjs-kysely';
     import { OpenTelemetryModule } from 'nestjs-otel';
     import { ZodSerializerInterceptor, ZodValidationPipe } from 'nestjs-zod';
+    import { existsSync } from 'node:fs';
+    import { join } from 'node:path';
     import { commandsAndQuestions } from "./commands/index.js";
     import { IWorker } from "./constants.js";
     import { controllers } from "./controllers/index.js";
-    import { ImmichWorker } from "./enum.js";
+    import { ImmichEnvironment, ImmichWorker } from "./enum.js";
     import { MaintenanceAuthGuard } from "./maintenance/maintenance-auth.guard.js";
     import { MaintenanceHealthRepository } from "./maintenance/maintenance-health.repository.js";
     import { MaintenanceWebsocketRepository } from "./maintenance/maintenance-websocket.repository.js";
     import { MaintenanceWorkerController } from "./maintenance/maintenance-worker.controller.js";
     import { MaintenanceWorkerService } from "./maintenance/maintenance-worker.service.js";
-    import { AuthGuard } from "./middleware/auth.guard.js";
+    import { AuthGuard, Authenticated } from "./middleware/auth.guard.js";
     import { ErrorInterceptor } from "./middleware/error.interceptor.js";
     import { FileUploadInterceptor } from "./middleware/file-upload.interceptor.js";
     import { GlobalExceptionFilter } from "./middleware/global-exception.filter.js";
@@ -242,6 +247,7 @@ data:
     import { QueueService } from "./services/queue.service.js";
     import { getKyselyConfig } from "./utils/database.js";
     import { configureUserAgent } from "./utils/fetch.js";
+    import { detectMediaLocation, getBackupsStatePath } from "./utils/storage.js";
     const common = [...repositories, ...services, GlobalExceptionFilter];
     const commonMiddleware = [
         { provide: APP_FILTER, useClass: GlobalExceptionFilter },
@@ -253,7 +259,13 @@ data:
     ];
     const apiMiddleware = [FileUploadInterceptor, ...commonMiddleware, { provide: APP_GUARD, useClass: AuthGuard }];
     const configRepository = new ConfigRepository();
-    const { bull, cls, database, otel } = configRepository.getEnv();
+    const { bull, cls, database, environment, otel, storage } = configRepository.getEnv();
+    const isFutoBackupsDevelopmentMode = environment !== ImmichEnvironment.Production;
+    const futoBackupsStatePath = getBackupsStatePath(storage.mediaLocation);
+    const futoBackupsCachePath = join(detectMediaLocation(storage.mediaLocation, existsSync), 'restic-cache');
+    for (const controller of futoBackupsControllers) {
+        applyDecorators(Authenticated({ admin: true }), ApiExcludeController())(controller);
+    }
     const commonImports = [
         ClsModule.forRoot(cls.config),
         KyselyModule.forRoot(getKyselyConfig(database.config)),
@@ -307,9 +319,31 @@ data:
     };
     ApiModule = __decorate([
         Module({
-            imports: [...bullImports, ...commonImports, ScheduleModule.forRoot()],
+            imports: [
+                ...bullImports,
+                ...commonImports,
+                ScheduleModule.forRoot(),
+                OrchestrationApiModule.forRootAsync({
+                    imports: [forwardRef(() => ApiModule)],
+                    inject: [AuthService],
+                    useFactory: (authService) => ({
+                        dialect: getKyselyConfig(database.config).dialect,
+                        statePath: futoBackupsStatePath,
+                        cachePath: futoBackupsCachePath,
+                        requireWsAuth: true,
+                        requireLock: true,
+                        developmentMode: isFutoBackupsDevelopmentMode,
+                        authenticate: (client) => authService.authenticate({
+                            headers: client.request.headers,
+                            queryParams: {},
+                            metadata: { adminRoute: true, sharedLinkRoute: false, uri: '/api/futo-backups/socket.io' },
+                        }),
+                    }),
+                }),
+            ],
             controllers: [...controllers],
             providers: [...common, ...apiMiddleware, { provide: IWorker, useValue: ImmichWorker.Api }],
+            exports: [AuthService, WebsocketRepository],
         })
     ], ApiModule);
     export { ApiModule };
@@ -327,7 +361,26 @@ data:
     };
     MaintenanceModule = __decorate([
         Module({
-            imports: [...commonImports],
+            imports: [
+                ...commonImports,
+                OrchestrationApiModule.forRootAsync({
+                    imports: [forwardRef(() => MaintenanceModule)],
+                    inject: [MaintenanceWorkerService],
+                    useFactory: (maintenanceWorkerService) => ({
+                        dialect: getKyselyConfig(database.config).dialect,
+                        statePath: futoBackupsStatePath,
+                        cachePath: futoBackupsCachePath,
+                        externalBaseUrl: 'https://my.immich.app',
+                        requireWsAuth: true,
+                        requireLock: true,
+                        developmentMode: isFutoBackupsDevelopmentMode,
+                        authenticate: async (client) => {
+                            await maintenanceWorkerService.authenticate(client.request.headers);
+                            return { user: { isAdmin: true } };
+                        },
+                    }),
+                }),
+            ],
             controllers: [MaintenanceWorkerController],
             providers: [
                 ConfigRepository,
@@ -346,6 +399,7 @@ data:
                 { provide: APP_GUARD, useClass: MaintenanceAuthGuard },
                 { provide: IWorker, useValue: ImmichWorker.Maintenance },
             ],
+            exports: [MaintenanceWorkerService, MaintenanceWebsocketRepository],
         }),
         __param(0, Inject(IWorker)),
         __metadata("design:paramtypes", [String, LoggingRepository,
@@ -381,12 +435,16 @@ data:
     //# sourceMappingURL=app.module.js.map
   http-route.interceptor.js: |
     import { Injectable } from '@nestjs/common';
-    import { contextBase, core } from '@opentelemetry/sdk-node';
+    import { context } from '@opentelemetry/api';
+    import { createRequire } from 'node:module';
+    // @opentelemetry/core is not a direct dependency of the server; load the copy instrumentation-http uses.
+    const require = createRequire(import.meta.url);
+    const { getRPCMetadata, RPCType } = createRequire(require.resolve('@opentelemetry/instrumentation-http'))('@opentelemetry/core');
     export class HttpRouteInterceptor {
-        intercept(context, next) {
-            const rpcMetadata = core.getRPCMetadata(contextBase.context.active());
-            if (rpcMetadata?.type === core.RPCType.HTTP) {
-                rpcMetadata.route = context.switchToHttp().getRequest().route?.path;
+        intercept(executionContext, next) {
+            const rpcMetadata = getRPCMetadata(context.active());
+            if (rpcMetadata?.type === RPCType.HTTP) {
+                rpcMetadata.route = executionContext.switchToHttp().getRequest().route?.path;
             }
             return next.handle();
         }
