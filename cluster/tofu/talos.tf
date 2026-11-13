@@ -2,6 +2,18 @@ locals {
   bootstrap_ip      = var.nodes["pi5-cp-01"].ip
   control_plane_ips = [for node in local.control_planes : node.ip]
   control_planes    = { for k, v in var.nodes : k => v if v.role == "controlplane" }
+  # Paired with createDefaultDiskLabeledNodes in manifests/infrastructure/longhorn/values.yaml: only
+  # labelled nodes get a Longhorn disk, taken with its tags from the annotation. Longhorn reads it
+  # only while the node has no disk yet.
+  longhorn_node_config = {
+    for k, v in var.nodes : k => {
+      labels = { for t in [v.longhorn_tag] : "node.longhorn.io/create-default-disk" => "config" if t != null }
+      annotations = {
+        for t in [v.longhorn_tag] : "node.longhorn.io/default-disks-config" =>
+        format("[{\"path\":\"/var/mnt/longhorn\",\"allowScheduling\":true,\"tags\":[%q]}]", t) if t != null
+      }
+    }
+  }
   patches = {
     for k, v in var.nodes : k => concat(
       [
@@ -22,26 +34,18 @@ locals {
         templatefile("${local.patches_dir}/controlplane/vip.yaml.tftpl", { vip = var.cluster_vip }),
         file("${local.patches_dir}/controlplane/etcd.yaml"),
         file("${local.patches_dir}/controlplane/node-delete.yaml"),
-        templatefile("${local.patches_dir}/controlplane/node.yaml.tftpl", {
-          labels      = v.node_labels
-          annotations = v.node_annotations
-        }),
+        templatefile("${local.patches_dir}/controlplane/node.yaml.tftpl", local.longhorn_node_config[k]),
       ] : [],
-      v.role == "worker" && (length(v.node_labels) > 0 || length(v.node_annotations) > 0) ? [
-        templatefile("${local.patches_dir}/worker/node-labels.yaml.tftpl", {
-          labels      = v.node_labels
-          annotations = v.node_annotations
-        }),
+      v.role == "worker" && v.longhorn_tag != null ? [
+        templatefile("${local.patches_dir}/worker/node-labels.yaml.tftpl", local.longhorn_node_config[k]),
       ] : [],
-      v.ephemeral_selector != null ? [
+      v.data_disk != null ? [
         templatefile("${local.patches_dir}/ephemeral.yaml.tftpl", {
-          selector = v.ephemeral_selector
+          selector = v.data_disk
           max_size = v.ephemeral_max_size
         }),
-      ] : [],
-      v.longhorn_selector != null ? [
         templatefile("${local.patches_dir}/longhorn.yaml.tftpl", {
-          selector = v.longhorn_selector
+          selector = v.data_disk
           min_size = v.longhorn_min_size
         }),
       ] : [],

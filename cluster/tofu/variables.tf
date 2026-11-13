@@ -41,151 +41,88 @@ variable "cluster_vip" {
 }
 
 variable "kubernetes_version" {
-  description = <<-EOT
-    Kubernetes version. Talos v1.15.0-beta.0 defaults to 1.38.0-beta.0, a pre-release, so
-    this stays on 1.37, which v1.15 still supports (6 versions back from 1.38).
-  EOT
+  description = "Kept on 1.37: Talos v1.15.0-beta.0 defaults to the 1.38.0-beta.0 pre-release"
   type        = string
   default     = "1.37.0"
 }
 
 variable "nodes" {
-  description = <<-EOT
-    Cluster nodes, keyed by hostname.
-
-    install_image: Pi 5 points at a locally built installer carrying the RP1 PWM fan
-    kernel, which is not upstream. Workers use stock Image Factory images,
-    written here by `make schematics`.
-
-    ephemeral_selector / longhorn_selector: CEL over Talos DiskSpec. Pin by wwid when
-    disks are identical -- `transport` and device names are not stable across reboots.
-    Run `talosctl get disks` on a node in maintenance mode to read the real values.
-  EOT
-
+  description = "Cluster nodes, keyed by hostname"
   type = map(object({
     ip            = string
     role          = string # "controlplane" | "worker"
-    install_disk  = string
     install_image = string
+    install_disk  = optional(string, "/dev/mmcblk0")
 
-    # Where EPHEMERAL (and therefore ETCD/CRI/KUBELET/LOG) lands. Null keeps it on the
-    # install disk, which is correct only where that disk is not an SD card.
-    ephemeral_selector = optional(string)
+    # CEL over Talos DiskSpec for the disk holding EPHEMERAL (etcd, CRI, logs) and Longhorn.
+    # Null keeps EPHEMERAL on the install disk. Device names and transport aren't stable
+    # across reboots; read real values with `talosctl get disks` in maintenance mode.
+    data_disk          = optional(string)
     ephemeral_max_size = optional(string)
+    longhorn_min_size  = optional(string)
+    longhorn_tag       = optional(string)
 
-    # Backing store for Longhorn, mounted at /var/mnt/longhorn.
-    longhorn_selector = optional(string)
-    longhorn_min_size = optional(string)
-
-    # Extra Kubernetes node labels and annotations, applied via KubeNodeConfig.
-    node_labels      = optional(map(string), {})
-    node_annotations = optional(map(string), {})
-
-    # Written to /sys by a SysfsConfig document; keys are /sys paths with dots for slashes.
+    # Keys are /sys paths with dots for slashes.
     sysfs = optional(map(string), {})
 
-    # Pi 5 / CM5 (RP1 MAC): turns off TX offloads on end0. Not for the Pi 4 (bcmgenet).
+    # Pi 5 / CM5 (RP1 MAC) only: turns off TX offloads on end0. See barnes-c/homelab-issues#20.
     rp1_ethernet = optional(bool, false)
   }))
 
   default = {
-    # 2x Samsung 870 2TB on a Radxa Penta SATA HAT, mirrored as md127.
-    # EPHEMERAL on the mirror keeps etcd off the SD card; the SD keeps only META + STATE.
+    # 2x Samsung 870 2TB on a Radxa Penta SATA HAT as RAID1 md127. It has no wwid, so it is
+    # matched by dev_path. Talos can discover mdraid but not create it: the array must survive
+    # any re-provision.
     "pi5-cp-01" = {
-      ip            = "192.168.1.11"
-      role          = "controlplane"
-      install_disk  = "/dev/mmcblk0"
-      install_image = "ghcr.io/barnes-c/talos/installer:v1.15.0-beta.0-pwmfan"
-
-      # Verified on hardware: md127 is RAID1 over sda+sdb (Samsung 870 2TB), [UU], and
-      # already backs EPHEMERAL at /dev/md127p2. The array has no wwid of its own, so
-      # match on dev_path. Talos DISCOVERS mdraid arrays but cannot CREATE them -- there
-      # is no array-creation controller -- so this array must survive any re-provision.
-      ephemeral_selector = "disk.dev_path == '/dev/md127'"
+      ip                 = "192.168.1.11"
+      role               = "controlplane"
+      install_image      = "ghcr.io/barnes-c/talos/installer:v1.15.0-beta.0-pwmfan"
+      data_disk          = "disk.dev_path == '/dev/md127'"
       ephemeral_max_size = "300GiB"
-      longhorn_selector  = "disk.dev_path == '/dev/md127'"
       longhorn_min_size  = "500GiB"
+      longhorn_tag       = "persistent"
+      rp1_ethernet       = true
 
-      # Paired with createDefaultDiskLabeledNodes in manifests/infrastructure/longhorn/values.yaml:
-      # only labelled nodes get a Longhorn disk. "config" makes Longhorn take the disk, with its
-      # tags, from the annotation below. It is read only when the node has no disk yet.
-      node_labels = {
-        "node.longhorn.io/create-default-disk" = "config"
-      }
-      node_annotations = {
-        "node.longhorn.io/default-disks-config" = "[{\"path\":\"/var/mnt/longhorn\",\"allowScheduling\":true,\"tags\":[\"persistent\"]}]"
-      }
-
-      # Keep the fan PWM enabled at 0% instead of disabling it: the v12 rp1-pwm driver drops
-      # the inverted polarity on disable, which runs the fan at full speed. See
-      # barnes-c/homelab-issues#8. hwmon2 is fixed by driver probe order on this kernel.
+      # Fan PWM enabled at 0% rather than disabled: on disable the rp1-pwm driver drops the
+      # inverted polarity and the fan runs flat out. hwmon2 is fixed by driver probe order.
+      # See barnes-c/homelab-issues#8.
       sysfs = {
         "devices.platform.cooling_fan.hwmon.hwmon2.pwm1_enable" = "2"
       }
-
-      rp1_ethernet = true
     }
 
-    # Samsung T7 500GB on USB: scratch storage for Longhorn (metrics, logs), replicated across the scratch disks.
-    # Matched by model because the USB bridge reports a generic wwid (naa.5000000000000001).
+    # Samsung T7 500GB on USB, matched by model: the USB bridge reports a generic wwid.
     "pi4-wk-01" = {
       ip                 = "192.168.1.12"
       role               = "worker"
-      install_disk       = "/dev/mmcblk0"
       install_image      = "factory.talos.dev/metal-installer/8bde169869ab746320f8f4b1f622aafd538ca787658d8bce46be35b4484d39fe:v1.15.0-beta.0"
-      ephemeral_selector = "disk.model == 'PSSD T7'"
+      data_disk          = "disk.model == 'PSSD T7'"
       ephemeral_max_size = "50GiB"
-      longhorn_selector  = "disk.model == 'PSSD T7'"
       longhorn_min_size  = "400GiB"
-
-      node_labels = {
-        "node.longhorn.io/create-default-disk" = "config"
-      }
-      node_annotations = {
-        "node.longhorn.io/default-disks-config" = "[{\"path\":\"/var/mnt/longhorn\",\"allowScheduling\":true,\"tags\":[\"scratch\"]}]"
-      }
+      longhorn_tag       = "scratch"
     }
 
-    # CM5 8GB on the NanoCluster: Talos on the 16GB eMMC, EPHEMERAL (and so etcd) and Longhorn
-    # scratch on a Transcend 256GB NVMe. Both NVMe drives are the same model, so they are pinned by wwid.
+    # CM5s: Talos on the eMMC, data on a Transcend 256GB NVMe. Same model on both, so pinned by wwid.
     "cm5-cp-01" = {
       ip                 = "192.168.1.13"
       role               = "controlplane"
-      install_disk       = "/dev/mmcblk0"
       install_image      = "factory.talos.dev/metal-installer/a64b67b0e9fb8ab3f4f3595532da5939ac26fc35adb4760ec1a4c6893c6d52a3:v1.15.0-beta.0"
-      ephemeral_selector = "disk.wwid == 'eui.00000000000000007c35485256bde646'"
+      data_disk          = "disk.wwid == 'eui.00000000000000007c35485256bde646'"
       ephemeral_max_size = "50GiB"
-      longhorn_selector  = "disk.wwid == 'eui.00000000000000007c35485256bde646'"
       longhorn_min_size  = "100GiB"
-
-      node_labels = {
-        "node.longhorn.io/create-default-disk" = "config"
-      }
-      node_annotations = {
-        "node.longhorn.io/default-disks-config" = "[{\"path\":\"/var/mnt/longhorn\",\"allowScheduling\":true,\"tags\":[\"scratch\"]}]"
-      }
-
-      rp1_ethernet = true
+      longhorn_tag       = "scratch"
+      rp1_ethernet       = true
     }
 
     "cm5-cp-02" = {
       ip                 = "192.168.1.14"
       role               = "controlplane"
-      install_disk       = "/dev/mmcblk0"
       install_image      = "factory.talos.dev/metal-installer/a64b67b0e9fb8ab3f4f3595532da5939ac26fc35adb4760ec1a4c6893c6d52a3:v1.15.0-beta.0"
-      ephemeral_selector = "disk.wwid == 'eui.00000000000000007c35485256bde5a1'"
+      data_disk          = "disk.wwid == 'eui.00000000000000007c35485256bde5a1'"
       ephemeral_max_size = "50GiB"
-      longhorn_selector  = "disk.wwid == 'eui.00000000000000007c35485256bde5a1'"
       longhorn_min_size  = "100GiB"
-
-      node_labels = {
-        "node.longhorn.io/create-default-disk" = "config"
-      }
-      node_annotations = {
-        "node.longhorn.io/default-disks-config" = "[{\"path\":\"/var/mnt/longhorn\",\"allowScheduling\":true,\"tags\":[\"scratch\"]}]"
-      }
-
-      rp1_ethernet = true
+      longhorn_tag       = "scratch"
+      rp1_ethernet       = true
     }
   }
 
@@ -202,10 +139,7 @@ variable "ntp_servers" {
 }
 
 variable "talos_version" {
-  description = <<-EOT
-    Talos version the machine config schema is generated for. Must not be newer than the
-    oldest node. Kept at v1.14.5 while v1.15 is in beta.
-  EOT
+  description = "Machine config contract version; not newer than the oldest node."
   type        = string
-  default     = "v1.14.5"
+  default     = "v1.15.0-beta.0"
 }
