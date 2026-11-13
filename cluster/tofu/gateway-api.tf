@@ -10,4 +10,6 @@ resource "kubectl_manifest" "gateway_api_crds" {
   server_side_apply = true
   force_conflicts   = true
   wait              = true
+
+  depends_on = [talos_cluster.cluster]
 }

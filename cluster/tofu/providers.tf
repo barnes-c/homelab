@@ -1,5 +1,5 @@
 locals {
-  k8s = talos_cluster_kubeconfig.cluster.kubernetes_client_configuration
+  k8s = ephemeral.talos_cluster_kubeconfig.cluster.kubernetes_client_configuration
   k8s_auth = {
     host                   = local.k8s.host
     cluster_ca_certificate = base64decode(local.k8s.ca_certificate)

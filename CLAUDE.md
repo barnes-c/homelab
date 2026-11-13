@@ -19,16 +19,19 @@ Two build paths, and they must stay in sync on system extensions — both carry 
 provisioning.
 
 ```sh
-gmake schematics images             # Pi 4B / CM5, via factory.talos.dev
+tf output disk_images           # Pi 4B / CM5 SD image URLs, via factory.talos.dev
 gmake pi5-image pi5-installer   # Pi 5, built locally
 ```
 
-**Workers** — `schematics/*.yaml` are POSTed to Image Factory, which returns an ID; the
-image is then downloaded per `TALOS_VERSION`. The factory resolves extension versions itself.
+**Pi 4B / CM5** — `talos_image_factory_schematic` (`cluster/tofu/schematics.tf`) POSTs
+`cluster/tofu/schematics/*.yaml` to Image Factory and the installer URL follows from the returned ID
+and `talos_image_version`. A node picks its schematic by name in `var.nodes`. The factory
+resolves extension versions itself. Editing a schematic changes `machine.install.image` only;
+the node picks it up at its next `talosctl upgrade`.
 
-**Pi 5** — a local imager build, because Image Factory can only layer onto a published
-release (see barnes-c/homelab-issues#15). It builds `installer-base` + `imager` from `TALOS_SRC`
-(`~/Code/siderolabs/talos`, tag `v1.15.0-beta.0`) and pushes them to
+**Pi 5** — a local imager build, because it needs a custom kernel with the RP1 PWM fan driver,
+which Image Factory cannot add (barnes-c/homelab-issues#8, #15). It builds `installer-base` +
+`imager` from `TALOS_SRC` (`~/Code/siderolabs/talos`, tag `v1.15.0-beta.0`) and pushes them to
 `REGISTRY` (`ghcr.io/barnes-c`) under `talos/`. A profile has to pin extension image refs by
 tag, unlike a schematic.
 
