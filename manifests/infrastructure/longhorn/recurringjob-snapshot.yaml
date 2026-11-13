@@ -1,0 +1,16 @@
+# Without snapshots a returning replica has to checksum the whole volume (~45 min for
+# Prometheus on pi4-wk-01). Fast rebuild skips snapshots whose checksums match, so only
+# data written since the last snapshot is compared. The "default" group covers every
+# volume without its own recurring job.
+apiVersion: longhorn.io/v1beta2
+kind: RecurringJob
+metadata:
+  name: snapshot-hourly
+  namespace: longhorn-system
+spec:
+  task: snapshot
+  cron: "0 * * * *"
+  retain: 3
+  concurrency: 2
+  groups:
+    - default
