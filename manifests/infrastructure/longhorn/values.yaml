@@ -11,6 +11,9 @@ defaultSettings:
   # the old one indefinitely. Live upgrades only work from the previous minor, so upgrade
   # Longhorn one minor at a time. See barnes-c/homelab-issues#57.
   concurrentAutomaticEngineUpgradePerNodeLimit: "1"
+  # Fast rebuild only skips snapshots that already have a checksum, and the weekly
+  # integrity cronjob leaves the hourly snapshots (recurringjob-snapshot.yaml) without one.
+  snapshotDataIntegrityImmediateCheckAfterSnapshotCreation: "true"
   # Only nodes labelled node.longhorn.io/create-default-disk get a disk; with "config" its
   # path and tags come from the node.longhorn.io/default-disks-config annotation.
   # Without this Longhorn creates one at defaultDataPath on EVERY node, and on a
