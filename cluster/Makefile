@@ -1,32 +1,33 @@
 # Talos image builds. Pi 4B / CM5 use Image Factory schematics; the Pi 5 needs a local
-# build for one not-yet-upstream commit. See barnes-c/homelab-issues#15.
+# build for its fan kernel (PKG_KERNEL below). See barnes-c/homelab-issues#15.
 #
 # Requires GNU Make 4+ (`gmake` on macOS) and the docker CLI with buildx, not podman's alias.
 
 SHELL          := /bin/bash
 FACTORY_HOST   := factory.talos.dev
-TALOS_VERSION  ?= v1.14.5
+TALOS_VERSION  ?= v1.15.0-beta.0
 
-# Local build inputs for the Pi 5.
+# Local build inputs for the Pi 5. TALOS_SRC must be checked out at TALOS_BRANCH.
 TALOS_SRC      ?= $(HOME)/Code/siderolabs/talos
-TALOS_BRANCH   ?= fix/no-cert-regen-on-ntp-spike-v1.14.5
+TALOS_BRANCH   ?= v1.15.0-beta.0
 # Public packages: Talos pulls the installer anonymously. Pushing needs `docker login`,
 # `podman login` and `crane auth login` against ghcr.io.
 REGISTRY       ?= ghcr.io/barnes-c
-# v0.2.1+ carries the SATA HAT fix; earlier tags time out on every command. Not yet A/B
-# tested against the old local overlay -- see barnes-c/homelab-issues#18 for the fallback.
-OVERLAY_IMAGE  ?= ghcr.io/siderolabs/sbc-raspberrypi:v0.2.2
+# The overlay version is tied to the Talos release: v0.3.0's DTBs carry an RP1 PCIe topology
+# patch that needs the 7.x kernel and kills end0 on 6.18. Use what
+# factory.talos.dev/version/$(TALOS_VERSION)/overlays/official resolves for rpi_5.
+OVERLAY_IMAGE  ?= ghcr.io/siderolabs/sbc-raspberrypi:v0.3.0@sha256:6f4e52953e8f7742672f39075610810f5767bfc15347930205a0a7f62175b58e
 
 # System extensions. The worker schematics name these and let Image Factory resolve the
 # version; a local imager build has to pin them by digest, because extension tags are
 # re-pushed for newer Talos releases and a newer build fails to load on this one. These
 # match what factory.talos.dev/version/$(TALOS_VERSION)/extensions/official resolves.
-ISCSI_TOOLS_IMAGE      ?= ghcr.io/siderolabs/iscsi-tools:v0.2.0@sha256:584e1d106e424d3e17ddd43bddf892b386748f10d11a9fd024a358f0d42c0a2e
-UTIL_LINUX_TOOLS_IMAGE ?= ghcr.io/siderolabs/util-linux-tools:2.42.2@sha256:f93f23e96b28e00228cf9a006a15c1648bd5975be989adb1bee6c05c046001a1
+ISCSI_TOOLS_IMAGE      ?= ghcr.io/siderolabs/iscsi-tools:v0.2.0@sha256:5c887effab3457700938b66b4de1ebd89f1c5025f20fd3a07b095d2994eec0fa
+UTIL_LINUX_TOOLS_IMAGE ?= ghcr.io/siderolabs/util-linux-tools:2.42.4@sha256:f7fac0baf758b7f1c19c779c95ac47e9a0c89b69e93b1849cfccdb7fb01e54ba
 
 # Kernel with the RP1 PWM driver, without which the Pi 5 fan never spins. Built from
-# ~/Code/siderolabs/pkgs branch feat/pwm-rp1-fan-v1.14.5, see barnes-c/homelab-issues#8.
-PKG_KERNEL     ?= $(REGISTRY)/talos/kernel:v1.14.0-48-gf4bda77-pwmrp1v12
+# ~/Code/siderolabs/pkgs branch feat/pwm-rp1-fan-v1.15.0-beta.0, see barnes-c/homelab-issues#8.
+PKG_KERNEL     ?= $(REGISTRY)/talos/kernel:v1.15.0-alpha.0-75-g17fdd33-pwmrp1v12
 KERNEL_SUFFIX  ?= -pwmfan
 DOCKER         := /opt/homebrew/bin/docker
 
