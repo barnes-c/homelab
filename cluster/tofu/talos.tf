@@ -68,42 +68,51 @@ data "talos_client_configuration" "cluster" {
   endpoints            = local.control_plane_ips
 }
 
-data "talos_machine_configuration" "node" {
+ephemeral "talos_machine_configuration" "node" {
   for_each = var.nodes
 
   cluster_name     = var.cluster_name
   cluster_endpoint = "https://${var.cluster_vip}:6443"
   machine_type     = each.value.role
   machine_secrets  = talos_machine_secrets.cluster.machine_secrets
+  config_patches   = local.patches[each.key]
 
   talos_version      = var.talos_version
   kubernetes_version = var.kubernetes_version
 }
 
-resource "talos_machine_configuration_apply" "node" {
+# OS upgrades stay on talosctl. `image` only exists so Create does not attempt an upgrade
+# when it is omitted; it must match the running version, and the node reports the Pi 5 tag
+# without the -pwmfan suffix. See barnes-c/homelab-issues#81.
+resource "talos_machine" "node" {
   for_each = var.nodes
 
-  client_configuration        = talos_machine_secrets.cluster.client_configuration
-  machine_configuration_input = data.talos_machine_configuration.node[each.key].machine_configuration
-  node                        = each.value.ip
-  endpoint                    = each.value.ip
-  apply_mode                  = "auto"
+  client_configuration     = talos_machine_secrets.cluster.client_configuration
+  machine_configuration_wo = ephemeral.talos_machine_configuration.node[each.key].machine_configuration
+  node                     = each.value.ip
+  image                    = trimsuffix(each.value.install_image, "-pwmfan")
+  drain_on_upgrade         = false
 
-  config_patches = local.patches[each.key]
+  ignore_kubernetes_upgrade_drift = true
 
   on_destroy = {
     graceful = false
     reboot   = true
     reset    = true
   }
+
+  lifecycle {
+    ignore_changes = [image]
+  }
 }
 
-resource "talos_machine_bootstrap" "cluster" {
-  client_configuration = talos_machine_secrets.cluster.client_configuration
-  node                 = local.bootstrap_ip
-  endpoint             = local.bootstrap_ip
+resource "talos_cluster" "cluster" {
+  client_configuration_wo = talos_machine_secrets.cluster.client_configuration
+  node                    = local.bootstrap_ip
+  control_plane_nodes     = local.control_plane_ips
+  kubernetes_version      = var.kubernetes_version
 
-  depends_on = [talos_machine_configuration_apply.node]
+  depends_on = [talos_machine.node]
 }
 
 resource "talos_cluster_kubeconfig" "cluster" {
@@ -111,9 +120,16 @@ resource "talos_cluster_kubeconfig" "cluster" {
   node                 = local.bootstrap_ip
   endpoint             = local.bootstrap_ip
 
-  depends_on = [talos_machine_bootstrap.cluster]
+  depends_on = [talos_cluster.cluster]
 }
 
-# A fresh cluster is applied in two steps on purpose (README Step 3): -target this first, then
-# restore the sealed-secrets keys before anything syncs. No talos_cluster_health gate: it is
-# read during plan and hangs on unprovisioned nodes. See barnes-c/homelab-issues#48.
+ephemeral "talos_cluster_kubeconfig" "cluster" {
+  cluster_name    = var.cluster_name
+  endpoint        = "https://${var.cluster_vip}:6443"
+  machine_secrets = talos_machine_secrets.cluster.machine_secrets
+}
+
+# A fresh cluster takes two applies: -target=talos_cluster.cluster first, since the providers'
+# kubeconfig is built from machine secrets that don't exist until then; restore the sealed-secrets
+# keys before the second. talos_cluster waits for etcd/apid/kubelet, not the API server.
+# See barnes-c/homelab-issues#80.
