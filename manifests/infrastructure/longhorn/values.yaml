@@ -14,6 +14,7 @@ defaultSettings:
   # Fast rebuild only skips snapshots that already have a checksum, and the weekly
   # integrity cronjob leaves the hourly snapshots (recurringjob-snapshot.yaml) without one.
   snapshotDataIntegrityImmediateCheckAfterSnapshotCreation: "true"
+  snapshotDataIntegrityCronjob: "0 3 * * *"
   # Only nodes labelled node.longhorn.io/create-default-disk get a disk; with "config" its
   # path and tags come from the node.longhorn.io/default-disks-config annotation.
   # Without this Longhorn creates one at defaultDataPath on EVERY node, and on a
