@@ -123,6 +123,16 @@ kubectl --kubeconfig $f config set-context homelab --cluster homelab --user clau
 kubectl --kubeconfig $f config use-context homelab
 ```
 
+**Talos** — a client certificate with the `os:reader` role: services, logs, dmesg, etcd status
+and resources, but no file reads, kubeconfig, etcd snapshots or changes. `TALOSCONFIG` in the
+user settings pins it; overriding it (`--talosconfig`, `TALOSCONFIG=`, `talosctl config`) and
+reading `~/.talos` are denied. A Talos client certificate cannot be revoked, only expire, so keep
+the TTL short and re-issue it (admin talosconfig needed):
+
+```sh
+talosctl config new --roles os:reader --crt-ttl 720h ~/.config/homelab/agent.talosconfig
+```
+
 **Grafana** — the `grafana` MCP server in `.mcp.json` (`mcp-grafana`, installed with
 `go install github.com/grafana/mcp-grafana/cmd/mcp-grafana@v1.6.3`). It authenticates as the
 Grafana service account `Claude` (Editor), token in `GRAFANA_SERVICE_ACCOUNT_TOKEN` in the
