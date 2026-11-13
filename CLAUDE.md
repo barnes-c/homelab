@@ -40,7 +40,7 @@ Two artifacts, not interchangeable:
 
 |              Artifact               |                          Use                          |
 | ----------------------------------- | ----------------------------------------------------- |
-| `images/talos-pi5.raw.xz`         | bootable SD image, initial flash only                 |
+| `images/talos-pi5.raw.xz`           | bootable SD image, initial flash only                 |
 | `$(REGISTRY)/talos/installer:<tag>` | `machine.install.image`, and every `talosctl upgrade` |
 
 Gotchas:
