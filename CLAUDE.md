@@ -1,177 +1,93 @@
 # homelab
 
-Talos Linux cluster on Raspberry Pi hardware. See `README.md` for provisioning steps.
+Talos Linux cluster on Raspberry Pi hardware. Provisioning steps: `README.md`.
 
 ## Ownership
 
-OpenTofu owns the cluster and what must exist before GitOps can work: Cilium and `apps-root`.
-It also installs ArgoCD, but only once — `apps/argocd.yaml` manages ArgoCD after bootstrap, and
-`helm_release.argocd` ignores later value and version changes. ArgoCD owns everything else.
-Nothing is owned by both.
+OpenTofu (`cluster/tofu/`) owns the cluster, Cilium and `apps-root`. It installs ArgoCD once;
+after that `apps/infrastructure/argocd.yaml` manages it (`helm_release.argocd` ignores value and
+version changes). ArgoCD owns everything else. Nothing is owned by both.
 
-- `apps/` — ArgoCD `Application` definitions. `apps-root` watches this directory.
-- `manifests/` — the raw manifests those Applications point at.
+- `apps/{infrastructure,workloads}/` — ArgoCD `Application`s; `apps/projects/` — `AppProject`s.
+  `apps-root` watches `apps/` recursively.
+- `manifests/{infrastructure,workloads}/<app>/` — what those Applications point at.
 
 ## Talos images
 
-Two build paths, and they must stay in sync on system extensions — both carry `iscsi-tools`
-(Longhorn attaches over iSCSI) and `util-linux-tools`. Talos cannot add extensions after
-provisioning.
+Both build paths must carry the same extensions (`iscsi-tools` for Longhorn, `util-linux-tools`);
+Talos cannot add extensions after provisioning.
 
-```sh
-tf output disk_images           # Pi 4B / CM5 SD image URLs, via factory.talos.dev
-gmake pi5-image pi5-installer   # Pi 5, built locally
-```
+- **Pi 4B / CM5** — Image Factory. `cluster/tofu/schematics/*.yaml`, picked per node by name in
+  `var.nodes`. `tf output disk_images` gives SD image URLs. A schematic change only changes
+  `machine.install.image`; the node picks it up at its next `talosctl upgrade`.
+- **Pi 5** — local imager build (`cluster/Makefile`: `gmake pi5-image pi5-installer`), because it
+  needs a custom kernel with the RP1 PWM fan driver (barnes-c/homelab-issues#8). Built from
+  `~/Code/siderolabs/talos` and the kernel from `~/Code/siderolabs/pkgs` (branch
+  `feat/pwm-rp1-fan-*`). Profiles pin extension images by tag.
 
-**Pi 4B / CM5** — `talos_image_factory_schematic` (`cluster/tofu/schematics.tf`) POSTs
-`cluster/tofu/schematics/*.yaml` to Image Factory and the installer URL follows from the returned ID
-and `talos_image_version`. A node picks its schematic by name in `var.nodes`. The factory
-resolves extension versions itself. Editing a schematic changes `machine.install.image` only;
-the node picks it up at its next `talosctl upgrade`.
-
-**Pi 5** — a local imager build, because it needs a custom kernel with the RP1 PWM fan driver,
-which Image Factory cannot add (barnes-c/homelab-issues#8, #15). It builds `installer-base` +
-`imager` from `TALOS_SRC` (`~/Code/siderolabs/talos`, tag `v1.15.0-beta.0`) and pushes them to
-`REGISTRY` (`ghcr.io/barnes-c`) under `talos/`. A profile has to pin extension image refs by
-tag, unlike a schematic.
-
-**Push every Pi 5 image to ghcr.io, never to a registry on the Mac.** The local plain-HTTP
-registry (`192.168.1.18:5005`) is retired: it made upgrades depend on the laptop being online
-and let any LAN host serve a trojaned installer (barnes-c/homelab-issues#66).
-
-Two artifacts, not interchangeable:
-
-|              Artifact               |                          Use                          |
-| ----------------------------------- | ----------------------------------------------------- |
-| `images/talos-pi5.raw.xz`           | bootable SD image, initial flash only                 |
-| `$(REGISTRY)/talos/installer:<tag>` | `machine.install.image`, and every `talosctl upgrade` |
+`images/talos-pi5.raw.xz` is for the initial SD flash only; `ghcr.io/barnes-c/talos/installer:<tag>`
+is for `machine.install.image` and every upgrade.
 
 Gotchas:
 
-- **`profiles/*.yaml` are generated** from the `.tmpl` files via `envsubst`. Edit the
-  template; the generated file is overwritten and `gmake clean` deletes it.
-- **Build the SD image *before* resetting a node.** `--wipe-mode system-disk` erases the
-  bootloader and there is no PXE fallback.
-- `check-clean` refuses to build on a dirty `TALOS_SRC` tree — `TALOS_TAG` comes from
-  `git describe --dirty` and a `-dirty` tag is not reproducible. Untracked files are ignored.
-- The imager build needs the real **docker** CLI with buildx (`DOCKER` is pinned to
-  `/opt/homebrew/bin/docker`), not podman's alias. Running the imager and pushing use
-  **podman** and **crane**. All three need a ghcr.io login with a classic PAT carrying
-  `write:packages` (fine-grained PATs cannot push). Always pass the token, e.g.
-  `crane auth login ghcr.io -u barnes-c --password-stdin`: without it crane overwrites
-  `~/.docker/config.json` with an empty password, and pushes fail with `DENIED`.
-- **The ghcr packages must be public.** Nodes pull the installer anonymously; ghcr creates
-  packages pushed from the CLI as private, so flip each new one (`talos/installer`,
-  `talos/installer-base`, `talos/imager`, `talos/kernel`) to public once in package settings.
-- `INSTALLER_ARCH=targetarch` is required; the default `all` pulls `pkg-kernel-amd64`.
-- The Pi 5 kernel is **local too**: `PKG_KERNEL` adds the RP1 PWM (fan) driver, built from
-  `~/Code/siderolabs/pkgs` branch `feat/pwm-rp1-fan-v1.15.0-beta.0` (barnes-c/homelab-issues#8),
-  and pushed to `$(REGISTRY)/talos/kernel`.
-- **Check the podman VM has ≥ 45 GB free before a kernel build** (`podman machine ssh -- df -h /`).
-  The kernel build takes ~36 GB at its peak and fails only at the final copy, after ~40 min of
-  compiling. BuildKit cache is the usual culprit: `podman exec buildx_buildkit_local0 buildctl du`.
-  `buildctl prune --keep-duration 48h` frees little when newer builds share old layers.
-- **Upgrade the Pi 5 with `talosctl upgrade --reboot-mode powercycle`.** The default kexec
-  reboot hung the node until it was power-cycled by hand (barnes-c/homelab-issues#47).
+- Push Pi 5 images to ghcr.io only — never a local registry (barnes-c/homelab-issues#66). The
+  ghcr packages must be public; flip new ones in package settings.
+- `profiles/*.yaml` are generated from `.tmpl` via `envsubst`. Edit the template.
+- Build the SD image *before* resetting a node: `--wipe-mode system-disk` erases the bootloader.
+- `check-clean` refuses a dirty `TALOS_SRC` (untracked files are fine).
+- Imager build needs real docker + buildx (`/opt/homebrew/bin/docker`); run/push use podman and
+  crane. ghcr login needs a classic PAT with `write:packages`, always passed via
+  `--password-stdin` — otherwise crane writes an empty password and pushes fail with `DENIED`.
+- `INSTALLER_ARCH=targetarch` is required (`all` pulls the amd64 kernel).
+- Kernel build needs ≥ 45 GB free in the podman VM (`podman machine ssh -- df -h /`); it fails
+  only at the final copy after ~40 min. Prune BuildKit cache via `buildx_buildkit_local0 buildctl`.
+- Upgrade the Pi 5 with `talosctl upgrade --reboot-mode powercycle`; kexec hangs it
+  (barnes-c/homelab-issues#47).
 
 ## Conventions
 
-- **Sync waves** order deployment; see the table in `apps/README.md`. Storage-dependent apps
-  go at wave 1.
-- **Finalizers**: every app gets `resources-finalizer.argocd.argoproj.io`, so deleting its file
-  retires it. Exceptions are platform apps whose cascade would take others down: `argocd`,
-  `apps-root`, `longhorn`, `cert-manager`, `external-secrets`, `sealed-secrets`, `gateway`.
-  Data survives a cascade because Longhorn's StorageClass is `reclaimPolicy: Retain`.
-- **Helm values live in `manifests/<app>/values.yaml`**, referenced via a `$values` source. If the
-  app also syncs `manifests/<app>/` as a directory source, that source needs
-  `directory.exclude: values.yaml` or Argo applies the values as a manifest. Apps with several
-  charts use `manifests/<app>/<chart>/values.yaml` (monitoring).
-- **HTTPRoutes live beside their app** (`manifests/immich/immich-route.yaml`,
-  `manifests/monitoring/grafana-route.yaml`), not in `manifests/gateway/`. The instruction in
-  `manifests/README.md` is out of date.
-- **Two Gateways**: `main` (`192.168.1.201`, public) and `internal` (`192.168.1.202`, LAN-only
-  — the Freebox forwards 80/443 to `.201` only). Admin surfaces attach to `internal`.
-- **Secrets** are sealed by `scripts/create-secrets.sh`. SealedSecrets are namespace-scoped,
-  so a value used in two namespaces is sealed twice (see the Porkbun API key).
-- **DNS is Porkbun**, not Cloudflare. Both the ACME DNS-01 solver and the ddns CronJob go
-  through the Porkbun API; the solver is a third-party webhook chart, see
-  `manifests/infrastructure/cert-manager-webhook-porkbun/README.md`.
-- **`gmake`, not `make`** — macOS ships GNU Make 3.81; the Makefile needs 4.0+.
+- **Sync waves**: -3 AppProjects; -2 storage/CSR (longhorn, snapshot-controller,
+  kubelet-csr-approver); -1 platform (cert-manager, external-secrets, sealed-secrets, gateway,
+  policies); 0 other infrastructure; 1 workloads and anything needing storage.
+- **Finalizers**: every app gets `resources-finalizer.argocd.argoproj.io`, except `argocd`,
+  `longhorn`, `cert-manager`, `external-secrets`, `sealed-secrets`, `gateway`. The `longhorn`
+  StorageClass is `Retain`; `longhorn-scratch` is `Delete`.
+- **Helm values** live in `manifests/<group>/<app>/values.yaml` via a `$values` source (multi-chart
+  apps: `<app>/<chart>/values.yaml`). If the app also syncs that directory, add
+  `directory.exclude: values.yaml`.
+- **HTTPRoutes** live beside their app (`<app>-route.yaml`), not in `gateway/`.
+- **Gateways**: `main` (`192.168.1.201`, public) and `internal` (`192.168.1.202`, LAN-only).
+  Admin surfaces attach to `internal`.
+- **Secrets** are sealed by `scripts/create-secrets.sh`; SealedSecrets are namespace-scoped, so a
+  value used in two namespaces is sealed twice.
+- **DNS is Porkbun** (ACME DNS-01 webhook + ddns CronJob), not Cloudflare.
+- **`gmake`, not `make`** — the Makefile needs GNU Make 4+.
 
-## Agent access
+## Agent access (read-only, LAN-only)
 
-Agents get read-only access to the live cluster and Grafana. Both are LAN-only.
+- **Kubernetes** — ServiceAccount `agent-access/claude` (`view` + `agent-readonly`; no Secrets,
+  exec or writes — keep it that way). The environment already points kubectl at it: run plain
+  `kubectl`, unsandboxed. To rotate the kubeconfig (admin needed), rebuild
+  `~/.config/homelab/agent.kubeconfig` from Secret `agent-access/claude-token` (`ca.crt`, `token`),
+  server `https://192.168.1.10:6443`; deleting the Secret revokes the old token.
+- **Talos** — `os:reader` client cert pinned by `TALOSCONFIG` in user settings. Never override it
+  or read `~/.talos`. Certs can't be revoked, so keep the TTL short:
+  `talosctl config new --roles os:reader --crt-ttl 720h ~/.config/homelab/agent.talosconfig`.
+- **Grafana** — `grafana` MCP server (`.mcp.json`), service account `Claude` (Editor), token from
+  `GRAFANA_SERVICE_ACCOUNT_TOKEN` in the environment, never in this repo. Dashboards in git are
+  the source of truth: hand-built ones in `barnes-c/dashboard-as-code`, gnetId ones in
+  `values.yaml`. UI edits to provisioned dashboards are lost on restart.
 
-**Kubernetes** — ServiceAccount `agent-access/claude` (`manifests/infrastructure/agent-access/`),
-bound to `view` plus `agent-readonly` (nodes, PVs, RBAC, CRDs). It cannot read Secrets, exec
-or write — keep it that way. The sandbox denies `~/.kube`, so the kubeconfig lives elsewhere:
+## Decision context
 
-```sh
-NO_PROXY=localhost no_proxy=localhost KUBECONFIG=~/.config/homelab/agent.kubeconfig kubectl get pods -A
-```
+Conclusion in the code, reasoning in the issue. Issues live in the **private**
+`barnes-c/homelab-issues` (this repo is public); check `gh issue list -R barnes-c/homelab-issues`
+at the start of a task.
 
-The sandbox only lets traffic out through its proxy, and its default `NO_PROXY` covers
-`192.168.0.0/16`, so kubectl would connect to the API (`192.168.1.10:6443`) directly and be
-refused. Overriding `NO_PROXY` routes it through the proxy, which allows `192.168.1.10`. To create or
-rotate the kubeconfig (admin kubeconfig needed; deleting the Secret revokes the old token):
+- Invariant ("can't work because…") → one-line comment stating the fact, plus `See #N`.
+- Temporal ("disabled until…") or anything closable → issue, with a one-line pointer comment.
+- Dead or commented-out config → issue only; delete it from the file.
 
-```sh
-s=agent-access/claude-token; f=~/.config/homelab/agent.kubeconfig; mkdir -p ${f:h}
-kubectl -n ${s%/*} get secret ${s#*/} -o jsonpath='{.data.ca\.crt}' | base64 -d > ${f:h}/ca.crt
-kubectl --kubeconfig $f config set-cluster homelab --server https://192.168.1.10:6443 \
-  --certificate-authority ${f:h}/ca.crt --embed-certs
-kubectl --kubeconfig $f config set-credentials claude \
-  --token "$(kubectl -n ${s%/*} get secret ${s#*/} -o jsonpath='{.data.token}' | base64 -d)"
-kubectl --kubeconfig $f config set-context homelab --cluster homelab --user claude
-kubectl --kubeconfig $f config use-context homelab
-```
-
-**Talos** — a client certificate with the `os:reader` role: services, logs, dmesg, etcd status
-and resources, but no file reads, kubeconfig, etcd snapshots or changes. `TALOSCONFIG` in the
-user settings pins it; overriding it (`--talosconfig`, `TALOSCONFIG=`, `talosctl config`) and
-reading `~/.talos` are denied. A Talos client certificate cannot be revoked, only expire, so keep
-the TTL short and re-issue it (admin talosconfig needed):
-
-```sh
-talosctl config new --roles os:reader --crt-ttl 720h ~/.config/homelab/agent.talosconfig
-```
-
-**Grafana** — the `grafana` MCP server in `.mcp.json` (`mcp-grafana`, installed with
-`go install github.com/grafana/mcp-grafana/cmd/mcp-grafana@v1.6.3`). It authenticates as the
-Grafana service account `Claude` (Editor), token in `GRAFANA_SERVICE_ACCOUNT_TOKEN` in the
-environment Claude Code starts from — never in a file in this repo. Editor can create
-dashboards, but those are drafts: the source of truth is the provisioned JSON in git, and
-Grafana's UI edits to provisioned dashboards are lost on restart. Hand-built dashboards live in
-`barnes-c/dashboard-as-code`, imported read-only by Git Sync; gnetId ones stay in `values.yaml`.
-
-## Where decision context lives
-
-Conclusion in the code, reasoning in the issue.
-
-|                      Kind                       |                          Home                          |
-| ----------------------------------------------- | ------------------------------------------------------ |
-| Invariant — "this cannot work because…"         | One-line comment stating the conclusion, plus `See #N` |
-| Temporal — "disabled until…", "re-enable when…" | Issue; one-line comment pointing to it                 |
-| Dead or commented-out config                    | Issue only; delete it from the file                    |
-
-A comment should state the fact, not just point — a bare `See #N` forces a round-trip to
-find out whether you cared.
-
-Anything that can be *closed* is an issue, not a comment. "Re-enable once a node is labelled"
-in a YAML comment is invisible: it never appears in the issue tracker and nothing can close it.
-
-Issues live in the **private** repo `barnes-c/homelab-issues`, not here — this repo is public,
-and its issues were moved on 2026-09-26 so they (and their references to upstream issues) stay
-private. At the start of a task, check `gh issue list -R barnes-c/homelab-issues` and the
-project board for current state.
-
-## Working in issues
-
-Track progress in the issue itself, not only in commits. Comment as the work proceeds, so the
-current state is visible without reading the diff.
-
-When something turns out to be wrong, **add a comment saying what changed and why — do not
-edit the earlier comment or rewrite the body to match**. A superseded assumption is part of
-the record: erasing it means the next person re-derives the same dead end, and hides that the
-conclusion moved at all. The body may carry current state (a checklist, the agreed approach);
-the reasoning trail lives in comments and is append-only.
+Comment on the issue as work proceeds. Comments are append-only: when something turns out wrong,
+add a comment saying what changed and why — don't edit earlier comments. The body may hold
+current state.
