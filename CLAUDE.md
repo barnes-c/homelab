@@ -87,8 +87,10 @@ the environment, so the public repo carries neither. A `tofu()` wrapper in the d
 `cluster/tofu`; `tf` stays an alias for `tofu`. The password manager is the source of truth for
 both secrets (Keychain items `homelab-tofu-gitlab-token`, `homelab-tofu-state-passphrase`).
 
-- **Lose the passphrase and the state is unreadable**, and with it the cluster CAs. The GitLab
-  token (scope `api`) expires yearly; rotate it in the password manager and the Keychain.
+- **Lose the passphrase and the state is unreadable**, and with it the cluster CAs.
+- The GitLab token is a fine-grained personal access token limited to the state project:
+  Terraform State **Read**, **Create** and **Lock**, no Delete. It expires yearly; rotate it in
+  the password manager and the Keychain (`security add-generic-password -U …`).
 - Pass the token only through the environment. `-backend-config` caches it in
   `.terraform/terraform.tfstate`.
 - CI runs `tofu init -backend=false`, so it needs neither secret.
