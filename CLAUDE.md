@@ -20,7 +20,7 @@ provisioning.
 
 ```sh
 gmake schematics images             # Pi 4B / CM5, via factory.talos.dev
-gmake rpi5b-image rpi5b-installer   # Pi 5, built locally
+gmake pi5-image pi5-installer   # Pi 5, built locally
 ```
 
 **Workers** — `schematics/*.yaml` are POSTed to Image Factory, which returns an ID; the
@@ -40,7 +40,7 @@ Two artifacts, not interchangeable:
 
 |              Artifact               |                          Use                          |
 | ----------------------------------- | ----------------------------------------------------- |
-| `images/talos-rpi5b.raw.xz`         | bootable SD image, initial flash only                 |
+| `images/talos-pi5.raw.xz`         | bootable SD image, initial flash only                 |
 | `$(REGISTRY)/talos/installer:<tag>` | `machine.install.image`, and every `talosctl upgrade` |
 
 Gotchas:

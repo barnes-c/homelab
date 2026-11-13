@@ -38,7 +38,7 @@ INSTALLER_TAG  ?= $(TALOS_TAG)
 
 WORKER_SCHEMATICS := rpi4b cm5
 
-.PHONY: all schematics images rpi5b-installer rpi5b-image check-clean clean help
+.PHONY: all schematics images pi5-installer pi5-image check-clean clean help
 
 all: schematics images
 
@@ -87,20 +87,20 @@ profiles/%.yaml: profiles/%.yaml.tmpl
 		envsubst '$$TALOS_TAG $$REGISTRY $$OVERLAY_IMAGE $$ISCSI_TOOLS_IMAGE $$UTIL_LINUX_TOOLS_IMAGE' < $< > $@
 
 # Installer image, for machine.install.image and `talosctl upgrade`.
-rpi5b-installer: .imager-$(TALOS_TAG) profiles/rpi5b-installer.yaml
+pi5-installer: .imager-$(TALOS_TAG) profiles/pi5-installer.yaml
 	@mkdir -p _out
 	podman run -i --rm -v $(CURDIR)/_out:/out \
-		$(REGISTRY)/talos/imager:$(TALOS_TAG) - < profiles/rpi5b-installer.yaml
+		$(REGISTRY)/talos/imager:$(TALOS_TAG) - < profiles/pi5-installer.yaml
 	crane push _out/installer-arm64.tar $(REGISTRY)/talos/installer:$(INSTALLER_TAG)
 	@echo ">> installer: $(REGISTRY)/talos/installer:$(INSTALLER_TAG)"
 
 # Bootable SD image, for the initial flash only.
-rpi5b-image: .imager-$(TALOS_TAG) profiles/rpi5b-metal.yaml
+pi5-image: .imager-$(TALOS_TAG) profiles/pi5-metal.yaml
 	@mkdir -p images
 	podman run -i --rm -v $(CURDIR)/images:/out \
-		$(REGISTRY)/talos/imager:$(TALOS_TAG) - < profiles/rpi5b-metal.yaml
-	@mv images/metal-arm64.raw.xz images/talos-rpi5b.raw.xz
-	@echo ">> image: images/talos-rpi5b.raw.xz"
+		$(REGISTRY)/talos/imager:$(TALOS_TAG) - < profiles/pi5-metal.yaml
+	@mv images/metal-arm64.raw.xz images/talos-pi5.raw.xz
+	@echo ">> image: images/talos-pi5.raw.xz"
 
 clean:
 	rm -f .schematic-id-* .imager-* profiles/*.yaml
@@ -109,6 +109,6 @@ clean:
 help:
 	@echo "schematics       upload worker schematics to $(FACTORY_HOST)"
 	@echo "images           download worker metal images"
-	@echo "rpi5b-installer  build + push the Pi 5 installer (machine.install.image)"
-	@echo "rpi5b-image      build the Pi 5 bootable SD image"
+	@echo "pi5-installer  build + push the Pi 5 installer (machine.install.image)"
+	@echo "pi5-image      build the Pi 5 bootable SD image"
 	@echo "clean            remove generated profiles, ids and images"
