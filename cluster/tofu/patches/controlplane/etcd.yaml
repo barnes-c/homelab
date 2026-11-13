@@ -2,3 +2,5 @@ cluster:
   etcd:
     advertisedSubnets:
       - 192.168.0.0/16
+    extraArgs:
+      listen-metrics-urls: http://0.0.0.0:2381

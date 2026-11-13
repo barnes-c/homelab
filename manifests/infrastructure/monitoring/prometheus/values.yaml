@@ -44,6 +44,21 @@ scrapeConfigs:
     post_relabel_configs: |
       - action: labeldrop
         regex: helm_sh_chart|app_kubernetes_io_version|pod_template_hash|controller_revision_hash|pod_template_generation
+  etcd:
+    kubernetes_sd_configs:
+      - role: node
+    relabel_configs:
+      - source_labels:
+          [
+            __meta_kubernetes_node_labelpresent_node_role_kubernetes_io_control_plane,
+          ]
+        action: keep
+        regex: "true"
+      - source_labels: [__meta_kubernetes_node_address_InternalIP]
+        target_label: __address__
+        replacement: $1:2381
+      - source_labels: [__meta_kubernetes_node_name]
+        target_label: node
   blackbox:
     metrics_path: /probe
     params:
