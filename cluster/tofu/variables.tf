@@ -146,6 +146,12 @@ variable "ntp_servers" {
   default     = ["162.159.200.1", "216.239.35.0", "2606:4700:f1::1", "2001:4860:4806::"]
 }
 
+variable "state_passphrase" {
+  description = "Encrypts state and plan files; from TF_VAR_state_passphrase, never in git"
+  type        = string
+  sensitive   = true
+}
+
 variable "talos_image_version" {
   description = "Talos release the Image Factory installers are built for"
   type        = string

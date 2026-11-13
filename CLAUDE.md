@@ -74,6 +74,26 @@ Gotchas:
 - **Upgrade the Pi 5 with `talosctl upgrade --reboot-mode powercycle`.** The default kexec
   reboot hung the node until it was power-cycled by hand (barnes-c/homelab-issues#47).
 
+## OpenTofu state
+
+State lives in the private gitlab.com project,
+GitLab-managed state named `homelab`, encrypted client-side with OpenTofu state encryption
+(`aes_gcm`, pbkdf2 key) before upload. GitLab only stores ciphertext. Plan files are encrypted
+the same way.
+
+`backend "http"` holds only the GitLab lock settings: the address and credentials come from
+the environment, so the public repo carries neither. A `tofu()` wrapper in the dotfiles
+(`~/Code/dotfiles/aliases`) sets them from the macOS Keychain, only when run inside
+`cluster/tofu`; `tf` stays an alias for `tofu`. The password manager is the source of truth for
+both secrets (Keychain items `homelab-tofu-gitlab-token`, `homelab-tofu-state-passphrase`).
+
+- **Lose the passphrase and the state is unreadable**, and with it the cluster CAs. The GitLab
+  token (scope `api`) expires yearly; rotate it in the password manager and the Keychain.
+- Pass the token only through the environment. `-backend-config` caches it in
+  `.terraform/terraform.tfstate`.
+- CI runs `tofu init -backend=false`, so it needs neither secret.
+- A stuck lock: `tf force-unlock <id>`, or delete it under Operate → Terraform states.
+
 ## Conventions
 
 - **Sync waves** order deployment; see the table in `apps/README.md`. Storage-dependent apps
