@@ -15,7 +15,6 @@ ingress:
   - subnet: 10.244.0.0/16 # pods (Talos default)
   - subnet: 10.96.0.0/12 # services (Talos default)
   - subnet: 192.168.1.0/24 # LAN
-  - subnet: 192.168.27.64/27 # Freebox WireGuard clients (routed, not NATed)
 ---
 apiVersion: v1alpha1
 kind: NetworkRuleConfig
@@ -27,6 +26,16 @@ ingress:
   - subnet: 10.244.0.0/16 # pods (Talos default)
   - subnet: 10.96.0.0/12 # services (Talos default)
   - subnet: 192.168.1.0/24 # LAN
+---
+# WireGuard clients reach only the Talos and Kubernetes APIs; anything else goes through the
+# Gateways (gateway-public below).
+apiVersion: v1alpha1
+kind: NetworkRuleConfig
+name: wireguard-apis
+portSelector:
+  ports: [6443, 50000]
+  protocol: tcp
+ingress:
   - subnet: 192.168.27.64/27 # Freebox WireGuard clients (routed, not NATed)
 ---
 # Gateway traffic reaches the host-network Envoy via TPROXY with its internet source
