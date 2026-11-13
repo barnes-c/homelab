@@ -30,8 +30,8 @@ is for `machine.install.image` and every upgrade.
 
 Gotchas:
 
-- Push Pi 5 images to ghcr.io only — never a local registry (barnes-c/homelab-issues#66). The
-  ghcr packages must be public; flip new ones in package settings.
+- Pi 5 images (installer, installer-base, imager, kernel) live on `ghcr.io/barnes-c/talos/`.
+  Nodes pull anonymously, so flip each new package to public in package settings.
 - `profiles/*.yaml` are generated from `.tmpl` via `envsubst`. Edit the template.
 - Build the SD image *before* resetting a node: `--wipe-mode system-disk` erases the bootloader.
 - `check-clean` refuses a dirty `TALOS_SRC` (untracked files are fine).
