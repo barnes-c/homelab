@@ -18,7 +18,7 @@ locals {
     for k, v in var.nodes : k => concat(
       [
         templatefile("${local.patches_dir}/time-sync.yaml.tftpl", { ntp_servers = var.ntp_servers }),
-        templatefile("${local.patches_dir}/install.yaml.tftpl", { image = v.install_image, disk = v.install_disk }),
+        templatefile("${local.patches_dir}/install.yaml.tftpl", { image = local.install_images[k], disk = v.install_disk }),
         templatefile("${local.patches_dir}/hostname.yaml.tftpl", { hostname = k }),
         file("${local.patches_dir}/kubelet.yaml"),
         file("${local.patches_dir}/resolver.yaml"),
@@ -86,7 +86,7 @@ ephemeral "talos_machine_configuration" "node" {
 
 # OS upgrades stay on talosctl (ignore_changes = [image]). Two things block managing them here:
 # - The Pi 5 installer tag (-pwmfan) never equals the version the node reports, so every apply
-#   would reinstall and reboot it. Gone once the local build is dropped (barnes-c/homelab-issues#15).
+#   would reinstall and reboot it. Gone once the fan kernel is upstream (barnes-c/homelab-issues#8).
 # - for_each upgrades all nodes in parallel; three control planes rebooting at once lose etcd
 #   quorum. Needs -parallelism=1 or per-node resources chained with depends_on.
 # `image` is set only so Create doesn't attempt an upgrade when it's omitted; it must match the
@@ -97,7 +97,7 @@ resource "talos_machine" "node" {
   client_configuration     = talos_machine_secrets.cluster.client_configuration
   machine_configuration_wo = ephemeral.talos_machine_configuration.node[each.key].machine_configuration
   node                     = each.value.ip
-  image                    = trimsuffix(each.value.install_image, "-pwmfan")
+  image                    = trimsuffix(local.install_images[each.key], "-pwmfan")
   drain_on_upgrade         = false
 
   ignore_kubernetes_upgrade_drift = true

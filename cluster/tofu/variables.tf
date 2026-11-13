@@ -49,10 +49,13 @@ variable "kubernetes_version" {
 variable "nodes" {
   description = "Cluster nodes, keyed by hostname"
   type = map(object({
-    ip            = string
-    role          = string # "controlplane" | "worker"
-    install_image = string
-    install_disk  = optional(string, "/dev/mmcblk0")
+    ip           = string
+    role         = string # "controlplane" | "worker"
+    install_disk = optional(string, "/dev/mmcblk0")
+
+    # Exactly one: a schematic in schematics/ (Image Factory), or a full installer image.
+    schematic     = optional(string)
+    install_image = optional(string)
 
     # CEL over Talos DiskSpec for the disk holding EPHEMERAL (etcd, CRI, logs) and Longhorn.
     # Null keeps EPHEMERAL on the install disk. Device names and transport aren't stable
@@ -95,7 +98,7 @@ variable "nodes" {
     "pi4-wk-01" = {
       ip                 = "192.168.1.12"
       role               = "worker"
-      install_image      = "factory.talos.dev/metal-installer/8bde169869ab746320f8f4b1f622aafd538ca787658d8bce46be35b4484d39fe:v1.15.0-beta.0"
+      schematic          = "pi4"
       data_disk          = "disk.model == 'PSSD T7'"
       ephemeral_max_size = "50GiB"
       longhorn_min_size  = "400GiB"
@@ -106,7 +109,7 @@ variable "nodes" {
     "cm5-cp-01" = {
       ip                 = "192.168.1.13"
       role               = "controlplane"
-      install_image      = "factory.talos.dev/metal-installer/a64b67b0e9fb8ab3f4f3595532da5939ac26fc35adb4760ec1a4c6893c6d52a3:v1.15.0-beta.0"
+      schematic          = "cm5"
       data_disk          = "disk.wwid == 'eui.00000000000000007c35485256bde646'"
       ephemeral_max_size = "50GiB"
       longhorn_min_size  = "100GiB"
@@ -117,7 +120,7 @@ variable "nodes" {
     "cm5-cp-02" = {
       ip                 = "192.168.1.14"
       role               = "controlplane"
-      install_image      = "factory.talos.dev/metal-installer/a64b67b0e9fb8ab3f4f3595532da5939ac26fc35adb4760ec1a4c6893c6d52a3:v1.15.0-beta.0"
+      schematic          = "cm5"
       data_disk          = "disk.wwid == 'eui.00000000000000007c35485256bde5a1'"
       ephemeral_max_size = "50GiB"
       longhorn_min_size  = "100GiB"
@@ -130,12 +133,23 @@ variable "nodes" {
     condition     = length([for n in var.nodes : n if n.role == "controlplane"]) > 0
     error_message = "At least one node must have role = \"controlplane\"."
   }
+
+  validation {
+    condition     = alltrue([for n in var.nodes : (n.schematic == null) != (n.install_image == null)])
+    error_message = "Each node needs exactly one of schematic or install_image."
+  }
 }
 
 variable "ntp_servers" {
   description = "NTP servers. Anycast Cloudflare + Google, v4 and v6."
   type        = list(string)
   default     = ["162.159.200.1", "216.239.35.0", "2606:4700:f1::1", "2001:4860:4806::"]
+}
+
+variable "talos_image_version" {
+  description = "Talos release the Image Factory installers are built for"
+  type        = string
+  default     = "v1.15.0-beta.0"
 }
 
 variable "talos_version" {
