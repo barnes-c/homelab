@@ -42,9 +42,8 @@ variable "cluster_vip" {
 
 variable "kubernetes_version" {
   description = <<-EOT
-    Kubernetes version. Talos v1.14.0-rc.2 defaults to 1.37.0-rc.1 only because it was cut
-    before 1.37.0 went GA; the value just selects image tags, and 1.37 is the newest of the
-    6 supported versions (constants.go:381-384).
+    Kubernetes version. Talos v1.15.0-beta.0 defaults to 1.38.0-beta.0, a pre-release, so
+    this stays on 1.37, which v1.15 still supports (6 versions back from 1.38).
   EOT
   type        = string
   default     = "1.37.0"
@@ -54,8 +53,8 @@ variable "nodes" {
   description = <<-EOT
     Cluster nodes, keyed by hostname.
 
-    install_image: Pi 5 points at a locally built installer carrying the NTP cert-regen
-    fix (5a2630749, on v1.14.5), which is not upstream. Workers use stock Image Factory images,
+    install_image: Pi 5 points at a locally built installer carrying the RP1 PWM fan
+    kernel, which is not upstream. Workers use stock Image Factory images,
     written here by `make schematics`.
 
     ephemeral_selector / longhorn_selector: CEL over Talos DiskSpec. Pin by wwid when
@@ -96,7 +95,7 @@ variable "nodes" {
       ip            = "192.168.1.11"
       role          = "controlplane"
       install_disk  = "/dev/mmcblk0"
-      install_image = "ghcr.io/barnes-c/talos/installer:v1.14.5-1-g5a2630749-pwmfan-r2"
+      install_image = "ghcr.io/barnes-c/talos/installer:v1.15.0-beta.0-pwmfan"
 
       # Verified on hardware: md127 is RAID1 over sda+sdb (Samsung 870 2TB), [UU], and
       # already backs EPHEMERAL at /dev/md127p2. The array has no wwid of its own, so
@@ -133,7 +132,7 @@ variable "nodes" {
       ip                 = "192.168.1.12"
       role               = "worker"
       install_disk       = "/dev/mmcblk0"
-      install_image      = "factory.talos.dev/metal-installer/8bde169869ab746320f8f4b1f622aafd538ca787658d8bce46be35b4484d39fe:v1.14.5"
+      install_image      = "factory.talos.dev/metal-installer/8bde169869ab746320f8f4b1f622aafd538ca787658d8bce46be35b4484d39fe:v1.15.0-beta.0"
       ephemeral_selector = "disk.model == 'PSSD T7'"
       ephemeral_max_size = "50GiB"
       longhorn_selector  = "disk.model == 'PSSD T7'"
@@ -153,7 +152,7 @@ variable "nodes" {
       ip                 = "192.168.1.13"
       role               = "controlplane"
       install_disk       = "/dev/mmcblk0"
-      install_image      = "factory.talos.dev/metal-installer/a64b67b0e9fb8ab3f4f3595532da5939ac26fc35adb4760ec1a4c6893c6d52a3:v1.14.5"
+      install_image      = "factory.talos.dev/metal-installer/a64b67b0e9fb8ab3f4f3595532da5939ac26fc35adb4760ec1a4c6893c6d52a3:v1.15.0-beta.0"
       ephemeral_selector = "disk.wwid == 'eui.00000000000000007c35485256bde646'"
       ephemeral_max_size = "50GiB"
       longhorn_selector  = "disk.wwid == 'eui.00000000000000007c35485256bde646'"
@@ -173,7 +172,7 @@ variable "nodes" {
       ip                 = "192.168.1.14"
       role               = "controlplane"
       install_disk       = "/dev/mmcblk0"
-      install_image      = "factory.talos.dev/metal-installer/a64b67b0e9fb8ab3f4f3595532da5939ac26fc35adb4760ec1a4c6893c6d52a3:v1.14.5"
+      install_image      = "factory.talos.dev/metal-installer/a64b67b0e9fb8ab3f4f3595532da5939ac26fc35adb4760ec1a4c6893c6d52a3:v1.15.0-beta.0"
       ephemeral_selector = "disk.wwid == 'eui.00000000000000007c35485256bde5a1'"
       ephemeral_max_size = "50GiB"
       longhorn_selector  = "disk.wwid == 'eui.00000000000000007c35485256bde5a1'"
@@ -205,7 +204,7 @@ variable "ntp_servers" {
 variable "talos_version" {
   description = <<-EOT
     Talos version the machine config schema is generated for. Must not be newer than the
-    oldest node: the Pi 5 runs one commit past v1.14.5, the workers run v1.14.5.
+    oldest node. Kept at v1.14.5 while v1.15 is in beta.
   EOT
   type        = string
   default     = "v1.14.5"
