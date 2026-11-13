@@ -55,8 +55,7 @@ locals {
 resource "talos_machine_secrets" "cluster" {
   talos_version = var.talos_version
 
-  # Changing talos_version regenerates every CA and the cluster ID, which locks all nodes out.
-  # The secrets are generated once; only the machine configs follow var.talos_version.
+  # Changing talos_version regenerates every CA and cluster ID = locked out.
   lifecycle {
     ignore_changes = [talos_version]
   }
@@ -81,9 +80,13 @@ ephemeral "talos_machine_configuration" "node" {
   kubernetes_version = var.kubernetes_version
 }
 
-# OS upgrades stay on talosctl. `image` only exists so Create does not attempt an upgrade
-# when it is omitted; it must match the running version, and the node reports the Pi 5 tag
-# without the -pwmfan suffix. See barnes-c/homelab-issues#81.
+# OS upgrades stay on talosctl (ignore_changes = [image]). Two things block managing them here:
+# - The Pi 5 installer tag (-pwmfan) never equals the version the node reports, so every apply
+#   would reinstall and reboot it. Gone once the local build is dropped (barnes-c/homelab-issues#15).
+# - for_each upgrades all nodes in parallel; three control planes rebooting at once lose etcd
+#   quorum. Needs -parallelism=1 or per-node resources chained with depends_on.
+# `image` is set only so Create doesn't attempt an upgrade when it's omitted; it must match the
+# running version, hence the trimsuffix. See barnes-c/homelab-issues#81.
 resource "talos_machine" "node" {
   for_each = var.nodes
 
