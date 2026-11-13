@@ -10,7 +10,6 @@ terraform.tfstate.*.backup
 !.terraform.lock.hcl
 
 # generated
-.schematic-id-*
 .imager-*
 cluster/profiles/*.yaml
 !cluster/profiles/*.yaml.tmpl

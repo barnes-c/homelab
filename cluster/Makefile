@@ -1,11 +1,10 @@
-# Talos image builds. Pi 4B / CM5 use Image Factory schematics; the Pi 5 needs a local
-# build for its fan kernel (PKG_KERNEL below). See barnes-c/homelab-issues#15.
+# Pi 5 image build, local because of its fan kernel (PKG_KERNEL below, barnes-c/homelab-issues#8).
+# Pi 4B / CM5 images come from Image Factory via OpenTofu (cluster/tofu/schematics.tf).
 #
 # Requires GNU Make 4+ (`gmake` on macOS) and the docker CLI with buildx, not podman's alias.
 
 SHELL          := /bin/bash
-FACTORY_HOST   := factory.talos.dev
-TALOS_VERSION  ?= v1.15.0-beta.0
+.DEFAULT_GOAL  := help
 
 # Local build inputs for the Pi 5. TALOS_SRC must be checked out at TALOS_BRANCH.
 TALOS_SRC      ?= $(HOME)/Code/siderolabs/talos
@@ -15,13 +14,13 @@ TALOS_BRANCH   ?= v1.15.0-beta.0
 REGISTRY       ?= ghcr.io/barnes-c
 # The overlay version is tied to the Talos release: v0.3.0's DTBs carry an RP1 PCIe topology
 # patch that needs the 7.x kernel and kills end0 on 6.18. Use what
-# factory.talos.dev/version/$(TALOS_VERSION)/overlays/official resolves for rpi_5.
+# factory.talos.dev/version/$(TALOS_BRANCH)/overlays/official resolves for rpi_5.
 OVERLAY_IMAGE  ?= ghcr.io/siderolabs/sbc-raspberrypi:v0.3.0@sha256:6f4e52953e8f7742672f39075610810f5767bfc15347930205a0a7f62175b58e
 
 # System extensions. The worker schematics name these and let Image Factory resolve the
 # version; a local imager build has to pin them by digest, because extension tags are
 # re-pushed for newer Talos releases and a newer build fails to load on this one. These
-# match what factory.talos.dev/version/$(TALOS_VERSION)/extensions/official resolves.
+# match what factory.talos.dev/version/$(TALOS_BRANCH)/extensions/official resolves.
 ISCSI_TOOLS_IMAGE      ?= ghcr.io/siderolabs/iscsi-tools:v0.2.0@sha256:5c887effab3457700938b66b4de1ebd89f1c5025f20fd3a07b095d2994eec0fa
 UTIL_LINUX_TOOLS_IMAGE ?= ghcr.io/siderolabs/util-linux-tools:2.42.4@sha256:f7fac0baf758b7f1c19c779c95ac47e9a0c89b69e93b1849cfccdb7fb01e54ba
 
@@ -36,29 +35,7 @@ DOCKER         := /opt/homebrew/bin/docker
 TALOS_TAG       = $(shell git -C $(TALOS_SRC) describe --tag --always --dirty --match 'v[0-9]*')$(KERNEL_SUFFIX)
 INSTALLER_TAG  ?= $(TALOS_TAG)
 
-WORKER_SCHEMATICS := rpi4b cm5
-
-.PHONY: all schematics images pi5-installer pi5-image check-clean clean help
-
-all: schematics images
-
-# -- Worker schematics (Image Factory) ---------------------------------------
-
-schematics: $(addprefix .schematic-id-,$(WORKER_SCHEMATICS))
-
-.schematic-id-%: schematics/%.yaml
-	@echo ">> uploading $* schematic"
-	@curl -sfX POST https://$(FACTORY_HOST)/schematics \
-		-H "Content-Type: application/yaml" \
-		--data-binary @$< | jq -r .id > $@
-	@echo "   $* schematic: $$(cat $@)"
-
-images: $(addprefix images/talos-,$(addsuffix .raw.xz,$(WORKER_SCHEMATICS)))
-
-images/talos-%.raw.xz: .schematic-id-%
-	@mkdir -p images
-	@echo ">> downloading $* image ($(TALOS_VERSION))"
-	curl -fL "https://$(FACTORY_HOST)/image/$$(cat $<)/$(TALOS_VERSION)/metal-arm64.raw.xz" -o $@
+.PHONY: pi5-installer pi5-image check-clean clean help
 
 # -- Pi 5 local build --------------------------------------------------------
 
@@ -103,12 +80,10 @@ pi5-image: .imager-$(TALOS_TAG) profiles/pi5-metal.yaml
 	@echo ">> image: images/talos-pi5.raw.xz"
 
 clean:
-	rm -f .schematic-id-* .imager-* profiles/*.yaml
+	rm -f .imager-* profiles/*.yaml
 	rm -rf images/ _out/
 
 help:
-	@echo "schematics       upload worker schematics to $(FACTORY_HOST)"
-	@echo "images           download worker metal images"
 	@echo "pi5-installer  build + push the Pi 5 installer (machine.install.image)"
 	@echo "pi5-image      build the Pi 5 bootable SD image"
-	@echo "clean            remove generated profiles, ids and images"
+	@echo "clean          remove generated profiles and images"
