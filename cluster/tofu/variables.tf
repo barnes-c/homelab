@@ -43,7 +43,7 @@ variable "cluster_vip" {
 variable "kubernetes_version" {
   description = "Kept on 1.37: Talos v1.15.0-beta.0 defaults to the 1.38.0-beta.0 pre-release"
   type        = string
-  default     = "1.37.0"
+  default     = "1.37.2"
 }
 
 variable "nodes" {
