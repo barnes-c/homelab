@@ -1,4 +1,4 @@
-# Compiled immich v3.4.0 files; line length is the compiler's. Remove with barnes-c/homelab-issues#51.
+# Compiled immich v3.4.1 files; line length is the compiler's. Remove with barnes-c/homelab-issues#51.
 # yamllint disable rule:line-length
 apiVersion: v1
 kind: ConfigMap
@@ -77,7 +77,7 @@ data:
                 [ATTR_SERVICE_NAME]: `immich`,
                 [ATTR_SERVICE_VERSION]: serverVersion.toString(),
             }),
-            metricReaders: [new PrometheusExporter({ port })],
+            metricReaders: [new PrometheusExporter({ port, host: '0.0.0.0' })],
             contextManager: new AsyncLocalStorageContextManager(),
             instrumentations: [
                 new HttpInstrumentation({
