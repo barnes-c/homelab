@@ -9,9 +9,11 @@
     "labels": [
         "dependencies"
     ],
-    "dependencyDashboardLabels": [
-        "dependencies"
-    ],
+    "dependencyDashboard": {
+        "labels": [
+            "dependencies"
+        ]
+    },
     "pinDigests": true,
     "platformAutomerge": true,
     "internalChecksFilter": "strict",
@@ -97,15 +99,6 @@
                 "github-actions"
             ],
             "groupName": "github-actions"
-        },
-        {
-            "matchManagers": [
-                "docker"
-            ],
-            "matchDatasources": [
-                "docker"
-            ],
-            "groupName": "docker-images"
         },
         {
             "matchManagers": [
