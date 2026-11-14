@@ -119,6 +119,10 @@ resource "talos_cluster" "cluster" {
   control_plane_nodes     = local.control_plane_ips
   kubernetes_version      = var.kubernetes_version
 
+  timeouts = {
+    update = "60m"
+  }
+
   depends_on = [talos_machine.node]
 }
 
