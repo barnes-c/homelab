@@ -76,6 +76,23 @@
             "automerge": false
         },
         {
+            "description": "Tags are <postgres major>-vectorchord<x.y.z>; extra suffixes (-pgvector…) don't match and are ignored.",
+            "matchDepNames": [
+                "ghcr.io/immich-app/postgres"
+            ],
+            "versioning": "regex:^(?<major>\\d+)-vectorchord(?<minor>\\d+)\\.(?<patch>\\d+)\\.(?<build>\\d+)$"
+        },
+        {
+            "description": "A Postgres major needs a dump and restore onto a new volume, not a tag bump.",
+            "matchDepNames": [
+                "ghcr.io/immich-app/postgres"
+            ],
+            "matchUpdateTypes": [
+                "major"
+            ],
+            "dependencyDashboardApproval": true
+        },
+        {
             "matchManagers": [
                 "github-actions"
             ],
