@@ -9,11 +9,6 @@
     "labels": [
         "dependencies"
     ],
-    "dependencyDashboard": {
-        "labels": [
-            "dependencies"
-        ]
-    },
     "pinDigests": true,
     "platformAutomerge": true,
     "internalChecksFilter": "strict",
