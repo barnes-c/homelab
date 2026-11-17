@@ -1,0 +1,167 @@
+controllers:
+  main:
+    applyDefaultContainerOptionsToInitContainers: false
+    pod:
+      # Gluetun's resolver (DoT through the tunnel); kube-dns resolves upstream from the home IP. See #85.
+      dnsPolicy: None
+      dnsConfig:
+        nameservers:
+          - 127.0.0.1
+    initContainers:
+      gluetun:
+        image:
+          repository: ghcr.io/qdm12/gluetun
+          tag: v3.41.3@sha256:fa19cc76b2af13d57a8d3dc3066f2ada061b1c761b8aecf989b3877c0486e027
+        restartPolicy: Always
+        env:
+          VPN_SERVICE_PROVIDER: custom
+          VPN_TYPE: wireguard
+          VPN_INTERFACE: wg0
+          # ch-zrh-wg-001; also pinned in network-policy.yaml (qbittorrent egress). Change both. See #85.
+          WIREGUARD_ENDPOINT_IP: 193.32.127.71
+          WIREGUARD_ENDPOINT_PORT: "51820"
+          WIREGUARD_PUBLIC_KEY: chvEpRH+05o+ESv8QLzNyY3Phirsym0mUvF03Kt7oCo=
+          FIREWALL_INPUT_PORTS: "8080,8888,9999"
+          HTTPPROXY: "on"
+          HEALTH_SERVER_ADDRESS: ":9999"
+        probes:
+          startup:
+            enabled: true
+            custom: true
+            spec:
+              httpGet:
+                path: /
+                port: 9999
+              periodSeconds: 5
+              failureThreshold: 60
+          liveness:
+            enabled: true
+            custom: true
+            spec:
+              httpGet:
+                path: /
+                port: 9999
+              periodSeconds: 30
+              failureThreshold: 3
+        securityContext:
+          runAsUser: 0
+          runAsGroup: 0
+          runAsNonRoot: false
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+            add:
+              - NET_ADMIN
+              - NET_RAW
+        resources:
+          requests:
+            cpu: 50m
+            memory: 64Mi
+          limits:
+            cpu: 500m
+            memory: 256Mi
+    containers:
+      main:
+        image:
+          repository: ghcr.io/home-operations/qbittorrent
+          tag: 5.3.0@sha256:5a858e61f94cf2712391db32ed03556576c700858f3e62c4c6fcde262443ebd8
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 2000m
+            memory: 2Gi
+
+service:
+  main:
+    controller: main
+    ports:
+      http:
+        port: 8080
+      proxy:
+        port: 8888
+
+configMaps:
+  defaults:
+    data:
+      # Seeds /config on first start only (see the image's entrypoint); UI changes persist after that.
+      qBittorrent.conf: |
+        [LegalNotice]
+        Accepted=true
+
+        [BitTorrent]
+        Session\AnonymousModeEnabled=true
+        Session\AsyncIOThreadsCount=10
+        Session\DefaultSavePath=/data/torrents
+        Session\DisableAutoTMMByDefault=false
+        Session\DiskCacheSize=-1
+        Session\DiskIOReadMode=DisableOSCache
+        Session\DiskIOType=SimplePreadPwrite
+        Session\DiskIOWriteMode=EnableOSCache
+        Session\DiskQueueSize=4194304
+        Session\FilePoolSize=40
+        Session\GlobalMaxRatio=0
+        Session\HashingThreadsCount=2
+        Session\Interface=wg0
+        Session\InterfaceName=wg0
+        Session\LSDEnabled=false
+        Session\Port=50413
+        Session\ResumeDataStorageType=SQLite
+        Session\ShareLimitAction=Stop
+        Session\TempPathEnabled=false
+        Session\UseOSCache=true
+
+        [Preferences]
+        Connection\UPnP=false
+        General\Locale=en
+        General\UseRandomPort=false
+        WebUI\Address=*
+        WebUI\AuthSubnetWhitelistEnabled=false
+        WebUI\CSRFProtection=true
+        WebUI\HostHeaderValidation=false
+        WebUI\LocalHostAuth=true
+        WebUI\Port=8080
+        WebUI\ServerDomains=*
+        WebUI\UseUPnP=false
+
+persistence:
+  config:
+    type: persistentVolumeClaim
+    storageClass: longhorn
+    accessMode: ReadWriteOnce
+    size: 1Gi
+    advancedMounts:
+      main:
+        main:
+          - path: /config
+  data:
+    existingClaim: media-data
+    advancedMounts:
+      main:
+        main:
+          - path: /data
+  defaults:
+    type: configMap
+    identifier: defaults
+    advancedMounts:
+      main:
+        main:
+          - path: /defaults/qBittorrent.conf
+            subPath: qBittorrent.conf
+            readOnly: true
+  wireguard:
+    type: secret
+    name: vpn-wireguard
+    advancedMounts:
+      main:
+        gluetun:
+          - path: /run/secrets
+            readOnly: true
+  tmp:
+    type: emptyDir
+    advancedMounts:
+      main:
+        main:
+          - path: /tmp
