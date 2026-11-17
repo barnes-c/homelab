@@ -183,13 +183,3 @@ entries:
       target: !KeyOf immich-app
       group: !KeyOf immich-users
       order: 0
-
-  - model: authentik_core.application
-    state: absent
-    identifiers:
-      slug: website-dashboard
-
-  - model: authentik_providers_proxy.proxyprovider
-    state: absent
-    identifiers:
-      name: Website Dashboard
