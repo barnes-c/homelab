@@ -7,7 +7,7 @@ domain: barnes.biz
 watchedResources: ["HTTPRoute"]
 ttl: 60
 
-# Only Blocky queries this; names it doesn't know fall back upstream in Blocky, so no forward here.
+# Only Blocky queries this; barnes.biz names without an HTTPRoute don't exist, so no forward here.
 extraZonePlugins:
   - name: errors
   - name: health
