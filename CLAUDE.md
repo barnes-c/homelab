@@ -78,8 +78,8 @@ both secrets (Keychain items `homelab-tofu-gitlab-token`, `homelab-tofu-state-pa
   apps: `<app>/<chart>/values.yaml`). If the app also syncs that directory, add
   `directory.exclude: values.yaml`.
 - **HTTPRoutes** live beside their app (`<app>-route.yaml`), not in `gateway/`.
-- **Gateways**: `main` (`192.168.1.201`, public) and `internal` (`192.168.1.202`, LAN-only).
-  Admin surfaces attach to `internal`.
+- **Gateways**: `public` (`192.168.1.201`, internet-facing) and `private` (`192.168.1.202`,
+  LAN-only), both in namespace `gateway`. Admin surfaces attach to `private`.
 - **Secrets** are sealed by `scripts/create-secrets.sh`; SealedSecrets are namespace-scoped, so a
   value used in two namespaces is sealed twice.
 - **DNS is Porkbun** (ACME DNS-01 webhook + ddns CronJob), not Cloudflare.
