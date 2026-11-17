@@ -44,6 +44,12 @@ spec:
     automated:
       prune: true
       selfHeal: true
+    # Gluetun needs NET_ADMIN; restricted is still reported on every pod. See barnes-c/homelab-issues#86.
+    managedNamespaceMetadata:
+      labels:
+        pod-security.kubernetes.io/enforce: privileged
+        pod-security.kubernetes.io/audit: restricted
+        pod-security.kubernetes.io/warn: restricted
     syncOptions:
       - CreateNamespace=true
     retry:

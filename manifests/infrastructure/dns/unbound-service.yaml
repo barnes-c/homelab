@@ -1,0 +1,16 @@
+# Selects both Unbound controllers (the chart's Services select one).
+apiVersion: v1
+kind: Service
+metadata:
+  name: unbound
+  namespace: dns
+spec:
+  selector:
+    app.kubernetes.io/name: unbound
+  ports:
+    - name: dns
+      port: 5335
+      protocol: TCP
+    - name: dns-udp
+      port: 5335
+      protocol: UDP

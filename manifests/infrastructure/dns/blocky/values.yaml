@@ -11,7 +11,7 @@ controllers:
       topologySpreadConstraints:
         - maxSkew: 1
           topologyKey: kubernetes.io/hostname
-          whenUnsatisfiable: ScheduleAnyway
+          whenUnsatisfiable: DoNotSchedule
           labelSelector:
             matchLabels:
               app.kubernetes.io/name: blocky
@@ -78,8 +78,6 @@ configMaps:
             default:
               - tcp+udp:unbound.dns.svc.cluster.local:5335
         conditional:
-          # Names k8s-gateway doesn't serve (mail records, hosts outside the cluster) resolve publicly.
-          fallbackUpstream: true
           mapping:
             barnes.biz: tcp+udp:k8s-gateway.dns.svc.cluster.local:53
         rebindingProtection:

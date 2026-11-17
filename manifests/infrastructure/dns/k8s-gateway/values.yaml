@@ -28,7 +28,7 @@ replicaCount: 2
 topologySpreadConstraints:
   - maxSkew: 1
     topologyKey: kubernetes.io/hostname
-    whenUnsatisfiable: ScheduleAnyway
+    whenUnsatisfiable: DoNotSchedule
     labelSelector:
       matchLabels:
         app.kubernetes.io/name: k8s-gateway
