@@ -1,0 +1,112 @@
+controllers:
+  main:
+    replicas: 2
+    pod:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 100
+        runAsGroup: 100
+        seccompProfile:
+          type: RuntimeDefault
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: blocky
+    containers:
+      main:
+        image:
+          repository: ghcr.io/0xerr0r/blocky
+          tag: v0.36.0@sha256:191c0f1e688aa37698297ef4059e11a2b080299a878f5b31d6d32ace9d0c54b2
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+              - ALL
+        probes:
+          liveness:
+            enabled: true
+          readiness:
+            enabled: true
+        resources:
+          requests:
+            cpu: 20m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+
+service:
+  main:
+    controller: main
+    type: LoadBalancer
+    ports:
+      dns:
+        primary: true
+        port: 53
+        targetPort: 5353
+        protocol: TCP
+      dns-udp:
+        port: 53
+        targetPort: 5353
+        protocol: UDP
+  # Port 4000 also serves the API (e.g. disabling blocking); keep it off the LAN address.
+  http:
+    controller: main
+    annotations:
+      prometheus.io/scrape: "true"
+      prometheus.io/port: "4000"
+    ports:
+      http:
+        port: 4000
+
+configMaps:
+  config:
+    data:
+      config.yml: |
+        ports:
+          dns: 5353
+          http: 4000
+        connectIPVersion: v4
+        upstreams:
+          init:
+            strategy: fast
+          groups:
+            default:
+              - tcp+udp:unbound.dns.svc.cluster.local:5335
+        conditional:
+          mapping:
+            barnes.biz: tcp+udp:k8s-gateway.dns.svc.cluster.local:53
+        rebindingProtection:
+          enable: true
+          allowedDomains:
+            - barnes.biz
+        blocking:
+          denylists:
+            ads:
+              - https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/pro.txt
+          clientGroupsBlock:
+            default:
+              - ads
+          blockType: zeroIp
+          loading:
+            strategy: fast
+            refreshPeriod: 24h
+        caching:
+          prefetching: true
+        queryLog:
+          type: none
+        prometheus:
+          enable: true
+
+persistence:
+  config:
+    type: configMap
+    identifier: config
+    globalMounts:
+      - path: /app/config.yml
+        subPath: config.yml
+        readOnly: true

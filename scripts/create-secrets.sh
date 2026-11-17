@@ -50,6 +50,10 @@ prompt ASURA_EMAIL           "Asura Scans email" false
 prompt ASURA_PASSWORD        "Asura Scans password"
 prompt GARMIN_USERNAME       "Garmin Connect email" false
 prompt GARMIN_PASSWORD       "Garmin Connect password"
+prompt UNBOUND_A_WG_KEY      "Mullvad WireGuard private key (unbound-a)"
+prompt UNBOUND_A_WG_ADDRESS  "Mullvad WireGuard address, e.g. 10.x.x.x/32 (unbound-a)" false
+prompt UNBOUND_B_WG_KEY      "Mullvad WireGuard private key (unbound-b)"
+prompt UNBOUND_B_WG_ADDRESS  "Mullvad WireGuard address, e.g. 10.x.x.x/32 (unbound-b)" false
 echo ""
 echo "=== Sealing secrets ==="
 
@@ -86,6 +90,17 @@ seal garmin-exporter garmin-credentials \
   "$MANIFESTS/workloads/garmin-exporter/garmin-credentials.yaml" \
   --from-literal=username="$GARMIN_USERNAME" \
   --from-literal=password="$GARMIN_PASSWORD"
+
+# Key names are the files Gluetun reads from /run/secrets.
+seal dns vpn-wireguard-a \
+  "$MANIFESTS/infrastructure/dns/vpn-wireguard-a.yaml" \
+  --from-literal=wireguard_private_key="$UNBOUND_A_WG_KEY" \
+  --from-literal=wireguard_addresses="$UNBOUND_A_WG_ADDRESS"
+
+seal dns vpn-wireguard-b \
+  "$MANIFESTS/infrastructure/dns/vpn-wireguard-b.yaml" \
+  --from-literal=wireguard_private_key="$UNBOUND_B_WG_KEY" \
+  --from-literal=wireguard_addresses="$UNBOUND_B_WG_ADDRESS"
 
 echo ""
 echo "Done. Review the files, then commit and push."

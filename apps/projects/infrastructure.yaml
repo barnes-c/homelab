@@ -17,6 +17,8 @@ spec:
     - https://charts.jetstack.io
     - https://charts.longhorn.io
     - https://fluent.github.io/helm-charts
+    - ghcr.io/bjw-s-labs/helm
+    - ghcr.io/k8s-gateway/charts
     - https://grafana-community.github.io/helm-charts
     - https://piraeus.io/helm-charts
     - https://postfinance.github.io/kubelet-csr-approver
