@@ -1,0 +1,75 @@
+controllers:
+  main:
+    replicas: 2
+    pod:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 101
+        runAsGroup: 102
+        seccompProfile:
+          type: RuntimeDefault
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: unbound
+    containers:
+      main:
+        image:
+          repository: ghcr.io/klutchell/unbound
+          tag: v1.26.2@sha256:50cbeb32b5838a829a7226b19cb151f9535bd7f9f3190f950780f452fe807478
+        securityContext:
+          allowPrivilegeEscalation: false
+          # auto-trust-anchor-file rewrites /var/unbound/root.key on DNSSEC root key changes.
+          readOnlyRootFilesystem: false
+          capabilities:
+            drop:
+              - ALL
+        probes:
+          liveness:
+            enabled: true
+          readiness:
+            enabled: true
+        resources:
+          requests:
+            cpu: 20m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 384Mi
+
+service:
+  main:
+    controller: main
+    ports:
+      dns-udp:
+        port: 5335
+        protocol: UDP
+      dns:
+        primary: true
+        port: 5335
+        protocol: TCP
+
+configMaps:
+  config:
+    data:
+      local.conf: |
+        server:
+            port: 5335
+            username: ""
+            do-ip6: no
+            qname-minimisation: yes
+            aggressive-nsec: yes
+            hide-identity: yes
+            hide-version: yes
+
+persistence:
+  config:
+    type: configMap
+    identifier: config
+    globalMounts:
+      - path: /etc/unbound/custom.conf.d/local.conf
+        subPath: local.conf
+        readOnly: true
