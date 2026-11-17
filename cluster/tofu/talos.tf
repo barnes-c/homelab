@@ -124,6 +124,12 @@ resource "talos_cluster" "cluster" {
   }
 
   depends_on = [talos_machine.node]
+
+  # The provider's Talos machinery predates 1.15, so any update fails; upgrade with talosctl.
+  # See #83.
+  lifecycle {
+    ignore_changes = [kubernetes_version, timeouts]
+  }
 }
 
 resource "talos_cluster_kubeconfig" "cluster" {
