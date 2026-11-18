@@ -1,7 +1,8 @@
 # Two single-replica controllers: each WireGuard key may be used from one place only, and
-# separate Mullvad servers keep one server failure from taking LAN DNS down. Recursion leaves
-# only through the tunnel; the Service is unbound-service.yaml (the chart's select one
-# controller). See barnes-c/homelab-issues#86.
+# separate Mullvad servers keep one server failure from taking LAN DNS down. Queries leave only
+# through the tunnel, as DoT to Quad9: Mullvad intercepts port 53, so recursion
+# can't work. The Service is unbound-service.yaml (the chart's select one controller).
+# See barnes-c/homelab-issues#86.
 x-pod: &pod
   # Gluetun's resolver; kube-dns would resolve from the home IP.
   dnsPolicy: None
@@ -29,6 +30,7 @@ x-gluetun-env: &gluetun-env
   WIREGUARD_ENDPOINT_PORT: "51820"
   FIREWALL_INPUT_PORTS: "5335,9999"
   HEALTH_SERVER_ADDRESS: ":9999"
+  DNS_UPSTREAM_RESOLVERS: quad9
 
 x-gluetun: &gluetun
   image:
@@ -139,12 +141,16 @@ configMaps:
             port: 5335
             username: ""
             do-ip6: no
-            qname-minimisation: yes
             aggressive-nsec: yes
             hide-identity: yes
             hide-version: yes
             msg-cache-size: 32m
             rrset-cache-size: 64m
+        forward-zone:
+            name: "."
+            forward-tls-upstream: yes
+            forward-addr: 9.9.9.9@853#dns.quad9.net
+            forward-addr: 149.112.112.112@853#dns.quad9.net
 
 persistence:
   config:
@@ -161,6 +167,16 @@ persistence:
           - path: /etc/unbound/custom.conf.d/local.conf
             subPath: local.conf
             readOnly: true
+  # Gluetun persists its public IP here; with all capabilities dropped it can't write the image's directory.
+  gluetun-tmp:
+    type: emptyDir
+    advancedMounts:
+      a:
+        gluetun:
+          - path: /tmp/gluetun
+      b:
+        gluetun:
+          - path: /tmp/gluetun
   wireguard-a:
     type: secret
     name: vpn-wireguard-a

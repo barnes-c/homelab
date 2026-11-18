@@ -76,8 +76,6 @@ spec:
             - port: "5335"
               protocol: ANY
   egress:
-    # Recursion leaves only through the tunnel. ch-zrh-wg-002 and -003; also pinned in
-    # unbound/values.yaml (WIREGUARD_ENDPOINT_IP). Change both.
     - toCIDR:
         - 193.32.127.70/32
         - 193.32.127.72/32
