@@ -56,6 +56,7 @@ prompt UNBOUND_B_WG_KEY      "Mullvad WireGuard private key (unbound-b)"
 prompt UNBOUND_B_WG_ADDRESS  "Mullvad WireGuard address, e.g. 10.x.x.x/32 (unbound-b)" false
 prompt QBT_WG_KEY            "Mullvad WireGuard private key (qbittorrent)"
 prompt QBT_WG_ADDRESS        "Mullvad WireGuard address, e.g. 10.x.x.x/32 (qbittorrent)" false
+prompt MEDIA_OUTPOST_TOKEN   "Authentik outpost token (Outposts → media → View Deployment Info)"
 echo ""
 echo "=== Sealing secrets ==="
 
@@ -108,6 +109,10 @@ seal media vpn-wireguard \
   "$MANIFESTS/workloads/media/vpn-wireguard.yaml" \
   --from-literal=wireguard_private_key="$QBT_WG_KEY" \
   --from-literal=wireguard_addresses="$QBT_WG_ADDRESS"
+
+seal media authentik-outpost-token \
+  "$MANIFESTS/workloads/media/authentik-outpost-token.yaml" \
+  --from-literal=token="$MEDIA_OUTPOST_TOKEN"
 
 echo ""
 echo "Done. Review the files, then commit and push."

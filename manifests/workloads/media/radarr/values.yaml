@@ -7,8 +7,8 @@ controllers:
           tag: 7.0.3.10918@sha256:55d3cf8a4c4c531bb8b5c1ba88eb270d4435e01e228fbdb16cdfc910a17e3b06
         env:
           RADARR__SERVER__PORT: "7878"
-          RADARR__AUTH__METHOD: Forms
-          RADARR__AUTH__REQUIRED: Enabled
+          # Login is handled by the Authentik outpost; the Gateway cannot reach this pod directly.
+          RADARR__AUTH__METHOD: External
         resources:
           requests:
             cpu: 50m
