@@ -15,7 +15,7 @@ spec:
         - matchExpressions:
             - key: app.kubernetes.io/name
               operator: In
-              values: [sonarr, radarr]
+              values: [sonarr, radarr, authentik-proxy]
       toPorts:
         - ports:
             - port: "8080"
@@ -57,7 +57,7 @@ spec:
         - matchExpressions:
             - key: app.kubernetes.io/name
               operator: In
-              values: [sonarr, radarr]
+              values: [sonarr, radarr, authentik-proxy]
       toPorts:
         - ports:
             - port: "9696"
@@ -99,7 +99,7 @@ spec:
         - matchExpressions:
             - key: app.kubernetes.io/name
               operator: In
-              values: [prowlarr, bazarr, jellyseerr]
+              values: [prowlarr, bazarr, jellyseerr, authentik-proxy]
       toPorts:
         - ports:
             - port: "8989"
@@ -148,7 +148,7 @@ spec:
         - matchExpressions:
             - key: app.kubernetes.io/name
               operator: In
-              values: [prowlarr, bazarr, jellyseerr]
+              values: [prowlarr, bazarr, jellyseerr, authentik-proxy]
       toPorts:
         - ports:
             - port: "7878"
@@ -192,6 +192,14 @@ spec:
   endpointSelector:
     matchLabels:
       app.kubernetes.io/name: bazarr
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            app.kubernetes.io/name: authentik-proxy
+      toPorts:
+        - ports:
+            - port: "6767"
+              protocol: TCP
   egress:
     - toEndpoints:
         - matchLabels:
@@ -279,6 +287,76 @@ spec:
     - toFQDNs:
         - matchName: api.themoviedb.org
         - matchName: image.tmdb.org
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP
+---
+# Without their own login (AUTH__METHOD=External), these UIs must only be reached through the outpost.
+# The baseline allows the Gateway into every media pod; deny it here so a stray route can't bypass SSO.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: admin-uis-via-outpost-only
+  namespace: media
+spec:
+  endpointSelector:
+    matchExpressions:
+      - key: app.kubernetes.io/name
+        operator: In
+        values: [sonarr, radarr, prowlarr, bazarr, qbittorrent]
+  ingressDeny:
+    - fromEntities:
+        - ingress
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: authentik-proxy
+  namespace: media
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: authentik-proxy
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            app.kubernetes.io/name: sonarr
+      toPorts:
+        - ports:
+            - port: "8989"
+              protocol: TCP
+    - toEndpoints:
+        - matchLabels:
+            app.kubernetes.io/name: radarr
+      toPorts:
+        - ports:
+            - port: "7878"
+              protocol: TCP
+    - toEndpoints:
+        - matchLabels:
+            app.kubernetes.io/name: prowlarr
+      toPorts:
+        - ports:
+            - port: "9696"
+              protocol: TCP
+    - toEndpoints:
+        - matchLabels:
+            app.kubernetes.io/name: bazarr
+      toPorts:
+        - ports:
+            - port: "6767"
+              protocol: TCP
+    - toEndpoints:
+        - matchLabels:
+            app.kubernetes.io/name: qbittorrent
+      toPorts:
+        - ports:
+            - port: "8080"
+              protocol: TCP
+    # Outpost API and websocket, like Immich's OIDC (resolves to the public Gateway).
+    - toFQDNs:
+        - matchName: auth.barnes.biz
       toPorts:
         - ports:
             - port: "443"

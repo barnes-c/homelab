@@ -1,0 +1,47 @@
+# Standalone Authentik proxy outpost for the arr UIs, LAN-only behind the private Gateway.
+# Configured by the "media" outpost in authentik's sso.yaml blueprint. See barnes-c/homelab-issues#88.
+controllers:
+  main:
+    strategy: RollingUpdate
+    containers:
+      main:
+        image:
+          repository: ghcr.io/goauthentik/proxy
+          tag: 2026.8.5@sha256:34640cf41e009ab052d4b9119cea816713adcd1eaac95de6caefebfe86d3fcd9
+        env:
+          AUTHENTIK_HOST: https://auth.barnes.biz
+          AUTHENTIK_INSECURE: "false"
+          AUTHENTIK_TOKEN:
+            valueFrom:
+              secretKeyRef:
+                name: authentik-outpost-token
+                key: token
+        probes:
+          liveness:
+            enabled: true
+            custom: true
+            spec:
+              exec:
+                command: ["/authentik", "healthcheck", "proxy"]
+              periodSeconds: 10
+          readiness:
+            enabled: true
+            custom: true
+            spec:
+              exec:
+                command: ["/authentik", "healthcheck", "proxy"]
+              periodSeconds: 10
+        resources:
+          requests:
+            cpu: 20m
+            memory: 64Mi
+          limits:
+            cpu: 500m
+            memory: 256Mi
+
+service:
+  main:
+    controller: main
+    ports:
+      http:
+        port: 9000

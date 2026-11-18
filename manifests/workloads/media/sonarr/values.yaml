@@ -7,10 +7,8 @@ controllers:
           tag: 5.0.0.2997@sha256:05acf764e72fa458b5edf236771d7a08d1f120fce509d4fb8a4e799fae29fda7
         env:
           SONARR__SERVER__PORT: "8989"
-          SONARR__AUTH__METHOD: Forms
-          # The Gateway reaches pods from cluster (private) addresses, so
-          # DisabledForLocalAddresses would mean no login at all.
-          SONARR__AUTH__REQUIRED: Enabled
+          # Login is handled by the Authentik outpost; the Gateway cannot reach this pod directly.
+          SONARR__AUTH__METHOD: External
         resources:
           requests:
             cpu: 50m
