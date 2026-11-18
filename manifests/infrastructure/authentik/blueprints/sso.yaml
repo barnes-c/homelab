@@ -30,6 +30,12 @@ entries:
     identifiers:
       name: Immich Users
 
+  - model: authentik_core.group
+    id: media-admins
+    state: present
+    identifiers:
+      name: Media Admins
+
   # Grafana
   - model: authentik_providers_oauth2.oauth2provider
     id: grafana-provider
@@ -184,3 +190,190 @@ entries:
       target: !KeyOf immich-app
       group: !KeyOf immich-users
       order: 0
+
+  # Media admin UIs, proxied by the standalone outpost in the media namespace (LAN-only).
+  # Its token is sealed in media; the embedded outpost stays disabled. See barnes-c/homelab-issues#88.
+  - model: authentik_providers_proxy.proxyprovider
+    id: sonarr-provider
+    state: present
+    identifiers:
+      name: Sonarr
+    attrs:
+      mode: proxy
+      external_host: https://sonarr.barnes.biz
+      internal_host: http://sonarr.media.svc.cluster.local:8989
+      authorization_flow:
+        !Find [
+          authentik_flows.flow,
+          [slug, default-provider-authorization-explicit-consent],
+        ]
+      invalidation_flow:
+        !Find [authentik_flows.flow, [slug, default-provider-invalidation-flow]]
+
+  - model: authentik_core.application
+    id: sonarr-app
+    state: present
+    identifiers:
+      slug: sonarr
+    attrs:
+      name: Sonarr
+      provider: !KeyOf sonarr-provider
+      meta_launch_url: https://sonarr.barnes.biz
+
+  - model: authentik_policies.policybinding
+    state: present
+    identifiers:
+      target: !KeyOf sonarr-app
+      group: !KeyOf media-admins
+      order: 0
+
+  - model: authentik_providers_proxy.proxyprovider
+    id: radarr-provider
+    state: present
+    identifiers:
+      name: Radarr
+    attrs:
+      mode: proxy
+      external_host: https://radarr.barnes.biz
+      internal_host: http://radarr.media.svc.cluster.local:7878
+      authorization_flow:
+        !Find [
+          authentik_flows.flow,
+          [slug, default-provider-authorization-explicit-consent],
+        ]
+      invalidation_flow:
+        !Find [authentik_flows.flow, [slug, default-provider-invalidation-flow]]
+
+  - model: authentik_core.application
+    id: radarr-app
+    state: present
+    identifiers:
+      slug: radarr
+    attrs:
+      name: Radarr
+      provider: !KeyOf radarr-provider
+      meta_launch_url: https://radarr.barnes.biz
+
+  - model: authentik_policies.policybinding
+    state: present
+    identifiers:
+      target: !KeyOf radarr-app
+      group: !KeyOf media-admins
+      order: 0
+
+  - model: authentik_providers_proxy.proxyprovider
+    id: prowlarr-provider
+    state: present
+    identifiers:
+      name: Prowlarr
+    attrs:
+      mode: proxy
+      external_host: https://prowlarr.barnes.biz
+      internal_host: http://prowlarr.media.svc.cluster.local:9696
+      authorization_flow:
+        !Find [
+          authentik_flows.flow,
+          [slug, default-provider-authorization-explicit-consent],
+        ]
+      invalidation_flow:
+        !Find [authentik_flows.flow, [slug, default-provider-invalidation-flow]]
+
+  - model: authentik_core.application
+    id: prowlarr-app
+    state: present
+    identifiers:
+      slug: prowlarr
+    attrs:
+      name: Prowlarr
+      provider: !KeyOf prowlarr-provider
+      meta_launch_url: https://prowlarr.barnes.biz
+
+  - model: authentik_policies.policybinding
+    state: present
+    identifiers:
+      target: !KeyOf prowlarr-app
+      group: !KeyOf media-admins
+      order: 0
+
+  - model: authentik_providers_proxy.proxyprovider
+    id: bazarr-provider
+    state: present
+    identifiers:
+      name: Bazarr
+    attrs:
+      mode: proxy
+      external_host: https://bazarr.barnes.biz
+      internal_host: http://bazarr.media.svc.cluster.local:6767
+      authorization_flow:
+        !Find [
+          authentik_flows.flow,
+          [slug, default-provider-authorization-explicit-consent],
+        ]
+      invalidation_flow:
+        !Find [authentik_flows.flow, [slug, default-provider-invalidation-flow]]
+
+  - model: authentik_core.application
+    id: bazarr-app
+    state: present
+    identifiers:
+      slug: bazarr
+    attrs:
+      name: Bazarr
+      provider: !KeyOf bazarr-provider
+      meta_launch_url: https://bazarr.barnes.biz
+
+  - model: authentik_policies.policybinding
+    state: present
+    identifiers:
+      target: !KeyOf bazarr-app
+      group: !KeyOf media-admins
+      order: 0
+
+  - model: authentik_providers_proxy.proxyprovider
+    id: qbittorrent-provider
+    state: present
+    identifiers:
+      name: qBittorrent
+    attrs:
+      mode: proxy
+      external_host: https://qbittorrent.barnes.biz
+      internal_host: http://qbittorrent.media.svc.cluster.local:8080
+      authorization_flow:
+        !Find [
+          authentik_flows.flow,
+          [slug, default-provider-authorization-explicit-consent],
+        ]
+      invalidation_flow:
+        !Find [authentik_flows.flow, [slug, default-provider-invalidation-flow]]
+
+  - model: authentik_core.application
+    id: qbittorrent-app
+    state: present
+    identifiers:
+      slug: qbittorrent
+    attrs:
+      name: qBittorrent
+      provider: !KeyOf qbittorrent-provider
+      meta_launch_url: https://qbittorrent.barnes.biz
+
+  - model: authentik_policies.policybinding
+    state: present
+    identifiers:
+      target: !KeyOf qbittorrent-app
+      group: !KeyOf media-admins
+      order: 0
+
+  - model: authentik_outposts.outpost
+    state: present
+    identifiers:
+      name: media
+    attrs:
+      type: proxy
+      providers:
+        - !KeyOf sonarr-provider
+        - !KeyOf radarr-provider
+        - !KeyOf prowlarr-provider
+        - !KeyOf bazarr-provider
+        - !KeyOf qbittorrent-provider
+      config:
+        authentik_host: https://auth.barnes.biz
