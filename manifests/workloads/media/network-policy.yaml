@@ -35,12 +35,6 @@ spec:
         - ports:
             - port: "51820"
               protocol: UDP
-  # The baseline allows kube-dns, which resolves upstream from the home IP.
-  egressDeny:
-    - toEndpoints:
-        - matchLabels:
-            k8s:io.kubernetes.pod.namespace: kube-system
-            k8s-app: kube-dns
 ---
 # Indexer traffic goes through Gluetun's HTTP proxy; Prowlarr itself has no internet egress.
 apiVersion: cilium.io/v2
