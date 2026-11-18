@@ -1,0 +1,205 @@
+# Two single-replica controllers: each WireGuard key may be used from one place only, and
+# separate Mullvad servers keep one server failure from taking LAN DNS down. Queries leave only
+# through the tunnel, as DoT to Quad9: Mullvad intercepts port 53, so recursion
+# can't work. The Service is unbound-service.yaml (the chart's select one controller).
+# See barnes-c/homelab-issues#86.
+x-pod: &pod
+  # Gluetun's resolver; kube-dns would resolve from the home IP.
+  dnsPolicy: None
+  dnsConfig:
+    nameservers:
+      - 127.0.0.1
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 101
+    runAsGroup: 102
+    seccompProfile:
+      type: RuntimeDefault
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: kubernetes.io/hostname
+      whenUnsatisfiable: DoNotSchedule
+      labelSelector:
+        matchLabels:
+          app.kubernetes.io/name: unbound
+
+x-gluetun-env: &gluetun-env
+  VPN_SERVICE_PROVIDER: custom
+  VPN_TYPE: wireguard
+  VPN_INTERFACE: wg0
+  WIREGUARD_ENDPOINT_PORT: "51820"
+  FIREWALL_INPUT_PORTS: "5335,9999"
+  HEALTH_SERVER_ADDRESS: ":9999"
+  DNS_UPSTREAM_RESOLVERS: quad9
+  # Lets replies to Blocky (any pod) leave via eth0; Gluetun's firewall drops them otherwise.
+  # New connections from this pod are still limited to Mullvad by the CiliumNetworkPolicy.
+  FIREWALL_OUTBOUND_SUBNETS: 10.244.0.0/16
+
+x-gluetun: &gluetun
+  image:
+    repository: ghcr.io/qdm12/gluetun
+    tag: v3.41.3@sha256:fa19cc76b2af13d57a8d3dc3066f2ada061b1c761b8aecf989b3877c0486e027
+  restartPolicy: Always
+  probes:
+    startup:
+      enabled: true
+      custom: true
+      spec:
+        httpGet:
+          path: /
+          port: 9999
+        periodSeconds: 5
+        failureThreshold: 60
+    liveness:
+      enabled: true
+      custom: true
+      spec:
+        httpGet:
+          path: /
+          port: 9999
+        periodSeconds: 30
+        failureThreshold: 3
+  securityContext:
+    runAsUser: 0
+    runAsGroup: 0
+    runAsNonRoot: false
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+      add:
+        - CHOWN
+        - NET_ADMIN
+        - NET_RAW
+  resources:
+    requests:
+      cpu: 20m
+      memory: 64Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+
+x-unbound: &unbound
+  image:
+    repository: ghcr.io/klutchell/unbound
+    tag: v1.26.2@sha256:50cbeb32b5838a829a7226b19cb151f9535bd7f9f3190f950780f452fe807478
+  securityContext:
+    allowPrivilegeEscalation: false
+    # auto-trust-anchor-file rewrites /var/unbound/root.key on DNSSEC root key changes.
+    readOnlyRootFilesystem: false
+    capabilities:
+      drop:
+        - ALL
+  probes:
+    liveness:
+      enabled: true
+      custom: true
+      spec:
+        tcpSocket:
+          port: 5335
+    readiness:
+      enabled: true
+      custom: true
+      spec:
+        tcpSocket:
+          port: 5335
+  resources:
+    requests:
+      cpu: 20m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 384Mi
+
+# Recreate: a WireGuard key must never be live in two pods. Sync wave 1 on b: Argo CD rolls b
+# only after a is healthy again, so a config change never restarts both at once.
+controllers:
+  a:
+    strategy: Recreate
+    pod: *pod
+    initContainers:
+      gluetun:
+        <<: *gluetun
+        env:
+          <<: *gluetun-env
+          # ch-zrh-wg-002; also pinned in ../network-policy.yaml (unbound egress). Change both.
+          WIREGUARD_ENDPOINT_IP: 193.32.127.70
+          WIREGUARD_PUBLIC_KEY: cq9ktmbTZwxYCrCSxV8SItOjRhJhLoYYkPThlifkkVI=
+    containers:
+      main: *unbound
+  b:
+    strategy: Recreate
+    annotations:
+      argocd.argoproj.io/sync-wave: "1"
+    pod: *pod
+    initContainers:
+      gluetun:
+        <<: *gluetun
+        env:
+          <<: *gluetun-env
+          # ch-zrh-wg-003; also pinned in ../network-policy.yaml (unbound egress). Change both.
+          WIREGUARD_ENDPOINT_IP: 193.32.127.72
+          WIREGUARD_PUBLIC_KEY: WHsy9kByfDzRtM1V/uDR2BFNUXqouU61vHdHnrgBMzI=
+    containers:
+      main: *unbound
+
+configMaps:
+  config:
+    data:
+      local.conf: |
+        server:
+            port: 5335
+            username: ""
+            do-ip6: no
+            aggressive-nsec: yes
+            hide-identity: yes
+            hide-version: yes
+            msg-cache-size: 32m
+            rrset-cache-size: 64m
+        forward-zone:
+            name: "."
+            forward-tls-upstream: yes
+            forward-addr: 9.9.9.9@853#dns.quad9.net
+            forward-addr: 149.112.112.112@853#dns.quad9.net
+
+persistence:
+  config:
+    type: configMap
+    identifier: config
+    advancedMounts:
+      a:
+        main:
+          - path: /etc/unbound/custom.conf.d/local.conf
+            subPath: local.conf
+            readOnly: true
+      b:
+        main:
+          - path: /etc/unbound/custom.conf.d/local.conf
+            subPath: local.conf
+            readOnly: true
+  # Gluetun persists its public IP here; with all capabilities dropped it can't write the image's directory.
+  gluetun-tmp:
+    type: emptyDir
+    advancedMounts:
+      a:
+        gluetun:
+          - path: /tmp/gluetun
+      b:
+        gluetun:
+          - path: /tmp/gluetun
+  wireguard-a:
+    type: secret
+    name: vpn-wireguard-a
+    advancedMounts:
+      a:
+        gluetun:
+          - path: /run/secrets
+            readOnly: true
+  wireguard-b:
+    type: secret
+    name: vpn-wireguard-b
+    advancedMounts:
+      b:
+        gluetun:
+          - path: /run/secrets
+            readOnly: true

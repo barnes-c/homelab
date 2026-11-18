@@ -1,5 +1,9 @@
 apiVersion: v1alpha1
 kind: ResolverConfig
+# Overrides DHCP, which hands out the in-cluster Blocky (.203): image pulls and recovery must not
+# depend on a pod running on these nodes. See barnes-c/homelab-issues#86.
+nameservers:
+  - address: 192.168.1.254
 hostDNS:
   resolveMemberNames: true
   # Breaks CoreDNS together with Cilium bpf.masquerade=true (Talos Cilium guide).

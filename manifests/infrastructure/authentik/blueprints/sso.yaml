@@ -103,6 +103,7 @@ entries:
       grant_types: [authorization_code, refresh_token]
       client_id: !Env ARGOCD_CLIENT_ID
       client_secret: !Env ARGOCD_CLIENT_SECRET
+      refresh_token_threshold: days=1
       redirect_uris:
         - url: "https://argo.barnes.biz/auth/callback"
           matching_mode: "strict"
@@ -115,7 +116,10 @@ entries:
         - !Find [authentik_providers_oauth2.scopemapping, [scope_name, openid]]
         - !Find [authentik_providers_oauth2.scopemapping, [scope_name, email]]
         - !Find [authentik_providers_oauth2.scopemapping, [scope_name, profile]]
-        - !Find [authentik_providers_oauth2.scopemapping, [scope_name, offline_access]]
+        - !Find [
+            authentik_providers_oauth2.scopemapping,
+            [scope_name, offline_access],
+          ]
 
   - model: authentik_core.application
     id: argocd-app
@@ -183,13 +187,3 @@ entries:
       target: !KeyOf immich-app
       group: !KeyOf immich-users
       order: 0
-
-  - model: authentik_core.application
-    state: absent
-    identifiers:
-      slug: website-dashboard
-
-  - model: authentik_providers_proxy.proxyprovider
-    state: absent
-    identifiers:
-      name: Website Dashboard

@@ -1,0 +1,54 @@
+image:
+  registry: ghcr.io
+  repository: k8s-gateway/k8s_gateway
+  tag: 1.8.2@sha256:e7d334bc486fc78e2f2366da2029b7308240d500330e85d2367d4d9cc46a5e52
+
+domain: barnes.biz
+watchedResources: ["HTTPRoute"]
+ttl: 60
+
+# Only Blocky queries this; barnes.biz names without an HTTPRoute don't exist, so no forward here.
+extraZonePlugins:
+  - name: errors
+  - name: health
+    configBlock: |-
+      lameduck 5s
+  - name: ready
+  - name: prometheus
+    parameters: 0.0.0.0:9153
+  - name: reload
+  - name: loadbalance
+
+service:
+  type: ClusterIP
+  port: 53
+  useTcp: true
+
+replicaCount: 2
+topologySpreadConstraints:
+  - maxSkew: 1
+    topologyKey: kubernetes.io/hostname
+    whenUnsatisfiable: DoNotSchedule
+    labelSelector:
+      matchLabels:
+        app.kubernetes.io/name: k8s-gateway
+
+resources:
+  requests:
+    cpu: 10m
+    memory: 32Mi
+  limits:
+    cpu: 200m
+    memory: 128Mi
+
+podSecurityContext:
+  runAsNonRoot: true
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
