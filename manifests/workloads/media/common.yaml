@@ -27,6 +27,12 @@ controllers:
             enabled: true
           readiness:
             enabled: true
+          # First start runs DB migrations; on the Pis that outlasts liveness (3 x 10 s).
+          startup:
+            enabled: true
+            spec:
+              periodSeconds: 5
+              failureThreshold: 60
 
 persistence:
   tmp:
