@@ -10,6 +10,7 @@ spec:
   description: End-user services, confined to their own namespace.
   sourceRepos:
     - https://github.com/barnes-c/homelab
+    - ghcr.io/bjw-s-labs/helm
     - ghcr.io/immich-app/immich-charts
   destinations:
     - server: https://kubernetes.default.svc
@@ -22,6 +23,8 @@ spec:
       namespace: garmin-exporter
     - server: https://kubernetes.default.svc
       namespace: immich
+    - server: https://kubernetes.default.svc
+      namespace: media
     - server: https://kubernetes.default.svc
       namespace: tarcycle
   clusterResourceWhitelist:
@@ -40,6 +43,9 @@ spec:
     - group: ""
       kind: Namespace
       name: immich
+    - group: ""
+      kind: Namespace
+      name: media
     - group: ""
       kind: Namespace
       name: tarcycle

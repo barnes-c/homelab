@@ -2,7 +2,8 @@ controllers:
   main:
     applyDefaultContainerOptionsToInitContainers: false
     pod:
-      # Gluetun's resolver (DoT through the tunnel); kube-dns resolves upstream from the home IP. See #85.
+      # Gluetun's resolver (DoT through the tunnel); kube-dns resolves upstream from the home IP.
+      # See barnes-c/homelab-issues#85.
       dnsPolicy: None
       dnsConfig:
         nameservers:
@@ -17,13 +18,18 @@ controllers:
           VPN_SERVICE_PROVIDER: custom
           VPN_TYPE: wireguard
           VPN_INTERFACE: wg0
-          # ch-zrh-wg-001; also pinned in network-policy.yaml (qbittorrent egress). Change both. See #85.
+          # ch-zrh-wg-001; also pinned in network-policy.yaml (qbittorrent egress). Change both.
+          # See barnes-c/homelab-issues#85.
           WIREGUARD_ENDPOINT_IP: 193.32.127.71
           WIREGUARD_ENDPOINT_PORT: "51820"
           WIREGUARD_PUBLIC_KEY: chvEpRH+05o+ESv8QLzNyY3Phirsym0mUvF03Kt7oCo=
           FIREWALL_INPUT_PORTS: "8080,8888,9999"
           HTTPPROXY: "on"
           HEALTH_SERVER_ADDRESS: ":9999"
+          DNS_UPSTREAM_RESOLVERS: quad9
+          # Lets replies to the arr apps and the Gateway (pod IPs) leave via eth0; Gluetun's firewall
+          # drops them otherwise. New connections stay limited to Mullvad by the CiliumNetworkPolicy.
+          FIREWALL_OUTBOUND_SUBNETS: 10.244.0.0/16
         probes:
           startup:
             enabled: true
@@ -52,6 +58,7 @@ controllers:
             drop:
               - ALL
             add:
+              - CHOWN
               - NET_ADMIN
               - NET_RAW
         resources:
@@ -151,6 +158,13 @@ persistence:
           - path: /defaults/qBittorrent.conf
             subPath: qBittorrent.conf
             readOnly: true
+  # Gluetun persists its public IP here; with all capabilities dropped it can't write the image's directory.
+  gluetun-tmp:
+    type: emptyDir
+    advancedMounts:
+      main:
+        gluetun:
+          - path: /tmp/gluetun
   wireguard:
     type: secret
     name: vpn-wireguard
