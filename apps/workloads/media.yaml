@@ -1,0 +1,97 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: media
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - git:
+        repoURL: https://github.com/barnes-c/homelab
+        revision: master
+        directories:
+          - path: manifests/workloads/media/*
+  template:
+    metadata:
+      name: "media-{{ .path.basename }}"
+      namespace: argocd
+      finalizers:
+        - resources-finalizer.argocd.argoproj.io
+    spec:
+      project: workloads
+      sources:
+        - repoURL: ghcr.io/bjw-s-labs/helm
+          chart: app-template
+          targetRevision: 5.3.0
+          helm:
+            releaseName: "{{ .path.basename }}"
+            valueFiles:
+              - $values/manifests/workloads/media/common.yaml
+              - $values/manifests/workloads/media/{{ .path.basename }}/values.yaml
+        - repoURL: https://github.com/barnes-c/homelab
+          targetRevision: master
+          ref: values
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: media
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        # Gluetun needs NET_ADMIN; restricted is still reported on every pod. See barnes-c/homelab-issues#85.
+        managedNamespaceMetadata:
+          labels:
+            pod-security.kubernetes.io/enforce: privileged
+            pod-security.kubernetes.io/audit: restricted
+            pod-security.kubernetes.io/warn: restricted
+        syncOptions:
+          - CreateNamespace=true
+        retry:
+          limit: 5
+          refresh: true
+          backoff:
+            duration: 30s
+            factor: 2
+            maxDuration: 5m
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: media-resources
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: workloads
+  source:
+    repoURL: https://github.com/barnes-c/homelab
+    targetRevision: master
+    path: manifests/workloads/media
+    directory:
+      exclude: common.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: media
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    managedNamespaceMetadata:
+      labels:
+        pod-security.kubernetes.io/enforce: privileged
+        pod-security.kubernetes.io/audit: restricted
+        pod-security.kubernetes.io/warn: restricted
+    syncOptions:
+      - CreateNamespace=true
+    retry:
+      limit: 5
+      refresh: true
+      backoff:
+        duration: 30s
+        factor: 2
+        maxDuration: 5m

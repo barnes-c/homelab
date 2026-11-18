@@ -54,6 +54,8 @@ prompt UNBOUND_A_WG_KEY      "Mullvad WireGuard private key (unbound-a)"
 prompt UNBOUND_A_WG_ADDRESS  "Mullvad WireGuard address, e.g. 10.x.x.x/32 (unbound-a)" false
 prompt UNBOUND_B_WG_KEY      "Mullvad WireGuard private key (unbound-b)"
 prompt UNBOUND_B_WG_ADDRESS  "Mullvad WireGuard address, e.g. 10.x.x.x/32 (unbound-b)" false
+prompt QBT_WG_KEY            "Mullvad WireGuard private key (qbittorrent)"
+prompt QBT_WG_ADDRESS        "Mullvad WireGuard address, e.g. 10.x.x.x/32 (qbittorrent)" false
 echo ""
 echo "=== Sealing secrets ==="
 
@@ -101,6 +103,11 @@ seal dns vpn-wireguard-b \
   "$MANIFESTS/infrastructure/dns/vpn-wireguard-b.yaml" \
   --from-literal=wireguard_private_key="$UNBOUND_B_WG_KEY" \
   --from-literal=wireguard_addresses="$UNBOUND_B_WG_ADDRESS"
+
+seal media vpn-wireguard \
+  "$MANIFESTS/workloads/media/vpn-wireguard.yaml" \
+  --from-literal=wireguard_private_key="$QBT_WG_KEY" \
+  --from-literal=wireguard_addresses="$QBT_WG_ADDRESS"
 
 echo ""
 echo "Done. Review the files, then commit and push."

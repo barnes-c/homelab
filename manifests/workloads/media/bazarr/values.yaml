@@ -1,0 +1,30 @@
+controllers:
+  main:
+    containers:
+      main:
+        image:
+          repository: ghcr.io/home-operations/bazarr
+          tag: 1.6.2@sha256:6c40dfa683f767d28d1dc502837ed0a5a57682a84231f03e704e2b3f61b25a46
+        resources:
+          requests:
+            cpu: 50m
+            memory: 128Mi
+          limits:
+            cpu: 1000m
+            memory: 512Mi
+
+service:
+  main:
+    controller: main
+    ports:
+      http:
+        port: 6767
+
+persistence:
+  config:
+    type: persistentVolumeClaim
+    storageClass: longhorn
+    accessMode: ReadWriteOnce
+    size: 1Gi
+  data:
+    existingClaim: media-data
