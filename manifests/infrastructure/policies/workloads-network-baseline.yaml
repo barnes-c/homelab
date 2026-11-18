@@ -11,8 +11,8 @@ spec:
         operator: In
         values:
           [asurascans, barnes-biz, blog-barnes-biz, garmin-exporter, immich, media, tarcycle]
-      # qBittorrent may only use the VPN tunnel. The kube-dns allow below (L7 DNS proxy) won over an
-      # egressDeny in its own policy (tested 2026-11-18). See barnes-c/homelab-issues#85.
+      # qBittorrent may only use the VPN tunnel, so it gets neither the kube-dns allow nor Gateway
+      # ingress; its own policy covers everything it needs. See barnes-c/homelab-issues#85.
       - key: app.kubernetes.io/name
         operator: NotIn
         values: [qbittorrent]
