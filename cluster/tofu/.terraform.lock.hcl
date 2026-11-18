@@ -31,6 +31,7 @@ provider "registry.opentofu.org/alekc/kubectl" {
     "zh:e37ef0804c54a70fb5ba39236956e9a480e87400e93b9af30d13f47f80a33d28",
     "zh:f1afb852e0cf1b9fedd1c5d241e27d034e499a7930b7f34d81a24d265212c54b",
     "zh:f46da20db6768349dcd0e16b34f5816cba598e4ec7e7130676b247c914b22ea3",
+    "zh:f809ab383cca0a5f83072981c64208cbd7fa67e986a86ee02dd2c82333221e32",
   ]
 }
 
