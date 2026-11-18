@@ -31,6 +31,9 @@ x-gluetun-env: &gluetun-env
   FIREWALL_INPUT_PORTS: "5335,9999"
   HEALTH_SERVER_ADDRESS: ":9999"
   DNS_UPSTREAM_RESOLVERS: quad9
+  # Lets replies to Blocky (any pod) leave via eth0; Gluetun's firewall drops them otherwise.
+  # New connections from this pod are still limited to Mullvad by the CiliumNetworkPolicy.
+  FIREWALL_OUTBOUND_SUBNETS: 10.244.0.0/16
 
 x-gluetun: &gluetun
   image:
@@ -65,6 +68,7 @@ x-gluetun: &gluetun
       drop:
         - ALL
       add:
+        - CHOWN
         - NET_ADMIN
         - NET_RAW
   resources:
@@ -107,8 +111,11 @@ x-unbound: &unbound
       cpu: 500m
       memory: 384Mi
 
+# Recreate: a WireGuard key must never be live in two pods. Sync wave 1 on b: Argo CD rolls b
+# only after a is healthy again, so a config change never restarts both at once.
 controllers:
   a:
+    strategy: Recreate
     pod: *pod
     initContainers:
       gluetun:
@@ -121,6 +128,9 @@ controllers:
     containers:
       main: *unbound
   b:
+    strategy: Recreate
+    annotations:
+      argocd.argoproj.io/sync-wave: "1"
     pod: *pod
     initContainers:
       gluetun:
