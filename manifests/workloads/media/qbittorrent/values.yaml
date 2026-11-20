@@ -8,6 +8,12 @@ controllers:
       dnsConfig:
         nameservers:
           - 127.0.0.1
+      # Prowlarr hands its proxy (this Service, :8888) to FlareSolverr, but Gluetun's resolver can't
+      # resolve cluster names; point it at Gluetun's own proxy in this pod.
+      hostAliases:
+        - ip: 127.0.0.1
+          hostnames:
+            - qbittorrent.media.svc.cluster.local
     initContainers:
       gluetun:
         image:
