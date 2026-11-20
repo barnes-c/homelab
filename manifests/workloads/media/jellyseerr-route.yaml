@@ -11,7 +11,7 @@ spec:
       namespace: gateway
       sectionName: https
   hostnames:
-    - jellyseerr.barnes.biz
+    - tv-add.barnes.biz
   rules:
     - matches:
         - path:
