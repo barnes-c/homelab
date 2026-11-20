@@ -286,6 +286,7 @@ spec:
     - toFQDNs:
         - matchName: api.themoviedb.org
         - matchName: image.tmdb.org
+        - matchName: raw.githubusercontent.com
       toPorts:
         - ports:
             - port: "443"
