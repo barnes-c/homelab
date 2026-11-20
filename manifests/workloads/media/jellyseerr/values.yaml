@@ -3,8 +3,8 @@ controllers:
     containers:
       main:
         image:
-          repository: ghcr.io/fallenbagel/jellyseerr
-          tag: 2.7.3@sha256:9cc9e9ee6cd5cf5a23feb45c37742ba34cfd6314d81d259cddb373a97ac92cdd
+          repository: ghcr.io/seerr-team/seerr
+          tag: v3.5.2@sha256:aadee014b40e28cf9aa4928bc9d1183a6eb08f8c44d543cddc9efdcb16549be2
         env:
           PORT: "5055"
         resources:
