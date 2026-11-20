@@ -23,7 +23,7 @@ controllers:
           WIREGUARD_ENDPOINT_IP: 193.32.127.71
           WIREGUARD_ENDPOINT_PORT: "51820"
           WIREGUARD_PUBLIC_KEY: chvEpRH+05o+ESv8QLzNyY3Phirsym0mUvF03Kt7oCo=
-          FIREWALL_INPUT_PORTS: "8080,8888,9999"
+          FIREWALL_INPUT_PORTS: "8080,8191,8888,9999"
           HTTPPROXY: "on"
           HEALTH_SERVER_ADDRESS: ":9999"
           DNS_UPSTREAM_RESOLVERS: quad9
@@ -80,6 +80,30 @@ controllers:
           limits:
             cpu: 2000m
             memory: 2Gi
+      # In this pod so its browser shares Gluetun's tunnel and firewall; Prowlarr reaches it on 8191.
+      flaresolverr:
+        image:
+          repository: ghcr.io/flaresolverr/flaresolverr
+          tag: v3.5.2@sha256:c80ae007ce2ccdcd217a12426e4f039ef763ff90738c808d38810c3e59323767
+        env:
+          LOG_LEVEL: info
+        probes:
+          liveness:
+            enabled: true
+            custom: true
+            spec:
+              httpGet:
+                path: /
+                port: 8191
+              periodSeconds: 30
+              failureThreshold: 3
+        resources:
+          requests:
+            cpu: 50m
+            memory: 256Mi
+          limits:
+            cpu: 1000m
+            memory: 1Gi
 
 service:
   main:
@@ -89,6 +113,8 @@ service:
         port: 8080
       proxy:
         port: 8888
+      flaresolverr:
+        port: 8191
 
 configMaps:
   defaults:
@@ -179,3 +205,30 @@ persistence:
       main:
         main:
           - path: /tmp
+  # Root filesystem is read-only; Chromium and undetected-chromedriver write under $HOME (/app) and /tmp.
+  flaresolverr-config:
+    type: emptyDir
+    advancedMounts:
+      main:
+        flaresolverr:
+          - path: /app/.config
+  flaresolverr-local:
+    type: emptyDir
+    advancedMounts:
+      main:
+        flaresolverr:
+          - path: /app/.local
+  flaresolverr-tmp:
+    type: emptyDir
+    advancedMounts:
+      main:
+        flaresolverr:
+          - path: /tmp
+  flaresolverr-shm:
+    type: emptyDir
+    medium: Memory
+    sizeLimit: 256Mi
+    advancedMounts:
+      main:
+        flaresolverr:
+          - path: /dev/shm

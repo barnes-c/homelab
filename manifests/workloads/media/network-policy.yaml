@@ -27,6 +27,8 @@ spec:
         - ports:
             - port: "8888"
               protocol: TCP
+            - port: "8191"
+              protocol: TCP
   egress:
     # ch-zrh-wg-001; also pinned in qbittorrent/values.yaml (WIREGUARD_ENDPOINT_IP). Change both.
     - toCIDR:
@@ -63,6 +65,8 @@ spec:
       toPorts:
         - ports:
             - port: "8888"
+              protocol: TCP
+            - port: "8191"
               protocol: TCP
     - toEndpoints:
         - matchLabels:
