@@ -81,13 +81,31 @@ controllers:
             cpu: 2000m
             memory: 2Gi
       # In this pod so its browser shares Gluetun's tunnel and firewall; Prowlarr reaches it on 8191.
+      # A FlareSolverr restart briefly takes the pod (8080, 8888) NotReady.
       flaresolverr:
         image:
           repository: ghcr.io/flaresolverr/flaresolverr
           tag: v3.5.2@sha256:c80ae007ce2ccdcd217a12426e4f039ef763ff90738c808d38810c3e59323767
         env:
           LOG_LEVEL: info
+        # undetected-chromedriver patches /app/chromedriver in place on first start. Replaces the
+        # default securityContext rather than merging, so the rest is repeated.
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: false
+          capabilities:
+            drop:
+              - ALL
         probes:
+          startup:
+            enabled: true
+            custom: true
+            spec:
+              httpGet:
+                path: /
+                port: 8191
+              periodSeconds: 5
+              failureThreshold: 60
           liveness:
             enabled: true
             custom: true
@@ -96,6 +114,7 @@ controllers:
                 path: /
                 port: 8191
               periodSeconds: 30
+              timeoutSeconds: 5
               failureThreshold: 3
         resources:
           requests:
@@ -205,29 +224,11 @@ persistence:
       main:
         main:
           - path: /tmp
-  # Root filesystem is read-only; Chromium and undetected-chromedriver write under $HOME (/app) and /tmp.
-  flaresolverr-config:
-    type: emptyDir
-    advancedMounts:
-      main:
-        flaresolverr:
-          - path: /app/.config
-  flaresolverr-local:
-    type: emptyDir
-    advancedMounts:
-      main:
-        flaresolverr:
-          - path: /app/.local
-  flaresolverr-tmp:
-    type: emptyDir
-    advancedMounts:
-      main:
-        flaresolverr:
-          - path: /tmp
+  # Chromium needs more than the runtime's 64Mi /dev/shm. No sizeLimit: exceeding it evicts the
+  # whole pod; without it the pages count against FlareSolverr's own memory limit instead.
   flaresolverr-shm:
     type: emptyDir
     medium: Memory
-    sizeLimit: 256Mi
     advancedMounts:
       main:
         flaresolverr:
