@@ -38,7 +38,8 @@ spec:
             - port: "51820"
               protocol: UDP
 ---
-# Indexer traffic goes through Gluetun's HTTP proxy; Prowlarr itself has no internet egress.
+# Indexer traffic goes through Gluetun's HTTP proxy (8888) or FlareSolverr (8191), both in the
+# qBittorrent pod's tunnel; Prowlarr itself has no internet egress.
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
 metadata:
