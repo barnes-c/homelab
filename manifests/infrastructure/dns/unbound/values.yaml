@@ -82,7 +82,7 @@ x-gluetun: &gluetun
 x-unbound: &unbound
   image:
     repository: ghcr.io/klutchell/unbound
-    tag: v1.26.2@sha256:50cbeb32b5838a829a7226b19cb151f9535bd7f9f3190f950780f452fe807478
+    tag: v1.26.2@sha256:de8e624f84337bdb2d16540c0b203d5df2a981180421cb50ab4212b67542d8b4
   securityContext:
     allowPrivilegeEscalation: false
     # auto-trust-anchor-file rewrites /var/unbound/root.key on DNSSEC root key changes.
