@@ -12,7 +12,7 @@ spec:
   sources:
     - repoURL: https://postfinance.github.io/kubelet-csr-approver
       chart: kubelet-csr-approver
-      targetRevision: 1.2.15
+      targetRevision: 1.2.16
       helm:
         valueFiles:
           - $values/manifests/infrastructure/kubelet-csr-approver/values.yaml
