@@ -98,7 +98,7 @@ spec:
         - matchExpressions:
             - key: app.kubernetes.io/name
               operator: In
-              values: [prowlarr, bazarr, jellyseerr, authentik-proxy]
+              values: [prowlarr, bazarr, seerr, authentik-proxy]
       toPorts:
         - ports:
             - port: "8989"
@@ -147,7 +147,7 @@ spec:
         - matchExpressions:
             - key: app.kubernetes.io/name
               operator: In
-              values: [prowlarr, bazarr, jellyseerr, authentik-proxy]
+              values: [prowlarr, bazarr, seerr, authentik-proxy]
       toPorts:
         - ports:
             - port: "7878"
@@ -236,7 +236,7 @@ spec:
         - matchExpressions:
             - key: app.kubernetes.io/name
               operator: In
-              values: [sonarr, radarr, jellyseerr]
+              values: [sonarr, radarr, seerr]
       toPorts:
         - ports:
             - port: "8096"
@@ -255,12 +255,12 @@ spec:
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
 metadata:
-  name: jellyseerr
+  name: seerr
   namespace: media
 spec:
   endpointSelector:
     matchLabels:
-      app.kubernetes.io/name: jellyseerr
+      app.kubernetes.io/name: seerr
   egress:
     - toEndpoints:
         - matchLabels:
