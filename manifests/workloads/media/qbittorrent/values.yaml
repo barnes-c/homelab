@@ -122,19 +122,22 @@ controllers:
               periodSeconds: 30
               timeoutSeconds: 5
               failureThreshold: 3
+        # One Chromium per in-flight request; two parallel Cloudflare solves OOM-killed it at 1Gi.
         resources:
           requests:
             cpu: 50m
-            memory: 256Mi
+            memory: 512Mi
           limits:
-            cpu: 1000m
-            memory: 1Gi
+            cpu: 2000m
+            memory: 2Gi
 
 service:
   main:
     controller: main
     ports:
+      # The default probes of the main container target the primary port; without this it is 8191.
       http:
+        primary: true
         port: 8080
       proxy:
         port: 8888
