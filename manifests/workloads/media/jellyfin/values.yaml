@@ -7,6 +7,11 @@ controllers:
           tag: 12.4@sha256:fea863d0cd9ec445985d9c75fc6ed64e38a1d2766cf0c250a33d553f4fc1b771
         env:
           JELLYFIN_PublishedServerUrl: https://tv.barnes.biz
+          # Metadata providers (TMDB, OMDb, plugin repo) only through Gluetun's HTTP proxy; .NET reads
+          # these. In-cluster callers (arr notifications, Seerr) stay direct.
+          HTTP_PROXY: http://qbittorrent.media.svc.cluster.local:8888
+          HTTPS_PROXY: http://qbittorrent.media.svc.cluster.local:8888
+          NO_PROXY: localhost,127.0.0.1,.svc.cluster.local,.cluster.local
         resources:
           requests:
             cpu: 200m

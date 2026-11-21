@@ -1,6 +1,6 @@
 # On top of workloads-baseline (Gateway ingress, DNS egress). Each app may reach only the peers
-# and hosts it needs. qBittorrent, Prowlarr and Bazarr have no path to the internet except the
-# WireGuard tunnel; this layer holds even if Gluetun fails. See barnes-c/homelab-issues#85.
+# and hosts it needs. qBittorrent, Prowlarr, Bazarr and Jellyfin have no path to the internet
+# except the WireGuard tunnel; this layer holds even if Gluetun fails. See barnes-c/homelab-issues#85.
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
 metadata:
@@ -30,8 +30,10 @@ spec:
             - port: "8191"
               protocol: TCP
     - fromEndpoints:
-        - matchLabels:
-            app.kubernetes.io/name: bazarr
+        - matchExpressions:
+            - key: app.kubernetes.io/name
+              operator: In
+              values: [bazarr, jellyfin]
       toPorts:
         - ports:
             - port: "8888"
@@ -250,14 +252,13 @@ spec:
             - port: "8096"
               protocol: TCP
   egress:
-    - toFQDNs:
-        - matchName: api.themoviedb.org
-        - matchName: image.tmdb.org
-        - matchName: musicbrainz.org
-        - matchName: repo.jellyfin.org
+    # Metadata only through Gluetun's HTTP proxy (HTTP_PROXY in jellyfin/values.yaml).
+    - toEndpoints:
+        - matchLabels:
+            app.kubernetes.io/name: qbittorrent
       toPorts:
         - ports:
-            - port: "443"
+            - port: "8888"
               protocol: TCP
 ---
 apiVersion: cilium.io/v2
