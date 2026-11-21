@@ -1,6 +1,6 @@
 # On top of workloads-baseline (Gateway ingress, DNS egress). Each app may reach only the peers
-# and hosts it needs. qBittorrent and Prowlarr have no path to the internet except the WireGuard
-# tunnel; this layer holds even if Gluetun fails. See barnes-c/homelab-issues#85.
+# and hosts it needs. qBittorrent, Prowlarr and Bazarr have no path to the internet except the
+# WireGuard tunnel; this layer holds even if Gluetun fails. See barnes-c/homelab-issues#85.
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
 metadata:
@@ -28,6 +28,13 @@ spec:
             - port: "8888"
               protocol: TCP
             - port: "8191"
+              protocol: TCP
+    - fromEndpoints:
+        - matchLabels:
+            app.kubernetes.io/name: bazarr
+      toPorts:
+        - ports:
+            - port: "8888"
               protocol: TCP
   egress:
     # ch-zrh-wg-001; also pinned in qbittorrent/values.yaml (WIREGUARD_ENDPOINT_IP). Change both.
@@ -214,12 +221,13 @@ spec:
         - ports:
             - port: "7878"
               protocol: TCP
-    - toFQDNs:
-        - matchName: api.opensubtitles.com
-        - matchPattern: "*.opensubtitles.com"
+    # Subtitle providers only through Gluetun's HTTP proxy, so they never see the home IP.
+    - toEndpoints:
+        - matchLabels:
+            app.kubernetes.io/name: qbittorrent
       toPorts:
         - ports:
-            - port: "443"
+            - port: "8888"
               protocol: TCP
 ---
 apiVersion: cilium.io/v2
