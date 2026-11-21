@@ -7,6 +7,8 @@ operator:
   infraAssessmentScannerEnabled: false
   # One server keeps the vulnerability DB on a PVC instead of every scan job downloading it.
   builtInTrivyServer: true
+  # SbomReports (~70 MB across the cluster) OOM the ArgoCD controller, which watches every CRD.
+  sbomGenerationEnabled: false
 
 service:
   annotations:
