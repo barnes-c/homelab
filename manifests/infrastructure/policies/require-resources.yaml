@@ -38,9 +38,9 @@ spec:
   policyName: require-resources
   validationActions: [Deny]
   matchResources:
-    # These still run containers without them. See barnes-c/homelab-issues#24.
+    # Exclude cluster critical namespaces from this policy.
     namespaceSelector:
       matchExpressions:
         - key: kubernetes.io/metadata.name
           operator: NotIn
-          values: [argocd, kube-system, longhorn-system, monitoring, sealed-secrets]
+          values: [kube-system, longhorn-system]

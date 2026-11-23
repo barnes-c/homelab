@@ -77,3 +77,27 @@ applicationSet:
     limits:
       cpu: 200m
       memory: 256Mi
+notifications:
+  resources:
+    requests:
+      cpu: 10m
+      memory: 112Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+redis:
+  resources:
+    requests:
+      cpu: 10m
+      memory: 48Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
+redisSecretInit:
+  resources:
+    requests:
+      cpu: 10m
+      memory: 32Mi
+    limits:
+      cpu: 100m
+      memory: 64Mi
