@@ -17,6 +17,16 @@ server:
       cpu: 1000m
       memory: 2Gi
 
+configmapReload:
+  prometheus:
+    resources:
+      requests:
+        cpu: 5m
+        memory: 48Mi
+      limits:
+        cpu: 50m
+        memory: 96Mi
+
 alertmanager:
   enabled: false
 

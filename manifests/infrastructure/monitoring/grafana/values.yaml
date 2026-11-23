@@ -15,6 +15,15 @@ resources:
     cpu: 500m
     memory: 1Gi
 
+downloadDashboards:
+  resources:
+    requests:
+      cpu: 10m
+      memory: 32Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
+
 startupProbe:
   httpGet:
     path: /api/health
