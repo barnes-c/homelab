@@ -4,3 +4,10 @@ rbac:
   secretAccess:
     secretNames:
       - porkbun-api-key
+
+resources:
+  requests:
+    cpu: 10m
+    memory: 96Mi
+  limits:
+    memory: 192Mi

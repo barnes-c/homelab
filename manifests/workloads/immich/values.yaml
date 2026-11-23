@@ -42,11 +42,11 @@ server:
                 name: immich-db
           resources:
             requests:
-              cpu: 200m
-              memory: 256Mi
+              cpu: 500m
+              memory: 2Gi
             limits:
-              cpu: 2000m
-              memory: 4Gi
+              cpu: 3000m
+              memory: 6Gi
   persistence:
     immich-config:
       type: secret
@@ -100,8 +100,8 @@ machine-learning:
                 - ALL
           resources:
             requests:
-              cpu: 100m
-              memory: 512Mi
+              cpu: 500m
+              memory: 1Gi
             limits:
               cpu: 4000m
               memory: 8Gi

@@ -6,7 +6,7 @@ prometheus:
 resources:
   requests:
     cpu: 25m
-    memory: 64Mi
+    memory: 96Mi
   limits:
     cpu: 500m
     memory: 256Mi
@@ -14,7 +14,7 @@ webhook:
   resources:
     requests:
       cpu: 25m
-      memory: 32Mi
+      memory: 80Mi
     limits:
       cpu: 200m
       memory: 128Mi
