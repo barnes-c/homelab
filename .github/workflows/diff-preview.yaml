@@ -48,7 +48,7 @@ jobs:
             -v "$PWD/output:/output" \
             -e BASE_BRANCH -e TARGET_BRANCH -e REPO \
             -e ARGOCD_CHART_VERSION="$ARGOCD_CHART_VERSION" \
-            docker.io/dagandersen/argocd-diff-preview:v0.2.17@sha256:ea90848df29337b50d5058330210b38e39232360b78d9c60951fc92e454c6941
+            docker.io/dagandersen/argocd-diff-preview:v0.2.18@sha256:8121606a333bc5de9a8d981222f7035f946e970079417ea48bc304d1e94ec332
 
       - name: Comment on PR
         env:
