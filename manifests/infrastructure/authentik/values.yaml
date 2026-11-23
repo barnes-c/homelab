@@ -44,8 +44,8 @@ server:
         - ALL
   resources:
     requests:
-      cpu: 100m
-      memory: 256Mi
+      cpu: 150m
+      memory: 640Mi
     limits:
       cpu: 500m
       memory: 1Gi
@@ -73,10 +73,10 @@ worker:
         - ALL
   resources:
     requests:
-      cpu: 100m
-      memory: 256Mi
+      cpu: 250m
+      memory: 512Mi
     limits:
-      cpu: 1500m
+      cpu: 3000m
       memory: 1Gi
   startupProbe:
     periodSeconds: 10
@@ -110,10 +110,10 @@ postgresql:
     resources:
       requests:
         cpu: 100m
-        memory: 256Mi
+        memory: 320Mi
       limits:
         cpu: 1500m
-        memory: 512Mi
+        memory: 768Mi
     persistence:
       enabled: true
       storageClass: longhorn

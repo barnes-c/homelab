@@ -27,6 +27,13 @@ trivy:
   storageClassName: longhorn-scratch
   timeout: 10m0s
   server:
+    resources:
+      requests:
+        cpu: 50m
+        memory: 256Mi
+      limits:
+        cpu: 1000m
+        memory: 1Gi
     securityContext:
       allowPrivilegeEscalation: false
       capabilities:
@@ -50,7 +57,7 @@ podSecurityContext:
 resources:
   requests:
     cpu: 50m
-    memory: 256Mi
+    memory: 448Mi
   limits:
     cpu: 500m
     memory: 1Gi
