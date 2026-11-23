@@ -78,6 +78,17 @@
             "automerge": false
         },
         {
+            "description": "Longhorn only supports upgrading one minor at a time, and preUpgradeChecker is off under ArgoCD, so nothing in-cluster blocks a skipped minor. See barnes-c/homelab-issues#57.",
+            "matchManagers": [
+                "argocd"
+            ],
+            "matchDepNames": [
+                "longhorn"
+            ],
+            "groupName": "longhorn",
+            "separateMultipleMinor": true
+        },
+        {
             "matchManagers": [
                 "argocd"
             ],
