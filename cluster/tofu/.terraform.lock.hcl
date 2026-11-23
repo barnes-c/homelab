@@ -89,6 +89,7 @@ provider "registry.opentofu.org/siderolabs/talos" {
     "h1:k6fdXzOD91aEgvYQ1OXATLw6BndbuCABB9Y8Wub0oBk=",
     "h1:oYvPfwMD7UEYmpWPd6wizRrFENarpFBUAJ7RyxoRW4U=",
     "h1:wG0uNsf/8Tsvq+3O7EFiXthXFvYXZ6BiHIOFYjvOzKM=",
+    "zh:0fa82a384b25a58b65523e0ea4768fa1212b1f5cfc0c9379d31162454fedcc9d",
     "zh:1a276a66a56a3ffe3dc22da221a541688720a1239238fbe8adc23d4fb420aa13",
     "zh:1b89ee64ae26d7a1705f6df936907d66b369a18c3ac0be02e2eae14fc09a2e75",
     "zh:1f56774c2b53606f26379bcff719789948e570c1503488082bdb8125fc9ea8aa",

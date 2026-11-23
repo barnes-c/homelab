@@ -19,7 +19,7 @@ locals {
     k8sServicePort       = 7445
 
     l2announcements = { enabled = true }
-    gatewayAPI      = { enabled = true }
+    gatewayAPI      = { enabled = true, enableAlpn = true }
 
     encryption = {
       enabled   = true
