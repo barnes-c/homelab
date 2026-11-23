@@ -34,4 +34,4 @@ spec:
             matchExpressions:
               - key: kubernetes.io/metadata.name
                 operator: In
-                values: [authentik, barnes-biz, blog-barnes-biz, immich]
+                values: [authentik, barnes-biz, blog-barnes-biz, gateway, immich]
