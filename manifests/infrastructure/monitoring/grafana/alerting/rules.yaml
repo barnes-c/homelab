@@ -42,3 +42,269 @@ alerting:
               description: >-
                 See the Authentik sign-ins row on the Gateway visitors dashboard for client IPs,
                 usernames tried and networks. Context: barnes-c/homelab-issues#41.
+      - orgId: 1
+        name: certificates
+        folder: Alerts
+        interval: 5m
+        rules:
+          - uid: certificate-expiring
+            title: Certificate expires within 24h
+            condition: B
+            data:
+              - refId: A
+                relativeTimeRange:
+                  from: 600
+                  to: 0
+                datasourceUid: prometheus
+                model:
+                  refId: A
+                  instant: true
+                  expr: >-
+                    min by (namespace, name)
+                    (certmanager_certificate_expiration_timestamp_seconds - time())
+              - refId: B
+                datasourceUid: __expr__
+                model:
+                  refId: B
+                  type: threshold
+                  expression: A
+                  conditions:
+                    - evaluator:
+                        type: lt
+                        params: [86400]
+            noDataState: OK
+            execErrState: Error
+            for: 0m
+            labels:
+              severity: critical
+            annotations:
+              summary: A cert-manager certificate expires in less than 24 hours
+              description: >-
+                Renewal has been failing for a while; certificate-renewal-overdue should have fired
+                first. Check the Certificate's Order and Challenge. Context:
+                barnes-c/homelab-issues#27.
+          # Ready stays True while a renewal is stuck, so this is the early warning: renewalTime
+          # only moves forward after a successful issuance.
+          - uid: certificate-renewal-overdue
+            title: Certificate renewal overdue
+            condition: B
+            data:
+              - refId: A
+                relativeTimeRange:
+                  from: 600
+                  to: 0
+                datasourceUid: prometheus
+                model:
+                  refId: A
+                  instant: true
+                  expr: >-
+                    max by (namespace, name)
+                    (time() - certmanager_certificate_renewal_timestamp_seconds)
+              - refId: B
+                datasourceUid: __expr__
+                model:
+                  refId: B
+                  type: threshold
+                  expression: A
+                  conditions:
+                    - evaluator:
+                        type: gt
+                        params: [3600]
+            noDataState: OK
+            execErrState: Error
+            for: 0m
+            labels:
+              severity: warning
+            annotations:
+              summary: A certificate is more than 1 hour past its renewal time
+              description: >-
+                Check the Certificate's Order and Challenge (DNS-01 via the Porkbun webhook).
+                Context: barnes-c/homelab-issues#27.
+          - uid: certificate-not-ready
+            title: Certificate not ready
+            condition: B
+            data:
+              - refId: A
+                relativeTimeRange:
+                  from: 600
+                  to: 0
+                datasourceUid: prometheus
+                model:
+                  refId: A
+                  instant: true
+                  expr: >-
+                    max by (namespace, name)
+                    (certmanager_certificate_ready_status{condition="False"})
+              - refId: B
+                datasourceUid: __expr__
+                model:
+                  refId: B
+                  type: threshold
+                  expression: A
+                  conditions:
+                    - evaluator:
+                        type: gt
+                        params: [0]
+            noDataState: OK
+            execErrState: Error
+            for: 1h
+            labels:
+              severity: warning
+            annotations:
+              summary: A cert-manager certificate has been not Ready for over 1 hour
+              description: "Context: barnes-c/homelab-issues#27."
+          # Kubelet certs last 7 days (cluster-signing-duration) and rotate at 70-90% of their
+          # lifetime, so at least ~17h remain at rotation. Under 12h means rotation failed.
+          - uid: kubelet-serving-cert-expiring
+            title: Kubelet serving certificate not renewed
+            condition: B
+            data:
+              - refId: A
+                relativeTimeRange:
+                  from: 600
+                  to: 0
+                datasourceUid: prometheus
+                model:
+                  refId: A
+                  instant: true
+                  expr: min by (instance) (kubelet_certificate_manager_server_ttl_seconds)
+              - refId: B
+                datasourceUid: __expr__
+                model:
+                  refId: B
+                  type: threshold
+                  expression: A
+                  conditions:
+                    - evaluator:
+                        type: lt
+                        params: [43200]
+            noDataState: OK
+            execErrState: Error
+            for: 0m
+            labels:
+              severity: critical
+            annotations:
+              summary: A kubelet serving certificate expires in less than 12 hours
+              description: >-
+                Its CSR was most likely not approved: check kubelet-csr-approver and pending CSRs.
+                Once it expires, kubectl logs/exec and the kubelet metric scrapes fail on that
+                node. Context: barnes-c/homelab-issues#70.
+          - uid: kubelet-client-cert-expiring
+            title: Kubelet client certificate not renewed
+            condition: B
+            data:
+              - refId: A
+                relativeTimeRange:
+                  from: 600
+                  to: 0
+                datasourceUid: prometheus
+                model:
+                  refId: A
+                  instant: true
+                  expr: min by (instance) (kubelet_certificate_manager_client_ttl_seconds)
+              - refId: B
+                datasourceUid: __expr__
+                model:
+                  refId: B
+                  type: threshold
+                  expression: A
+                  conditions:
+                    - evaluator:
+                        type: lt
+                        params: [43200]
+            noDataState: OK
+            execErrState: Error
+            for: 0m
+            labels:
+              severity: critical
+            annotations:
+              summary: A kubelet client certificate expires in less than 12 hours
+              description: >-
+                Once it expires the node goes NotReady; Talos then wipes the kubelet PKI and
+                re-bootstraps. Check the node's CSRs and kube-controller-manager. Context:
+                barnes-c/homelab-issues#70.
+      - orgId: 1
+        name: cronjobs
+        folder: Alerts
+        interval: 1m
+        rules:
+          # Failed Jobs stay in the CronJob history for days, so only count Jobs started in the
+          # last hour; the alert resolves an hour after the failure.
+          - uid: cronjob-failed
+            title: CronJob run failed
+            condition: B
+            data:
+              - refId: A
+                relativeTimeRange:
+                  from: 600
+                  to: 0
+                datasourceUid: prometheus
+                model:
+                  refId: A
+                  instant: true
+                  expr: >-
+                    count by (namespace, owner_name) (
+                      (kube_job_status_failed > 0)
+                      * on (namespace, job_name) group_left (owner_name)
+                      kube_job_owner{owner_kind="CronJob"}
+                      and on (namespace, job_name) (time() - kube_job_status_start_time < 3600)
+                    )
+              - refId: B
+                datasourceUid: __expr__
+                model:
+                  refId: B
+                  type: threshold
+                  expression: A
+                  conditions:
+                    - evaluator:
+                        type: gt
+                        params: [0]
+            noDataState: OK
+            execErrState: Error
+            for: 0m
+            labels:
+              severity: warning
+            annotations:
+              summary: A CronJob run failed in the last hour
+              description: >-
+                The owner_name label is the CronJob. Logs: Loki by namespace; a run that logged
+                nothing likely never started (volume attach, scheduling). Context:
+                barnes-c/homelab-issues#79.
+          # Catches runs that never start at all. Threshold: 3 schedule intervals without a
+          # success, the interval taken from the CronJob's own next and last schedule times.
+          - uid: cronjob-no-success
+            title: CronJob has not succeeded recently
+            condition: B
+            data:
+              - refId: A
+                relativeTimeRange:
+                  from: 600
+                  to: 0
+                datasourceUid: prometheus
+                model:
+                  refId: A
+                  instant: true
+                  expr: >-
+                    (time() - max by (namespace, cronjob) (kube_cronjob_status_last_successful_time))
+                    / max by (namespace, cronjob)
+                    (kube_cronjob_next_schedule_time - kube_cronjob_status_last_schedule_time)
+                    and on (namespace, cronjob)
+                    (max by (namespace, cronjob) (kube_cronjob_spec_suspend) == 0)
+              - refId: B
+                datasourceUid: __expr__
+                model:
+                  refId: B
+                  type: threshold
+                  expression: A
+                  conditions:
+                    - evaluator:
+                        type: gt
+                        params: [3]
+            noDataState: OK
+            execErrState: Error
+            for: 0m
+            labels:
+              severity: warning
+            annotations:
+              summary: A CronJob has gone more than 3 schedule intervals without a successful run
+              description: "Context: barnes-c/homelab-issues#79."
