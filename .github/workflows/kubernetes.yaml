@@ -4,6 +4,7 @@ on:
   pull_request:
     paths: &paths
       - apps/**
+      - manifests/**
       - .github/workflows/kubernetes.yaml
   push:
     branches: [master]
@@ -30,8 +31,10 @@ jobs:
         run: |
           CRDS="https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json"
 
-          docker run --rm -v "$PWD:/work" -w /work "$KUBECONFORM_IMAGE" \
-            -strict -summary \
-            -schema-location default \
-            -schema-location "$CRDS" \
-            apps/
+          # manifests/ also holds Helm values, Authentik blueprints and Grafana provisioning files,
+          # so only files with a top-level kind are Kubernetes objects.
+          grep -rlZE --include='*.yaml' '^kind:' apps manifests |
+            xargs -0 docker run --rm -v "$PWD:/work" -w /work "$KUBECONFORM_IMAGE" \
+              -strict -summary \
+              -schema-location default \
+              -schema-location "$CRDS"
