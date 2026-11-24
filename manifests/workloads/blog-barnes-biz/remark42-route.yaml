@@ -18,6 +18,13 @@ spec:
             type: PathPrefix
             value: /
       filters:
+        # Envoy appends to a client-sent X-Forwarded-For and remark42 reads its first entry, so
+        # without this any client picks the IP remark42 records. See barnes-c/homelab-issues#30.
+        - type: RequestHeaderModifier
+          requestHeaderModifier:
+            set:
+              - name: X-Forwarded-For
+                value: "%DOWNSTREAM_REMOTE_ADDRESS_WITHOUT_PORT%"
         - type: ResponseHeaderModifier
           responseHeaderModifier:
             set:
