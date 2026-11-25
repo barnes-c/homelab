@@ -7,7 +7,7 @@ controllers:
       main:
         image:
           repository: ghcr.io/goauthentik/proxy
-          tag: 2026.8.6@sha256:ceb1402294bb71cac3651d88b917302001ccbecad6afcea1f8b6ace101da64df
+          tag: 2026.8.7@sha256:fb5173f4f41add451f20b65490248ddaebea70ff0b552ec7b2520ebfdaf61d36
         env:
           AUTHENTIK_HOST: https://auth.barnes.biz
           AUTHENTIK_INSECURE: "false"
