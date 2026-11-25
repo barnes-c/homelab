@@ -26,6 +26,6 @@ jobs:
       - name: Validate config
         shell: bash
         env:
-          RENOVATE_IMAGE: ghcr.io/renovatebot/renovate:44.260.3@sha256:3a3afa18062aa0514f32cd636cdd08f4b6c68cb62e699e5729511d1127ad7b05
+          RENOVATE_IMAGE: ghcr.io/renovatebot/renovate:44.262.1@sha256:9f571539ab94f0798d9439110ecf38c1e540920520794d87e111fbb97c322d50
         run: |
           docker run --rm -v "$PWD:/work:ro" -w /work --entrypoint renovate-config-validator "$RENOVATE_IMAGE" --strict
