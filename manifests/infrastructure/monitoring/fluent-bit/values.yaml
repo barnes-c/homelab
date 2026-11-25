@@ -142,6 +142,25 @@ config:
         Condition  Key_value_matches log ^F\d{4}
         Set        level fatal
 
+    # Kubernetes JSON logging (--logging-format=json: cert-manager, snapshot-controller) has no
+    # level field: info records carry a verbosity "v", error records don't.
+    [FILTER]
+        Name       modify
+        Match      kube.*
+        Condition  Key_does_not_exist level
+        Condition  Key_exists ts
+        Condition  Key_exists caller
+        Condition  Key_exists v
+        Set        level info
+
+    [FILTER]
+        Name       modify
+        Match      kube.*
+        Condition  Key_does_not_exist level
+        Condition  Key_exists ts
+        Condition  Key_exists caller
+        Set        level error
+
     # Gateway access logs (CiliumGatewayClassConfig `gateway/access-logs`). Records without a
     # public client_ip get nulls; the filter only adds fields.
     [FILTER]
