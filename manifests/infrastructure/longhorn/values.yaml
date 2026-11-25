@@ -34,6 +34,8 @@ persistence:
 preUpgradeChecker:
   jobEnabled: false
 longhornManager:
+  log:
+    format: json
   serviceAnnotations:
     prometheus.io/scrape: "true"
     prometheus.io/port: "9500"
@@ -46,6 +48,8 @@ longhornGlobalManager:
 longhornUI:
   replicas: 0
 longhornDriver:
+  log:
+    format: json
   resources:
     requests:
       cpu: 25m

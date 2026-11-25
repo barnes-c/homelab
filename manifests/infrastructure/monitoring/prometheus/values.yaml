@@ -3,6 +3,9 @@ fullnameOverride: prometheus
 server:
   fullnameOverride: prometheus
   retention: 90d
+  extraFlags:
+    - web.enable-lifecycle
+    - log.format=json
   # Under persistentVolume.size so blocks evict before the disk fills; base-2 units. See barnes-c/homelab-issues#25.
   retentionSize: 26GB
   persistentVolume:

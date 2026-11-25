@@ -106,6 +106,12 @@ config:
         Condition  Key_Value_Equals level log
         Set        level info
 
+    # Servarr apps (Sonarr, Radarr, Prowlarr) log CLEF, which keeps the level in "@l".
+    [FILTER]
+        Name    modify
+        Match   kube.*
+        Rename  @l level
+
     # klog lines (I1023 ...) carry their severity in the prefix. Without a level field Loki
     # guesses from keywords, so an info line containing "error=" shows up as an error.
     [FILTER]

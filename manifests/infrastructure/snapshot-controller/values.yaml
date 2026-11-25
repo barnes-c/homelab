@@ -1,4 +1,6 @@
 controller:
+  args:
+    loggingFormat: json
   resources:
     requests:
       cpu: 10m

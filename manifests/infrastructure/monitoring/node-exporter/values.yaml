@@ -1,5 +1,8 @@
 fullnameOverride: node-exporter
 
+extraArgs:
+  - --log.format=json
+
 resources:
   requests:
     cpu: 10m

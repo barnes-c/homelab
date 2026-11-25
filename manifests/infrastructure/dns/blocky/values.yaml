@@ -67,6 +67,8 @@ configMaps:
   config:
     data:
       config.yml: |
+        log:
+          format: json
         ports:
           dns: 5353
           http: 4000

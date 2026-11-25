@@ -9,6 +9,7 @@ controllers:
           SONARR__SERVER__PORT: "8989"
           # Login is handled by the Authentik outpost; the Gateway cannot reach this pod directly.
           SONARR__AUTH__METHOD: External
+          SONARR__LOG__CONSOLEFORMAT: Clef
         resources:
           requests:
             cpu: 50m

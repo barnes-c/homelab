@@ -1,3 +1,6 @@
+global:
+  logging:
+    format: json
 configs:
   params:
     server.insecure: true

@@ -9,6 +9,7 @@ controllers:
           RADARR__SERVER__PORT: "7878"
           # Login is handled by the Authentik outpost; the Gateway cannot reach this pod directly.
           RADARR__AUTH__METHOD: External
+          RADARR__LOG__CONSOLEFORMAT: Clef
         resources:
           requests:
             cpu: 50m

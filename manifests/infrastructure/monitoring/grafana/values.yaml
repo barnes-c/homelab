@@ -48,6 +48,8 @@ smtp:
   existingSecret: grafana-smtp
 
 grafana.ini:
+  log.console:
+    format: json
   analytics:
     reporting_enabled: false
     check_for_updates: false

@@ -4,6 +4,8 @@ deploymentMode: Monolithic
 
 loki:
   auth_enabled: false
+  server:
+    log_format: json
   commonConfig:
     replication_factor: 1
   schemaConfig:

@@ -4,6 +4,9 @@ podSecurityContext:
   seccompProfile:
     type: RuntimeDefault
 
+extraArgs:
+  - --log.format=json
+
 resources:
   requests:
     cpu: 10m

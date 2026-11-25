@@ -33,6 +33,8 @@ locals {
       tls           = { enabled = false }
     }
 
+    logOptions = { format = "json" }
+
     resources = { requests = { cpu = "100m", memory = "256Mi" } }
     operator = {
       replicas  = length(local.control_plane_ips) > 1 ? 2 : 1
